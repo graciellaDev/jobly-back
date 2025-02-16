@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\register\Success;
 use App\Mail\RegsuccessEmail;
 use App\Models\Customer;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -117,7 +118,7 @@ class CustomerController extends Controller
         ]);
     }
 
-    public function regSuccess(int $id, Request $request) {
+    public function regSuccess(int $id, Request $request): RedirectResponse {
         $query = $request->query('key');
         $today = Carbon::today()->subDays(3);
         $user = Customer::all()->find($id)->where('created_at', '>', $today);
@@ -125,10 +126,15 @@ class CustomerController extends Controller
             $user->update([
                 'status' => true
             ]);
-            return redirect(env('URL_FRONT') . '/reg-success');
+
+            return redirect(env('URL_FRONT') . '/auth/?reg=success');
         } else {
-            $user->delete();
-            return redirect(env('URL_FRONT') . '/reg-error');
+            $user = $user = Customer::all()->find($id)->where('created_at', '<=', $today);
+            if (!empty($user)) {
+                $user->delete();
+            }
+
+            return redirect(env('URL_FRONT') . '/auth/?reg=error');
         }
     }
 }
