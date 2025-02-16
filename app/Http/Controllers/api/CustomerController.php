@@ -30,7 +30,7 @@ class CustomerController extends Controller
         $credentials = $request->only('email', 'password');
         $user = Customer::where('email', $request->email)->where('status', true)->first();
 
-        if (Hash::check($request->password, $user->password)) {
+        if (!empty($user) && Hash::check($request->password, $user->password)) {
             return response()->json([
                 'message' => 'Авторизация прошла успешно',
                 'user' => [
