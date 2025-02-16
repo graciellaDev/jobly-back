@@ -19,7 +19,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::controller(AuthController::class)->group(function () {
     Route::post('login-jwt', 'login');
-    // Route::post('register-jwt', 'register');
+     Route::post('register-jwt', 'register');
     Route::get('profile-jwt', 'profile');
 });
 
