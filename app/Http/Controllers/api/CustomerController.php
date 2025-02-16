@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\register\Success;
 use App\Mail\RegsuccessEmail;
 use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Mail;
+use Illuminate\Support\Facades\Mail;
+use Carbon\Carbon;
 
 class CustomerController extends Controller
 {
@@ -25,7 +27,7 @@ class CustomerController extends Controller
         }
 
         $credentials = $request->only('email', 'password');
-        $user = Customer::where('email', $request->email)->first();
+        $user = Customer::where('email', $request->email)->where('status', true)->first();
 
         if (Hash::check($request->password, $user->password)) {
             return response()->json([
@@ -47,7 +49,6 @@ class CustomerController extends Controller
 
     public function register(Request $request)
     {
-        // Mail::to('gravielladesign@gmail.com')->send(new RegsuccessEmail(['name' => 'test', 'url' => '']));
         try {
             $request->validate([
                 'name' => 'required|string|max:255',
@@ -96,14 +97,13 @@ class CustomerController extends Controller
             'password' => Hash::make($request->password),
             'phone' => $request->phone,
             'role' => 'customer',
-            'site' => $request->site ?? $request->site
+            'site' => $request->site ?? $request->site,
+            'status' => false
         ]);
 
-        // $data = [
-        //     'name' => $user->name,
-        //     'url' => 'Ссылка'
-        // ];
-        // Mail::to($user->email)->send(new RegsuccessEmail($data));
+        $rootUrl = $request->root();
+        $url = $rootUrl . '/reg-success/' . $user->id . '/?key=' . urldecode($user->password);
+        Mail::to('gravielladesign@gmail.com')->send(new Success(['name' => $user->name, 'url' => $url]));
 
         return response()->json([
             'message' => 'Пользователь успешно зарегистрирован',
@@ -115,5 +115,20 @@ class CustomerController extends Controller
                 'site' => $user->site
             ]
         ]);
+    }
+
+    public function regSuccess(int $id, Request $request) {
+        $query = $request->query('key');
+        $today = Carbon::today()->subDays(3);
+        $user = Customer::all()->find($id)->where('created_at', '>', $today);
+        if (!empty($user)) {
+            $user->update([
+                'status' => true
+            ]);
+            return redirect(env('URL_FRONT') . '/reg-success');
+        } else {
+            $user->delete();
+            return redirect(env('URL_FRONT') . '/reg-error');
+        }
     }
 }

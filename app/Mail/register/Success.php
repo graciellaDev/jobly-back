@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Mail;
+namespace App\Mail\register;
 
 use Illuminate\Bus\Queueable;
 //use Illuminate\Contracts\Queue\ShouldQueue;
@@ -9,36 +9,17 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class RegsuccessEmail extends Mailable
+class Success extends Mailable
 {
     use Queueable, SerializesModels;
+    public $data;
 
     /**
      * Create a new message instance.
      */
-    public array $data; // Данные для передачи в шаблон
-
-    /**
-     * Создание нового экземпляра письма.
-     */
     public function __construct($data)
     {
         $this->data = $data;
-    }
-
-    /**
-     * Построение письма.
-     */
-    public function build()
-    {
-//         return $this->subject('Регистрация job-ly.ru')->
-//             view('emails.test', $this->data);
-
-
-        return $this->from('your_email@gmail.com', 'Your App Name')
-            ->subject('Пример письма')
-            ->view('test')
-            ->with('data', $this->data);
     }
 
     /**
@@ -47,7 +28,7 @@ class RegsuccessEmail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Regsuccess Email',
+            subject: 'Success',
         );
     }
 
@@ -57,7 +38,7 @@ class RegsuccessEmail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'view.name',
+            view: 'emails.register.success',
         );
     }
 
@@ -69,5 +50,9 @@ class RegsuccessEmail extends Mailable
     public function attachments(): array
     {
         return [];
+    }
+
+    public function build() {
+        return $this->view('emails.register.success')->with($this->data);
     }
 }

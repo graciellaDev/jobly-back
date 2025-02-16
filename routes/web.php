@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\api\CustomerController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -14,3 +15,5 @@ Route::get('/clear-cache', function () {
 //    Artisan::call('backup:clean');
     return "Кэш очищен.";
 });
+
+Route::get('/reg-success/{id}', [CustomerController::class, 'regSuccess']);

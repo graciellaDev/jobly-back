@@ -14,9 +14,11 @@ return new class extends Migration {
             $table->id();
             $table->timestamps();
             $table->string('name');
-            $table->string('email')->nullable();
+            $table->string('email')->unique();
             $table->string('login')->unique();
-            $table->string('password')->unique();
+            $table->string('password');
+            $table->string('site')->nullable();
+            $table->boolean('status')->nullable();
         });
     }
 
