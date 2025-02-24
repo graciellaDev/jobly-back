@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\api\AuthController;
 use App\Http\Controllers\api\CustomerController;
+use App\Http\Controllers\api\VacancyController;
+use App\Models\Vacancy;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -19,7 +21,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::controller(AuthController::class)->group(function () {
     Route::post('login-jwt', 'login');
-//     Route::post('register-jwt', 'register');
+    // Route::post('register-jwt', 'register');
     Route::get('profile-jwt', 'profile');
 });
 
@@ -33,4 +35,8 @@ Route::group(['middleware' => 'auth:api'], function () {
     // });
     Route::post('login', [CustomerController::class, 'login']);
     Route::post('register', [CustomerController::class, 'register']);
+
+    Route::get('vacancy-fields', [VacancyController::class, 'fields']);
+    Route::get('vacancies/{id?}', [VacancyController::class, 'show']);
+    Route::post('vacancies', [VacancyController::class, 'create']);
 });

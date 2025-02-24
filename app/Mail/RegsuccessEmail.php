@@ -31,14 +31,17 @@ class RegsuccessEmail extends Mailable
      */
     public function build()
     {
-//         return $this->subject('Регистрация job-ly.ru')->
-//             view('emails.test', $this->data);
+
+         return $this->subject('Регистрация job-ly.ru')->
+             view('emails.success', $this->data);
 
 
-        return $this->from('your_email@gmail.com', 'Your App Name')
-            ->subject('Пример письма')
-            ->view('test')
-            ->with('data', $this->data);
+
+//        return $this->from('your_email@gmail.com', 'Your App Name')
+//            ->subject('Пример письма')
+//            ->view('emails.success', $this->data)
+//         ->with('data', $this->data);
+
     }
 
     /**
@@ -47,7 +50,7 @@ class RegsuccessEmail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Regsuccess Email',
+            subject: 'Регистрация job-ly.ru',
         );
     }
 
@@ -57,7 +60,7 @@ class RegsuccessEmail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'view.name',
+            view: 'emails.success',
         );
     }
 

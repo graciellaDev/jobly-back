@@ -38,13 +38,13 @@ class AuthController extends Controller
 //        $user = Cache::remember('states', $seconds = 3600, function () {
 //            return JWTAuth::user();
 //        });
-
         $request->validate([
             'email' => 'required|string|email',
             'password' => 'required|string',
         ]);
 
         $credentials = $request->only('email', 'password');
+
         $token = JWTAuth::attempt($credentials);
 
         if (!$token) {
