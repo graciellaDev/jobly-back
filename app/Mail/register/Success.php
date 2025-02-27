@@ -12,7 +12,7 @@ use Illuminate\Queue\SerializesModels;
 class Success extends Mailable
 {
     use Queueable, SerializesModels;
-    public $data;
+    public array $data;
 
     /**
      * Create a new message instance.

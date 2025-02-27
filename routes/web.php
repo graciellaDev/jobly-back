@@ -17,3 +17,4 @@ Route::get('/clear-cache', function () {
 });
 
 Route::get('/reg-success/{id}', [CustomerController::class, 'regSuccess']);
+//Route::get('/restore-success/{id}', CustomerController::class, 'restoreSuccess');

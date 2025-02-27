@@ -7,13 +7,27 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Vacancy extends Model
 {
-    public function industries(): BelongsToMany
-    {
-        return $this->belongsToMany(Industry::class);
-    }
+    protected $fillable = [
+        'id',
+        'name',
+        'description',
+        'specializations',
+        'employment',
+        'schedule',
+        'experience',
+        'education',
+        'salary_from',
+        'salary_to',
+        'salary',
+        'currency',
+        'place',
+        'location',
+        'phrases'
+    ];
 
-    public function drivers(): BelongsToMany
-    {
-        return $this->belongsToMany(Driver::class);
-    }
+    protected $casts = [
+        'industry' => 'array',
+        'condition' => 'array',
+        'driver' => 'array'
+    ];
 }

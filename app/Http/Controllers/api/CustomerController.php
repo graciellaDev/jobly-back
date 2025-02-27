@@ -3,7 +3,8 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
-use App\Mail\RegsuccessEmail;
+use App\Mail\register\Success;
+use App\Mail\register\Restore;
 use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\RedirectResponse;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class CustomerController extends Controller
 {
@@ -19,21 +21,38 @@ class CustomerController extends Controller
     {
         $cookieAuth = $request->cookie('auth_user');
         if (isset($cookieAuth) && !empty($cookieAuth)) {
-            $userAuth = Customer::all()
-                ->where('auth_token', $cookieAuth)
-                ->where('auth_time', '>=', Carbon::today())
-                ->first();
+            $userAuth = Customer::all()->where('auth_token', $cookieAuth)->first();
             if (!empty($userAuth)) {
-                return response()->json([
-                    'message' => 'Авторизация прошла успешно',
-                    'user' => [
-                        'login' => $userAuth->login,
-                        'name' => $userAuth->name,
-                        'email' => $userAuth->email,
-                        'phone' => $userAuth->phone,
-                        'site' => $userAuth->site
-                    ]
-                ]);
+                if(!empty($userAuth->auth_time)) {
+                    if ($userAuth->auth_time >= Carbon::today()) {
+                        return response()->json([
+                            'message' => 'Авторизация прошла успешно',
+                            'user' => [
+                                'login' => $userAuth->login,
+                                'name' => $userAuth->name,
+                                'email' => $userAuth->email,
+                                'phone' => $userAuth->phone,
+                                'site' => $userAuth->site,
+                                'auth_token' => $userAuth->auth_token
+                            ]
+                        ]);
+                    }
+                } else {
+                    $userAuth->auth_time = Carbon::now()->addMonths(2);
+                    $userAuth->save();
+
+                    return response()->json([
+                        'message' => 'Авторизация прошла успешно',
+                        'user' => [
+                            'login' => $userAuth->login,
+                            'name' => $userAuth->name,
+                            'email' => $userAuth->email,
+                            'phone' => $userAuth->phone,
+                            'site' => $userAuth->site,
+                            'auth_token' => $userAuth->auth_token
+                        ]
+                    ]);
+                }
             }
         }
 
@@ -55,7 +74,10 @@ class CustomerController extends Controller
             ], 404);
         }
         if (Hash::check($request->password, $user->password)) {
-            $user->auth_time = Carbon::today();
+            $customHash = Str::random(16) . time();
+            $token = Hash::make($customHash);
+            $user->auth_token = $token;
+            $user->auth_time = Carbon::now()->addMonths(2);
             $user->save();
 
         return response()->json([
@@ -120,6 +142,8 @@ class CustomerController extends Controller
             }
         }
 
+        $customHash = Str::random(16) . time();
+        $authToken = Hash::make($customHash);
         $user = Customer::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -127,17 +151,17 @@ class CustomerController extends Controller
             'password' => Hash::make($request->password),
             'phone' => $request->phone,
             'role' => 'customer',
-            'site' => $request->site ?? $request->site
+            'site' => $request->site ?? $request->site,
         ]);
 
 
         $rootUrl = $request->root();
         $url = $rootUrl . '/reg-success/' . $user->id . '/?key=' . urldecode($user->password);
         $data = [
-        'name' => $user->name,
-        'url' => $url
-    ];
-         Mail::to($user->email)->send(new RegsuccessEmail($data));
+            'name' => $user->name,
+            'url' => $url
+        ];
+         Mail::to($user->email)->send(new Success($data));
 
         return response()->json([
             'message' => 'Пользователь успешно зарегистрирован',
@@ -158,12 +182,12 @@ class CustomerController extends Controller
             if($key !== $user->password) {
                 return redirect(env('URL_FRONT') . '/auth/?reg=error');
             }
-
-            $token = Hash::make($user->password);
+            $customHash = Str::random(16) . time();
+            $token = Hash::make($customHash);
             $user->auth_token = $token;
             $user->save();
 
-            return redirect(env('URL_FRONT') . '/auth/?reg=success');
+            return redirect(env('URL_FRONT') . '/auth/?reg=success&key=' . $token);
         } else {
             $user = Customer::all()->find($id)->where('created_at', '<=', $today);
             if (!empty($user)) {
@@ -172,5 +196,83 @@ class CustomerController extends Controller
 
             return redirect(env('URL_FRONT') . '/auth/?reg=error');
         }
+    }
+
+    public function restoreAccess(Request $request) {
+        try {
+            $request->validate([
+                'email' => 'required|string|email|max:255|unique:users',
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Ошибка валидации',
+            ], 422);
+        }
+
+        $user = Customer::all()->where('email', $request->email)->first();
+        if (empty($user))
+            return response()->json([
+                'message' => 'Пользователь с таким email не найден',
+            ], 404);
+
+        $rootUrl = $request->root();
+
+        $key = urldecode($user->auth_token);
+        if (empty($key)) {
+            return response()->json([
+                'message' => 'Пользователь не авторизован',
+            ], 404);
+        }
+        $url = env('URL_FRONT') . '/auth/recovery/?user_id=' . $user->id . '&key=' . $key;
+        $data = [
+            'name' => $user->name,
+            'url' => $url,
+            'subject' => 'Восстановление доступа на job-ly.ru'
+        ];
+        Mail::to($user->email)->send(new Restore($data));
+
+        return response()->json([
+            'message' => 'На ваш email отправлено письмо с инструкцией для восстановления'
+        ]);
+    }
+
+    public function restoreSuccess(int $id, Request $request) {
+        try {
+            $request->validate([
+                'key' => 'required|min:6',
+                'password' => 'required|string|min:6',
+                'password_confirmation' => 'required|string|min:6'
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Ошибка валидации',
+            ], 422);
+        }
+
+        if ($request->password !== $request->password_confirmation) {
+            return  json_encode([
+                'message' => 'Пароли не совпадают'
+            ], 422);
+        }
+        $key = $request->key;
+        $user = Customer::all()->where('auth_token',  $key)->find($id);
+        if (empty($user))
+            return response()->json([
+                'message' => 'Ошибка аутентификации'
+            ], 404);
+
+        if ($user->auth_token !== $key)
+            return response()->json([
+                'message' => 'Ошибка аутентификации'
+            ], 404);
+
+        $user->password = Hash::make($request->password);
+        $user->auth_time = null;
+        $user->updated_at = Carbon::today();
+        $user->save();
+
+        return response()->json([
+            'message' => 'Пароль успешно обновлен',
+        ]);
     }
 }

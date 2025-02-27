@@ -35,8 +35,12 @@ Route::group(['middleware' => 'auth:api'], function () {
     // });
     Route::post('login', [CustomerController::class, 'login']);
     Route::post('register', [CustomerController::class, 'register']);
+    Route::post('restore-access', [CustomerController::class, 'restoreAccess']);
+    Route::post('restore-success/{id}', [CustomerController::class, 'restoreSuccess']);
 
     Route::get('vacancy-fields', [VacancyController::class, 'fields']);
     Route::get('vacancies/{id?}', [VacancyController::class, 'show']);
     Route::post('vacancies', [VacancyController::class, 'create']);
+    Route::put('vacancies/{id?}', [VacancyController::class, 'update']);
+    Route::delete('vacancies/{id?}', [VacancyController::class, 'delete']);
 });
