@@ -11,11 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('vacancy_condition', function (Blueprint $table) {
+        Schema::create('condition_vacancy', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('vacancy_id');
             $table->unsignedBigInteger('condition_id');
-            $table->timestamps();
 
             $table->foreign('vacancy_id')->references('id')->on('vacancies')->onDelete('cascade');
             $table->foreign('condition_id')->references('id')->on('conditions')->onDelete('cascade');
@@ -27,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('vacancy_condition');
+        Schema::dropIfExists('condition_vacancy');
     }
 };

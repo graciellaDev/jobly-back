@@ -11,16 +11,17 @@ class Vacancy extends Model
         'id',
         'name',
         'description',
+        'code',
         'specializations',
+        'industry',
         'employment',
         'schedule',
         'experience',
         'education',
         'salary_from',
         'salary_to',
-        'salary',
-        'currency',
         'place',
+        'currency',
         'location',
         'phrases'
     ];
@@ -30,4 +31,28 @@ class Vacancy extends Model
         'condition' => 'array',
         'driver' => 'array'
     ];
+
+    public $timestamps = true;
+
+    public function industries() {
+        return $this->belongsToMany(Industry::class);
+    }
+
+    public function drivers() {
+        return $this->belongsToMany(Driver::class);
+    }
+
+    public function conditions() {
+        return $this->belongsToMany(Condition::class);
+    }
+
+    public function place()
+    {
+        return $this->belongsTo(Place::class);
+    }
+
+    public function additions()
+    {
+        return $this->belongsToMany(Addition::class);
+    }
 }

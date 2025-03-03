@@ -16,6 +16,15 @@ use App\Models\Employment;
 
 class VacancyController extends Controller
 {
+    public function index() {
+        $vacancies = Vacancy::select(['id', 'name', 'location'])
+            ->paginate();
+
+        return response()->json([
+            'message' => 'Success',
+            'data' => $vacancies
+        ]);
+    }
     public function fields() {
         $data = [
             'employments' => Employment::all()->pluck('name', 'id')->all(),
@@ -36,27 +45,33 @@ class VacancyController extends Controller
     }
 
     public function show(int $id) {
+        $vacancy = Vacancy::all()->find($id);
+        if (!empty($vacancy)) {
+            $vacancy['conditions'] = $vacancy->conditions;
+            $vacancy['drivers'] = $vacancy->drivers;
+            $vacancy['additions'] = $vacancy->additions;
+        }
 
         return json_encode([
             'message' => 'Success',
-            'data' => !empty(Vacancy::all()->find($id)) ? Vacancy::all()->find($id) : []
+            'data' => $vacancy
         ]);
     }
 
     public function create(Request $request) {
         try {
             $data = $request->validate([
-                'name' => 'required|string|max:255',
-                'description' => 'required|string|max:255',
-                'middle_name' => 'nullable|string|max:255',
+                'name' => 'required|string|min:3|max:255',
+                'description' => 'required|string|min:3|max:255',
+                'code' => 'nullable|string|max:255',
                 'specializations' => 'nullable|string|max:255',
+                'industry' => 'nullable|string|max:255',
                 'employment' => 'nullable|string|max:255',
                 'schedule' => 'nullable|string|max:255',
                 'experience' => 'nullable|string|max:255',
                 'education' => 'nullable|string|max:255',
                 'salary_from' => 'nullable|string|max:255',
                 'salary_to' => 'nullable|string|max:255',
-                'salary' => 'nullable|string|max:255',
                 'currency' => 'nullable|string|max:255',
                 'place' => 'nullable|string|max:255',
                 'location' => 'nullable|string|max:255',
@@ -67,10 +82,33 @@ class VacancyController extends Controller
                 'message' => 'Ошибка валидации',
             ], 422);
         }
-        $vacancy = Vacancy::create($data);
+        $isExists = Vacancy::where('name', $request->name)->exists();
+        if ($isExists) {
+            return response()->json([
+                'massage' => 'Вакансия с именем ' . $request->name . ' уже существует'
+            ], 409);
+        }
 
-        return json_encode([
-            'message' => 'Вакансия успешно создана',
+        $place = Place::all()->find($request->place);
+        if (!empty($place)) {
+            $data['place'] = $place->id;
+        }
+        $vacancy = Vacancy::create($data);
+        if(isset($request->conditions)) {
+            $vacancy->conditions()->attach($request->conditions);
+        }
+        if(isset($request->additions)) {
+            $vacancy->additions()->attach($request->additions);
+        }
+        if(isset($request->drivers)) {
+            $vacancy->drivers()->attach($request->drivers);
+        }
+
+        $vacancy = Vacancy::with(['conditions', 'drivers', 'additions'])->find($vacancy->id);
+
+
+        return response()->json([
+            'message' => 'Вакансия ' . $request->name . ' успешно создана',
             'data' => $vacancy
         ]);
     }
@@ -80,27 +118,87 @@ class VacancyController extends Controller
         if (!empty($vacancy)) {
             $name = $vacancy->name;
             $vacancy->delete();
-            return json_encode([
+            $vacancy->conditions()->detach();
+            $vacancy->additions()->detach();
+            $vacancy->drivers()->detach();
+
+            return response()->json([
                 'massage' => 'Вакансия ' . $name . ' успешно удалена'
             ]);
         } else {
-            return json_encode([
+            return response()->json([
                 'message' => 'Вакансия не найдена'
             ], 404);
         }
     }
 
-    public function update (int $id): mixed
+    public function update (Request $request, int $id): mixed
     {
         $vacancy = Vacancy::find($id);
-        if (!empty($vacancy)) {
-            $name = $vacancy->name;
 
-            return json_encode([
-                'massage' => 'Вакансия ' . $name . ' успешно обновлена'
+        if (!empty($vacancy)) {
+            try {
+                $data = $request->validate([
+                    'name' => 'nullable|string|min:3|max:255',
+                    'description' => 'nullable|string|min:3|max:65535',
+                    'code' => 'nullable|string|max:255',
+                    'specializations' => 'nullable|string|max:255',
+                    'industry' => 'nullable|string|max:255',
+                    'employment' => 'nullable|string|max:255',
+                    'schedule' => 'nullable|string|max:255',
+                    'experience' => 'nullable|string|max:255',
+                    'education' => 'nullable|string|max:255',
+                    'salary_from' => 'nullable|string|max:255',
+                    'salary_to' => 'nullable|string|max:255',
+                    'currency' => 'nullable|string|max:255',
+                    'place' => 'nullable|string|max:255',
+                    'location' => 'nullable|string|max:255',
+                    'phrases' => 'nullable|string|max:255'
+                ]);
+            } catch (\Throwable $th) {
+                return response()->json([
+                    'message' => 'Ошибка валидации',
+                ], 422);
+            }
+
+            if (!empty($data)) {
+                if (empty($request->name)) {
+                    $data['name'] = $vacancy->name;
+                }
+                if (empty($request->description)) {
+                    $data['description'] = $vacancy->description;
+                }
+            }
+
+            try{
+                if (isset($request->conditions)) {
+                    $relatedFields = array_filter($request->conditions);
+                    $vacancy->conditions()->sync($relatedFields);
+                }
+                if (isset($request->drivers)) {
+                    $relatedFields= array_filter($request->drivers);
+                    $vacancy->drivers()->sync($relatedFields);
+                }
+                if (isset($request->additions)) {
+                    $relatedFields= array_filter($request->additions);
+                    $vacancy->additions()->sync($relatedFields);
+                }
+            } catch (\Throwable $th) {
+                return response()->json([
+                    'message' => 'Ошибка обновления связаных данных',
+                    ], 409);
+            }
+
+            $vacancy->update($data);
+
+            $vacancy = Vacancy::with(['conditions', 'drivers', 'additions'])->find($vacancy->id);
+
+            return response()->json([
+                'massage' => 'Вакансия ' . $vacancy->name . ' успешно обновлена',
+                'data' => $vacancy
             ]);
         } else {
-            return json_encode([
+            return response()->json([
                 'message' => 'Вакансия не найдена'
             ], 404);
         }

@@ -12,6 +12,8 @@ class Driver extends Model
         'name'
     ];
 
+    protected $hidden = ['pivot'];
+
     public function vacancies(): BelongsToMany
     {
         return $this->belongsToMany(Vacancy::class);

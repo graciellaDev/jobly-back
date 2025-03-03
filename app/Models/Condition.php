@@ -10,4 +10,10 @@ class Condition extends Model
         'id',
         'name'
     ];
+
+    protected $hidden = ['pivot'];
+
+    public function vacancies() {
+        return $this->belongsToMany(Vacancy::class);
+    }
 }

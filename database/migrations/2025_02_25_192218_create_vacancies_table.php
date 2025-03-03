@@ -18,15 +18,15 @@ return new class extends Migration
             $table->string('code')->unique()->nullable();
             $table->longText('description')->nullable(false);
             $table->string('specializations')->nullable();
+            $table->string('industry')->nullable();
             $table->string('employment')->nullable();
             $table->string('schedule')->nullable();
             $table->string('experience')->nullable();
             $table->string('education')->nullable();
             $table->string('salary_from')->nullable();
             $table->string('salary_to')->nullable();
-            $table->string('salary')->nullable();
             $table->string('currency')->nullable();
-            $table->string('place')->nullable();
+            $table->foreignId('place')->nullable()->constrained()->onDelete('set null');
             $table->string('location')->nullable();
             $table->text('phrases')->nullable();
         });

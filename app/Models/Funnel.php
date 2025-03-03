@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Executor extends Model
+class Funnel extends Model
 {
     protected $fillable = [
-        'name',
-        'description',
-
+        'id',
+        'name'
     ];
+
+    public $timestamps = false;
 }

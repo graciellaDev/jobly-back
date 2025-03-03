@@ -4,12 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Industry extends Model
+class Addition extends Model
 {
     protected $fillable = [
         'id',
         'name'
     ];
+
     protected $hidden = ['pivot'];
 
     public function vacancies() {
