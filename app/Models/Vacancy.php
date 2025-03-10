@@ -23,7 +23,12 @@ class Vacancy extends Model
         'place',
         'currency',
         'location',
-        'phrases'
+        'phrases',
+        'footerData',
+        'customer_id',
+        'customer_name',
+        'customer_phone',
+        'customer_email'
     ];
 
     protected $casts = [
@@ -54,5 +59,17 @@ class Vacancy extends Model
     public function additions()
     {
         return $this->belongsToMany(Addition::class);
+    }
+
+    public function footerData()
+    {
+        return $this->footerData = [
+            'itemId' => $this->id . ' ID'
+        ];
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
     }
 }

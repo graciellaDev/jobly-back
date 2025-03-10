@@ -4,6 +4,7 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Currency;
+use App\Models\Customer;
 use App\Models\Driver;
 use App\Models\Education;
 use App\Models\Experience;
@@ -16,16 +17,26 @@ use App\Models\Employment;
 
 class VacancyController extends Controller
 {
-    public function index() {
-        $vacancies = Vacancy::select(['id', 'name', 'location'])
-            ->paginate();
+    public function index()
+    {
+        $vacancies = Vacancy::select(['id', 'name as title', 'location as city'])->paginate();
+        $vacancies->getCollection()->transform(function ($vacancy) {
+            $vacancy->footerData = [
+                'sites' => 0,
+                'responsible' => 'Не назначен',
+                'itemId' => $vacancy->id . ' ID'
+            ];
+            return $vacancy;
+        });
+
 
         return response()->json([
             'message' => 'Success',
             'data' => $vacancies
         ]);
     }
-    public function fields() {
+    public function fields()
+    {
         $data = [
             'employments' => Employment::all()->pluck('name', 'id')->all(),
             'schedules' => Schedule::all()->pluck('name', 'id'),
@@ -44,7 +55,8 @@ class VacancyController extends Controller
         ]);
     }
 
-    public function show(int $id) {
+    public function show(int $id)
+    {
         $vacancy = Vacancy::all()->find($id);
         if (!empty($vacancy)) {
             $vacancy['conditions'] = $vacancy->conditions;
@@ -58,7 +70,8 @@ class VacancyController extends Controller
         ]);
     }
 
-    public function create(Request $request) {
+    public function create(Request $request)
+    {
         try {
             $data = $request->validate([
                 'name' => 'required|string|min:3|max:255',
@@ -75,17 +88,21 @@ class VacancyController extends Controller
                 'currency' => 'nullable|string|max:255',
                 'place' => 'nullable|string|max:255',
                 'location' => 'nullable|string|max:255',
-                'phrases' => 'nullable|string|max:255'
+                'phrases' => 'nullable|string|max:255',
+                'customer_id' => 'nullable|numeric',
+                'customer_name' => 'nullable|string',
+                'customer_phone' => 'nullable|regex:/^\+7\d{10}$/',
+                'customer_email' => 'nullable|string'
             ]);
         } catch (\Throwable $th) {
             return response()->json([
                 'message' => 'Ошибка валидации',
             ], 422);
         }
-        $isExists = Vacancy::where('name', $request->name)->exists();
+        $isExists = Vacancy::where('code', $request->code)->exists();
         if ($isExists) {
             return response()->json([
-                'massage' => 'Вакансия с именем ' . $request->name . ' уже существует'
+                'massage' => 'Вакансия с кодом ' . $request->code . ' уже существует'
             ], 409);
         }
 
@@ -93,7 +110,19 @@ class VacancyController extends Controller
         if (!empty($place)) {
             $data['place'] = $place->id;
         }
-        $vacancy = Vacancy::create($data);
+        $customer = Customer::all()->find($request->customer_id);
+        if (!empty($customer)) {
+            $data['customer_id'] = $customer->id;
+        }
+
+        try {
+            $vacancy = Vacancy::create($data);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'massage' => 'Ошибка создания вакансии ' . $request->name
+            ], 500);
+        }
+
         if(isset($request->conditions)) {
             $vacancy->conditions()->attach($request->conditions);
         }
@@ -113,7 +142,8 @@ class VacancyController extends Controller
         ]);
     }
 
-    public function delete (int $id) {
+    public function delete (int $id)
+    {
         $vacancy = Vacancy::find($id);
         if (!empty($vacancy)) {
             $name = $vacancy->name;

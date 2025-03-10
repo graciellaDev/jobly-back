@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('vacancies', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->string('name')->unique()->nullable(false);
-            $table->string('code')->unique()->nullable();
+            $table->string('name')->nullable(false);
+            $table->string('code')->nullable();
             $table->longText('description')->nullable(false);
             $table->string('specializations')->nullable();
             $table->string('industry')->nullable();
@@ -29,6 +29,10 @@ return new class extends Migration
             $table->foreignId('place')->nullable()->constrained()->onDelete('set null');
             $table->string('location')->nullable();
             $table->text('phrases')->nullable();
+            $table->foreignId('customer_id')->nullable()->constrained()->onDelete('set null');
+            $table->string('customer_name')->nullable();
+            $table->string('customer_email')->nullable();
+            $table->string('customer_phone')->nullable();
         });
     }
 

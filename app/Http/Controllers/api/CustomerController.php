@@ -174,7 +174,8 @@ class CustomerController extends Controller
             ]
         ]);
     }
-    public function regSuccess(int $id, Request $request): RedirectResponse {
+    public function regSuccess(int $id, Request $request): RedirectResponse
+    {
         $today = Carbon::today()->subDays(3);
         $key = $request->get('key');
         $user = Customer::all()->find($id)->where('created_at', '>', $today)->first();
@@ -198,7 +199,8 @@ class CustomerController extends Controller
         }
     }
 
-    public function restoreAccess(Request $request) {
+    public function restoreAccess(Request $request)
+    {
         try {
             $request->validate([
                 'email' => 'required|string|email|max:255|unique:users',
@@ -236,7 +238,8 @@ class CustomerController extends Controller
         ]);
     }
 
-    public function restoreSuccess(int $id, Request $request) {
+    public function restoreSuccess(int $id, Request $request)
+    {
         try {
             $request->validate([
                 'key' => 'required|min:6',

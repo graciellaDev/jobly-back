@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Funnel extends Model
+class Stage extends Model
 {
     protected $fillable = [
         'id',
@@ -13,12 +13,10 @@ class Funnel extends Model
 
     public $timestamps = false;
 
-    protected $casts = [
-        'stage' => 'array'
-    ];
+    protected $hidden = ['pivot'];
 
-    public function stages()
+    public function funnels()
     {
-        return $this->belongsToMany(Stage::class);
+        return $this->belongsToMany(Funnel::class);
     }
 }
