@@ -51,7 +51,7 @@ class Vacancy extends Model
         return $this->belongsToMany(Condition::class);
     }
 
-    public function place()
+    public function places()
     {
         return $this->belongsTo(Place::class);
     }

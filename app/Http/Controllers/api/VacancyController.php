@@ -106,10 +106,7 @@ class VacancyController extends Controller
             ], 409);
         }
 
-        $place = Place::all()->find($request->place);
-        if (!empty($place)) {
-            $data['place'] = $place->id;
-        }
+        unset($data['place']);
         $customer = Customer::all()->find($request->customer_id);
         if (!empty($customer)) {
             $data['customer_id'] = $customer->id;
@@ -131,6 +128,13 @@ class VacancyController extends Controller
         }
         if(isset($request->drivers)) {
             $vacancy->drivers()->attach($request->drivers);
+        }
+        if(isset($request->place)) {
+            $place = Place::all()->find($request->place);
+            if (!empty($place)) {
+                $vacancy->places = $request->place;
+                $vacancy->save();
+            }
         }
 
         $vacancy = Vacancy::with(['conditions', 'drivers', 'additions'])->find($vacancy->id);
