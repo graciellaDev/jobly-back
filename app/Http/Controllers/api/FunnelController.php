@@ -148,6 +148,8 @@ class FunnelController extends Controller
     }
 
     public function indexStage(int $id) {
+        $fixStages = Stage::all()->where('fixed', 1)->toArray();
+
         $funnel = Funnel::find($id);
         if (empty($funnel)) {
             return response()->json([
@@ -157,7 +159,7 @@ class FunnelController extends Controller
 
         return response()->json([
             'message' => 'Success',
-            'data' => $funnel->stages->toArray()
+            'data' => array_merge($fixStages, $funnel->stages->toArray())
         ]);
     }
 }
