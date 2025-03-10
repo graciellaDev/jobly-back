@@ -26,7 +26,7 @@ return new class extends Migration
             $table->string('salary_from')->nullable();
             $table->string('salary_to')->nullable();
             $table->string('currency')->nullable();
-            $table->foreignId('place')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('places')->nullable()->constrained()->onDelete('set null');
             $table->string('location')->nullable();
             $table->text('phrases')->nullable();
             $table->foreignId('customer_id')->nullable()->constrained()->onDelete('set null');
