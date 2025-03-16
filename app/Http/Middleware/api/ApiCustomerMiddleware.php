@@ -16,12 +16,12 @@ class ApiCustomerMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!$request->hasCookie('auth_token')) {
+        if (!$request->hasCookie('auth_user')) {
             return response()->json([
                 'message' => 'Unauthorized'
             ], 401);
         } else {
-            $authToken = request()->cookie('auth_token');
+            $authToken = request()->cookie('auth_user');
             $customer = Customer::where('auth_token', $authToken)->first();
             if (empty($customer)) {
                 return response()->json([
