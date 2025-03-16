@@ -17,9 +17,11 @@ use App\Models\Employment;
 
 class VacancyController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $vacancies = Vacancy::select(['id', 'name as title', 'location as city'])->paginate();
+        $customerId = $request->attributes->get('customer_id');
+//        var_dump(Vacancy::where('customer_id', $customerId)->select(['id', 'name as title', 'location as city'])->paginate());
+        $vacancies = Vacancy::where('customer_id', $customerId)->select(['id', 'name as title', 'location as city'])->paginate();
         $vacancies->getCollection()->transform(function ($vacancy) {
             $vacancy->footerData = [
                 'sites' => 0,
@@ -55,9 +57,10 @@ class VacancyController extends Controller
         ]);
     }
 
-    public function show(int $id)
+    public function show(Request $request, int $id)
     {
-        $vacancy = Vacancy::all()->find($id);
+        $customerId = $request->attributes->get('customer_id');
+        $vacancy = Vacancy::where('customer_id', $customerId)->find($id);
         if (!empty($vacancy)) {
             $vacancy['conditions'] = $vacancy->conditions;
             $vacancy['drivers'] = $vacancy->drivers;
