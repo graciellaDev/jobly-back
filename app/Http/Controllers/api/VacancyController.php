@@ -4,7 +4,6 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Currency;
-use App\Models\Customer;
 use App\Models\Driver;
 use App\Models\Education;
 use App\Models\Experience;
@@ -110,10 +109,7 @@ class VacancyController extends Controller
         }
 
         unset($data['place']);
-        $customer = Customer::all()->find($request->customer_id);
-        if (!empty($customer)) {
-            $data['customer_id'] = $customer->id;
-        }
+        $data['customer_id'] = $request->attributes->get('customer_id');
 
         try {
             $vacancy = Vacancy::create($data);
@@ -149,9 +145,10 @@ class VacancyController extends Controller
         ]);
     }
 
-    public function delete (int $id)
+    public function delete (Request $request, int $id)
     {
-        $vacancy = Vacancy::find($id);
+        $customerId = $request->attributes->get('customer_id');
+        $vacancy = Vacancy::where('customer_id', $customerId)->find($id);
         if (!empty($vacancy)) {
             $name = $vacancy->name;
             $vacancy->delete();
@@ -171,7 +168,8 @@ class VacancyController extends Controller
 
     public function update (Request $request, int $id): mixed
     {
-        $vacancy = Vacancy::find($id);
+        $customerId = $request->attributes->get('customer_id');
+        $vacancy = Vacancy::where('customer_id', $customerId)->find($id);
 
         if (!empty($vacancy)) {
             try {

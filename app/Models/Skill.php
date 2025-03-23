@@ -4,10 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Executor extends Model
+class Skill extends Model
 {
     protected $fillable = [
-        'name',
-        'description',
+        'name'
     ];
 }

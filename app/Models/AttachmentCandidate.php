@@ -4,10 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Executor extends Model
+class AttachmentCandidate extends Model
 {
     protected $fillable = [
-        'name',
-        'description',
+        'link',
+        'candidate_id'
     ];
 }

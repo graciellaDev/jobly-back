@@ -4,10 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Executor extends Model
+class CustomFieldType extends Model
 {
     protected $fillable = [
         'name',
-        'description',
+        'multiply'
     ];
 }

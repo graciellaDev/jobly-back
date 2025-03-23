@@ -15,7 +15,7 @@ class Vacancy extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        var_dump('dgdgd');
+
         return [
             'id' => $this->id,
             'created_at' => $this->created_at,
