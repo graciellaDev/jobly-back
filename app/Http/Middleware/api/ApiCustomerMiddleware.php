@@ -16,7 +16,7 @@ class ApiCustomerMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!$request->hasCookie('auth_user')) {
+        if (!$request->header('X-Auth-User')) {
 
             return response()->json([
                 'message' => 'Unauthorized'
