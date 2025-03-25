@@ -22,7 +22,8 @@ class ApiCustomerMiddleware
                 'message' => 'Unauthorized'
             ], 401);
         } else {
-            $authToken = request()->cookie('auth_user');
+//            $authToken = request()->cookie('auth_user');
+            $authToken = $request->header('X-Auth-User');
             $customer = Customer::where('auth_token', $authToken)->first();
 
             if (empty($customer)) {
