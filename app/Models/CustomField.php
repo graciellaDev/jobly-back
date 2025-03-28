@@ -18,4 +18,9 @@ class CustomField extends Model
     {
         return $this->belongsTo(CustomFieldType::class);
     }
+
+    public function canditates()
+    {
+        return $this->belongsToMany(Candidate::class)->withPivot('name');
+    }
 }

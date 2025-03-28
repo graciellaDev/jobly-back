@@ -9,4 +9,9 @@ class Tag extends Model
     protected $fillable = [
         'name'
     ];
+
+    public function candidates()
+    {
+        return $this->belongsToMany(Candidate::class);
+    }
 }

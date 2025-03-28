@@ -32,9 +32,9 @@ class Vacancy extends Model
     ];
 
     protected $casts = [
-        'industry' => 'array',
-        'condition' => 'array',
-        'driver' => 'array'
+        'additions' => 'array',
+        'conditions' => 'array',
+        'drivers' => 'array'
     ];
 
     public $timestamps = true;

@@ -37,7 +37,7 @@ class Candidate extends Model
 
     public  function customFields()
     {
-        return $this->belongsToMany(CustomField::class);
+        return $this->belongsToMany(CustomField::class)->withPivot('name');
     }
 
     public function skills()

@@ -11,9 +11,11 @@ class CandidateController extends Controller
     public function index(Request $request)
     {
         $customerId = $request->attributes->get('customer_id');
-        $candidates = Candidate::with(['tags', 'customFields', 'skills', 'attachments'])
-            ->where('customer_id', $customerId)
-            ->paginate();
+        $candidates = Candidate::with('customFields')->get();
+//        where('customer_id', $customerId)
+//
+//            ->paginate();
+//        ->get();
 
         return response()->json([
             'message' => 'Success',

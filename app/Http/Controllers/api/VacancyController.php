@@ -74,6 +74,7 @@ class VacancyController extends Controller
 
     public function create(Request $request)
     {
+        $customerId = $request->attributes->get('customer_id');
         try {
             $data = $request->validate([
                 'name' => 'required|string|min:3|max:255',
@@ -88,7 +89,7 @@ class VacancyController extends Controller
                 'salary_from' => 'nullable|string|max:255',
                 'salary_to' => 'nullable|string|max:255',
                 'currency' => 'nullable|string|max:255',
-                'place' => 'nullable|string|max:255',
+                'place' => 'nullable|numeric|max:255',
                 'location' => 'nullable|string|max:255',
                 'phrases' => 'nullable|string|max:255',
                 'customer_id' => 'nullable|numeric',
@@ -101,10 +102,18 @@ class VacancyController extends Controller
                 'message' => 'Ошибка валидации',
             ], 422);
         }
-        $isExists = Vacancy::where('code', $request->code)->exists();
+        $isExists = Vacancy::where('code', $request->code)->where('customer_id', $customerId)->exists();
+
         if ($isExists) {
             return response()->json([
                 'massage' => 'Вакансия с кодом ' . $request->code . ' уже существует'
+            ], 409);
+        }
+
+        $isExists = Vacancy::where('name', $request->name)->where('customer_id', $customerId)->exists();
+        if ($isExists) {
+            return response()->json([
+                'massage' => 'Вакансия с названием ' . $request->name . ' уже существует'
             ], 409);
         }
 
@@ -136,8 +145,15 @@ class VacancyController extends Controller
             }
         }
 
-        $vacancy = Vacancy::with(['conditions', 'drivers', 'additions'])->find($vacancy->id);
+        $place = Place::find($vacancy->places);
+        $vacancy->place = $place;
+        $vacancy->makeHidden('places');
 
+        $conditions = Condition::whereIn('id', $request->conditions)->get();
+        $vacancy->conditions = $conditions->toArray();
+
+        $drivers = Driver::whereIn('id', $request->drivers)->get();
+        $vacancy->drivers = $drivers;
 
         return response()->json([
             'message' => 'Вакансия ' . $request->name . ' успешно создана',
@@ -196,6 +212,10 @@ class VacancyController extends Controller
                 ], 422);
             }
 
+            if (isset($request->place)) {
+                $data['places'] = $data['place'];
+                unset($data['place']);
+            }
             if (!empty($data)) {
                 if (empty($request->name)) {
                     $data['name'] = $vacancy->name;
@@ -205,28 +225,40 @@ class VacancyController extends Controller
                 }
             }
 
+            if(isset($request->place)) {
+                $place = Place::all()->find($request->place);
+                if (!empty($place)) {
+                    $vacancy->places = $request->place;
+                }
+            }
+            $vacancy->update($data);
+
+            $place = Place::find($vacancy->places);
+            $vacancy->place = $place;
+            $vacancy->makeHidden('places');
+
             try{
                 if (isset($request->conditions)) {
-                    $relatedFields = array_filter($request->conditions);
-                    $vacancy->conditions()->sync($relatedFields);
+                    $relatedFields = array_map(fn($el) => intval($el), $request->conditions);
+
+                    var_dump($vacancy);
                 }
-                if (isset($request->drivers)) {
-                    $relatedFields= array_filter($request->drivers);
-                    $vacancy->drivers()->sync($relatedFields);
-                }
-                if (isset($request->additions)) {
-                    $relatedFields= array_filter($request->additions);
-                    $vacancy->additions()->sync($relatedFields);
-                }
+//                if (isset($request->drivers)) {
+//                    $relatedFields = array_map(fn($el) => intval($el), $request->drivers);
+//                    $vacancy->drivers()->sync($relatedFields);
+//                }
+//                if (isset($request->additions)) {
+//                    $relatedFields= array_filter($request->additions);
+//                    $vacancy->additions()->sync($relatedFields);
+//                }
             } catch (\Throwable $th) {
+
                 return response()->json([
                     'message' => 'Ошибка обновления связаных данных',
                     ], 409);
             }
 
-            $vacancy->update($data);
-
-            $vacancy = Vacancy::with(['conditions', 'drivers', 'additions'])->find($vacancy->id);
+//            $vacancy = Vacancy::with(['conditions', 'drivers', 'additions'])->find($vacancy->id);
 
             return response()->json([
                 'massage' => 'Вакансия ' . $vacancy->name . ' успешно обновлена',
