@@ -243,7 +243,6 @@ class VacancyController extends Controller
                 if (isset($request->conditions)) {
                     $relatedFields = array_map(fn($el) => intval($el), $request->conditions);
 
-                    var_dump($vacancy);
                 }
 //                if (isset($request->drivers)) {
 //                    $relatedFields = array_map(fn($el) => intval($el), $request->drivers);
