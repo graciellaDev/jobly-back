@@ -261,7 +261,7 @@ class VacancyController extends Controller
 //            $vacancy = Vacancy::with(['conditions', 'drivers', 'additions'])->find($vacancy->id);
 
             return response()->json([
-                'massage' => 'Вакансия ' . $vacancy->name . ' успешно обновлена',
+                'message' => 'Вакансия ' . $vacancy->name . ' успешно обновлена',
                 'data' => $vacancy
             ]);
         } else {
