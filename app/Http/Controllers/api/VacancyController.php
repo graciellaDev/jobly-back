@@ -64,6 +64,8 @@ class VacancyController extends Controller
             $vacancy['conditions'] = $vacancy->conditions;
             $vacancy['drivers'] = $vacancy->drivers;
             $vacancy['additions'] = $vacancy->additions;
+            $vacancy['place'] = $vacancy->places;
+            unset($vacancy['places']);
         }
 
         return json_encode([
