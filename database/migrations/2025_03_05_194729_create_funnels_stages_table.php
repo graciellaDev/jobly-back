@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('funnel_id');
             $table->unsignedBigInteger('stage_id');
+            $table->foreignId('customer_id')->nullable()->constrained()->onDelete('set null');
 
             $table->foreign('funnel_id')->references('id')->on('funnels')->onDelete('cascade');
             $table->foreign('stage_id')->references('id')->on('stages')->onDelete('cascade');

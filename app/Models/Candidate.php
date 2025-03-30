@@ -54,4 +54,14 @@ class Candidate extends Model
     {
         return $this->belongsToMany(CustomField::class);
     }
+
+    public function funnelStages()
+    {
+        return $this->belongsTo(FunnelStage::class, 'candidate_funnel_stage', 'candidate_id', 'funnel_stage_id');
+    }
+
+    public function vacancy()
+    {
+        return $this->belongsTo(Vacancy::class);
+    }
 }

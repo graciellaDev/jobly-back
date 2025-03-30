@@ -67,4 +67,9 @@ class Vacancy extends Model
     {
         return $this->belongsTo(Customer::class);
     }
+
+    public function candidates()
+    {
+        return $this->belongsTo(Candidate::class);
+    }
 }

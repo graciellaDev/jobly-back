@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 
 class CandidateController extends Controller
 {
+    private int $defaultStage = 1;
+    private int $defaultFunnel = 1;
     public function index(Request $request)
     {
         $customerId = $request->attributes->get('customer_id');
@@ -147,21 +149,22 @@ class CandidateController extends Controller
         $customerId = $request->attributes->get('customer_id');
         $candidate->customer = $customerId;
 
-        if(isset($request->skills)) {
-            $candidate->skills()->attach($request->skills);
-        }
+//        if(isset($request->skills)) {
+//            $candidate->skills()->attach($request->skills);
+//        }
 
-        if(isset($request->tags)) {
-            $candidate->skills()->attach($request->tags);
-        }
+//        if(isset($request->tags)) {
+//            $candidate->skills()->attach($request->tags);
+//        }
+//
+//        if(isset($request->customFields)) {
+//            $candidate->customFields()->attach($request->customFields);
+//        }
+//
+//        if(isset($request->attachments)) {
+//            $candidate->attachments()->attach($request->attachments);
+//        }
 
-        if(isset($request->customFields)) {
-            $candidate->customFields()->attach($request->customFields);
-        }
-
-        if(isset($request->attachments)) {
-            $candidate->attachments()->attach($request->attachments);
-        }
 
         return response()->json([
             'message' => 'Кандидат ' . $data['name'] . ' успешно создан',
