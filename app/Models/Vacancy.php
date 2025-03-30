@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Vacancy extends Model
@@ -20,7 +21,7 @@ class Vacancy extends Model
         'education',
         'salary_from',
         'salary_to',
-        'place',
+        'places',
         'currency',
         'location',
         'phrases',
@@ -28,37 +29,31 @@ class Vacancy extends Model
         'customer_id',
         'customer_name',
         'customer_phone',
-        'customer_email'
+        'customer_email',
     ];
 
-    protected $casts = [
-        'additions' => 'array',
-        'conditions' => 'array',
-        'drivers' => 'array'
-    ];
-
-    public $timestamps = true;
-
-    public function industries() {
-        return $this->belongsToMany(Industry::class);
+    public function drivers(): BelongsToMany
+    {
+        return $this->belongsToMany(Driver::class, 'driver_vacancy', 'vacancy_id', 'driver_id');
     }
 
-    public function drivers() {
-        return $this->belongsToMany(Driver::class);
+    /**
+     * @return BelongsToMany
+     */
+    public function conditions(): BelongsToMany
+    {
+
+        return $this->belongsToMany(Condition::class, 'condition_vacancy', 'vacancy_id', 'condition_id');
     }
 
-    public function conditions() {
-        return $this->belongsToMany(Condition::class);
-    }
-
-    public function places()
+    public function places(): BelongsTo
     {
         return $this->belongsTo(Place::class);
     }
 
-    public function additions()
+    public function additions(): BelongsToMany
     {
-        return $this->belongsToMany(Addition::class);
+        return $this->belongsToMany(Addition::class, 'addition_vacancy', 'vacancy_id');
     }
 
     public function footerData()
@@ -68,7 +63,7 @@ class Vacancy extends Model
         ];
     }
 
-    public function customer()
+    public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
     }

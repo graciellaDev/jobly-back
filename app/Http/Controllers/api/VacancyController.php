@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Addition;
+use App\Models\ConditionVacancy;
 use App\Models\Currency;
 use App\Models\Driver;
+use App\Models\DriverVacancy;
 use App\Models\Education;
 use App\Models\Experience;
 use App\Models\Condition;
@@ -13,6 +16,7 @@ use App\Models\Schedule;
 use App\Models\Vacancy;
 use Illuminate\Http\Request;
 use App\Models\Employment;
+use App\Models\AdditionVacancy;
 
 class VacancyController extends Controller
 {
@@ -60,10 +64,20 @@ class VacancyController extends Controller
     {
         $customerId = $request->attributes->get('customer_id');
         $vacancy = Vacancy::where('customer_id', $customerId)->find($id);
+
         if (!empty($vacancy)) {
-            $vacancy['conditions'] = $vacancy->conditions;
-            $vacancy['drivers'] = $vacancy->drivers;
-            $vacancy['additions'] = $vacancy->additions;
+            $conditions = ConditionVacancy::all()->where('vacancy_id', $id)->pluck(['condition_id']);
+            $conditions = Condition::whereIn('id', $conditions)->get();
+            $vacancy['conditions'] = $conditions;
+
+            $drivers = DriverVacancy::all()->where('vacancy_id', $id)->pluck(['driver_id']);
+            $drivers = Driver::whereIn('id', $drivers)->get();
+            $vacancy['drivers'] = $drivers;
+
+            $additions = AdditionVacancy::all()->where('vacancy_id', $id)->pluck(['addition_id']);
+            $additions = Addition::whereIn('id', $additions)->get();
+            $vacancy['additions'] = $additions;
+
             $vacancy['place'] = $vacancy->places;
             unset($vacancy['places']);
         }
@@ -119,6 +133,7 @@ class VacancyController extends Controller
             ], 409);
         }
 
+        $data['places'] = $data['place'];
         unset($data['place']);
         $data['customer_id'] = $request->attributes->get('customer_id');
 
@@ -130,32 +145,32 @@ class VacancyController extends Controller
             ], 500);
         }
 
-        if(isset($request->conditions)) {
-            $vacancy->conditions()->attach($request->conditions);
-        }
-        if(isset($request->additions)) {
-            $vacancy->additions()->attach($request->additions);
-        }
-        if(isset($request->drivers)) {
-            $vacancy->drivers()->attach($request->drivers);
-        }
         if(isset($request->place)) {
             $place = Place::all()->find($request->place);
             if (!empty($place)) {
                 $vacancy->places = $request->place;
-                $vacancy->save();
             }
+        }
+
+        if(isset($request->conditions)) {
+            $vacancy->conditions()->attach($request->conditions);
+            $conditions = Condition::whereIn('id', $request->conditions)->get();
+            $vacancy->conditions = $conditions->toArray();
+        }
+        if(isset($request->additions)) {
+            $vacancy->additions()->attach($request->additions);
+            $drivers = Driver::whereIn('id', $request->drivers)->get();
+            $vacancy->drivers = $drivers;
+        }
+        if(isset($request->drivers)) {
+            $vacancy->drivers()->attach($request->drivers);
+            $additions = Addition::whereIn('id', $request->additions)->get();
+            $vacancy->additions = $additions;
         }
 
         $place = Place::find($vacancy->places);
         $vacancy->place = $place;
         $vacancy->makeHidden('places');
-
-        $conditions = Condition::whereIn('id', $request->conditions)->get();
-        $vacancy->conditions = $conditions->toArray();
-
-        $drivers = Driver::whereIn('id', $request->drivers)->get();
-        $vacancy->drivers = $drivers;
 
         return response()->json([
             'message' => 'Вакансия ' . $request->name . ' успешно создана',
@@ -170,9 +185,6 @@ class VacancyController extends Controller
         if (!empty($vacancy)) {
             $name = $vacancy->name;
             $vacancy->delete();
-            $vacancy->conditions()->detach();
-            $vacancy->additions()->detach();
-            $vacancy->drivers()->detach();
 
             return response()->json([
                 'massage' => 'Вакансия ' . $name . ' успешно удалена'
@@ -239,21 +251,42 @@ class VacancyController extends Controller
             $vacancy->place = $place;
             $vacancy->makeHidden('places');
 
+
             try{
                 if (isset($request->conditions)) {
                     $relatedFields = array_map(fn($el) => intval($el), $request->conditions);
-
+                    $vacancy->conditions()->detach();
+                    $vacancy->conditions()->sync($relatedFields);
+                    $conditions = Condition::whereIn('id', $relatedFields)->get();
+                } else {
+                    $conditions = ConditionVacancy::all()->where('vacancy_id', $id)->pluck(['condition_id']);
+                    $conditions = Condition::whereIn('id', $conditions)->get();
                 }
-//                if (isset($request->drivers)) {
-//                    $relatedFields = array_map(fn($el) => intval($el), $request->drivers);
-//                    $vacancy->drivers()->sync($relatedFields);
-//                }
-//                if (isset($request->additions)) {
-//                    $relatedFields= array_filter($request->additions);
-//                    $vacancy->additions()->sync($relatedFields);
-//                }
-            } catch (\Throwable $th) {
+                    $vacancy['conditions'] = $conditions;
 
+                if (isset($request->drivers)) {
+                    $relatedFields = array_map(fn($el) => intval($el), $request->drivers);
+                    $vacancy->drivers()->detach();
+                    $vacancy->drivers()->sync($relatedFields);
+                    $drivers = Driver::whereIn('id', $relatedFields)->get();
+                } else {
+                    $drivers = DriverVacancy::all()->where('vacancy_id', $id)->pluck(['driver_id']);
+                    $drivers = Driver::whereIn('id', $drivers)->get();
+                }
+                $vacancy['drivers'] = $drivers;
+
+                if (isset($request->additions)) {
+                    $relatedFields= array_map(fn($el) => intval($el), $request->additions);
+                    $vacancy->additions()->detach();
+                    $vacancy->additions()->sync($relatedFields);
+                    $additions = Addition::whereIn('id', $relatedFields)->get();
+                } else {
+                    $additions = DriverVacancy::all()->where('vacancy_id', $id)->pluck(['addition_id']);
+                    $additions = Driver::whereIn('id', $additions)->get();
+                }
+                $vacancy['additions'] = $additions;
+            } catch (\Throwable $th) {
+                var_dump($th->getMessage());
                 return response()->json([
                     'message' => 'Ошибка обновления связаных данных',
                     ], 409);

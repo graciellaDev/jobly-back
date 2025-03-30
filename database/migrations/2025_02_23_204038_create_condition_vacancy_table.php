@@ -12,12 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('condition_vacancy', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('vacancy_id');
-            $table->unsignedBigInteger('condition_id');
+//            $table->unsignedBigInteger('vacancy_id');
+//            $table->unsignedBigInteger('condition_id');
+//            $table->timestamps();
 
-            $table->foreign('vacancy_id')->references('id')->on('vacancies')->onDelete('cascade');
-            $table->foreign('condition_id')->references('id')->on('conditions')->onDelete('cascade');
+//            $table->foreignId('condition_id')->references('id')->on('conditions')->onDelete('cascade');
+//            $table->foreignId('vacancy_id')->references('id')->on('vacancies')->onDelete('cascade');
+
+            $table->id();
+            $table->foreignId('condition_id')->constrained()->onDelete('cascade');
+            $table->foreignId('vacancy_id')->constrained()->onDelete('cascade');
         });
     }
 

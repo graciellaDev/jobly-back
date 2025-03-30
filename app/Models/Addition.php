@@ -11,6 +11,8 @@ class Addition extends Model
         'name'
     ];
 
+    public $timestamps = false;
+
     protected $hidden = ['pivot'];
 
     public function vacancies() {

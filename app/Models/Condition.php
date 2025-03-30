@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Condition extends Model
 {
@@ -11,9 +12,10 @@ class Condition extends Model
         'name'
     ];
 
-//    protected $hidden = ['pivot'];
+    public $timestamps = false;
 
-    public function vacancies() {
-        return $this->belongsToMany(Vacancy::class);
+    public function vacancies(): BelongsToMany
+    {
+        return $this->belongsToMany(Vacancy::class, 'condition_vacancy', 'condition_id', 'vacancy_id');;
     }
 }
