@@ -102,13 +102,15 @@ class CustomerController extends Controller
     public function register(Request $request)
     {
         try {
-            $request->validate([
+            $data = $request->validate([
                 'name' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:users',
                 'login' => 'required|string|max:60',
                 'phone' => 'regex:/^\+7\d{10}$/',
                 'password' => 'required|string|min:6',
-                'password_confirmation' => 'required|string|min:6'
+                'password_confirmation' => 'required|string|min:6',
+                'site' => 'nullable|string|max:50',
+                'from' => 'nullable|string|max:255'
             ]);
         } catch (\Throwable $th) {
             return response()->json([
@@ -144,15 +146,9 @@ class CustomerController extends Controller
 
         $customHash = Str::random(16) . time();
         $authToken = Hash::make($customHash);
-        $user = Customer::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'login' => $request->login,
-            'password' => Hash::make($request->password),
-            'phone' => $request->phone,
-            'role' => 'customer',
-            'site' => $request->site ?? $request->site,
-        ]);
+        $data['password'] = Hash::make($request->password);
+        $data['from_source'] = $data['from'];
+        $user = Customer::create($data);
 
 
         $rootUrl = $request->root();
@@ -170,7 +166,8 @@ class CustomerController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'phone' => $user->phone,
-                'site' => $user->site
+                'site' => $user->site,
+                'from' => $user->from_source
             ]
         ]);
     }

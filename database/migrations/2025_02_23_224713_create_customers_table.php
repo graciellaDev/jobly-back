@@ -18,6 +18,8 @@ return new class extends Migration {
             $table->string('login')->unique();
             $table->string('password')->unique();
             $table->string('phone')->unique();
+            $table->string('site')->nullable();
+            $table->string('from')->nullable();
             $table->unsignedBigInteger('role_id')->default(1);
             $table->foreign('role_id')->references('id')->on('roles');
             $table->string('auth_token')->nullable();
