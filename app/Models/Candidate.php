@@ -7,20 +7,26 @@ use Illuminate\Database\Eloquent\Model;
 class Candidate extends Model
 {
     protected $fillable = [
-        'name',
+        'firstname',
+        'surname',
+        'patronymic',
         'email',
         'phone',
-        'job',
         'location',
+        'stage_id',
         'phone',
-        'description',
+        'quickInfo',
         'education',
+        'icon',
         'link',
-        'vacancy',
+        'vacancy_id',
+        'customer_id',
         'experience',
         'telegram',
         'skype',
         'imagePath',
+        'isPng',
+        'resume',
         'resumePath',
         'coverPath',
     ];
@@ -47,7 +53,7 @@ class Candidate extends Model
 
     public function attachments()
     {
-        return $this->belongsToMany(AttachmentCandidate::class);
+        return $this->hasMany(AttachmentCandidate::class);
     }
 
     public function fields()
@@ -55,9 +61,9 @@ class Candidate extends Model
         return $this->belongsToMany(CustomField::class);
     }
 
-    public function funnelStages()
+    public function stage()
     {
-        return $this->belongsTo(FunnelStage::class, 'candidate_funnel_stage', 'candidate_id', 'funnel_stage_id');
+        return $this->belongsTo(Stage::class, 'stages');
     }
 
     public function vacancy()

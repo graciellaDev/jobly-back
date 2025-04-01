@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('attachment_candidate', function (Blueprint $table) {
+        Schema::create('attachment_candidates', function (Blueprint $table) {
             $table->id();
             $table->string('link');
             $table->foreignId('candidate_id')->references('id')->on('candidates');
@@ -23,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('attachment_candidate');
+        Schema::dropIfExists('attachment_candidates');
     }
 };

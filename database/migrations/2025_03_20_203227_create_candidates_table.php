@@ -14,22 +14,27 @@ return new class extends Migration
         Schema::create('candidates', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->string('name', 100);
-            $table->string('job', 255);
-            $table->string('location', 100);
-            $table->string('phone', 50);
+            $table->string('firstname', 50);
+            $table->string('surname', 50);
+            $table->string('patronymic', 50);
+            $table->string('location', 100)->nullable();
+            $table->string('phone', 50)->nullable();
             $table->string('email', 50);
-            $table->string('description', 255);
-            $table->string('education', 100);
+            $table->string('quickInfo', 255)->nullable();
+            $table->string('education', 100)->nullable();
             $table->string('link', 100)->nullable();
-            $table->string('vacancy', 100);
-            $table->string('experience', 50);
+            $table->string('experience', 50)->nullable();
             $table->string('telegram', 50)->nullable();
             $table->string('skype', 50)->nullable();
             $table->string('imagePath', 50)->nullable();
+            $table->boolean('isPng')->nullable();
+            $table->string('icon', 50)->nullable();
             $table->string('resumePath', 50)->nullable();
+            $table->string('resume', 50)->nullable();
             $table->string('coverPath', 50)->nullable();
-            $table->foreignId('customer_id')->references('id')->on('customers');
+            $table->foreignId('vacancy_id')->constrained()->onDelete('cascade');
+            $table->foreignId('customer_id')->constrained()->onDelete('cascade');
+            $table->foreignId('stage_id')->constrained()->onDelete('cascade');
         });
     }
 
