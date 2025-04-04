@@ -5,24 +5,91 @@ namespace App\Http\Controllers\api;
 use App\Http\Controllers\Controller;
 use App\Models\AttachmentCandidate;
 use App\Models\Candidate;
+use App\Models\CandidateCustomField;
 use App\Models\CandidateSkill;
+use App\Models\CandidateTag;
 use App\Models\Skill;
 use App\Models\Tag;
 use Illuminate\Http\Request;
-use Illuminate\Mail\Attachment;
-
+use App\Models\CustomField;
+use App\Traits\ModelTrait;
+use \Illuminate\Http\JsonResponse;
 class CandidateController extends Controller
 {
+    use ModelTrait;
     private int $defaultStage = 1;
     private int $defaultFunnel = 1;
-    public function index(Request $request)
+
+    private array $validFields = [
+        'firstname' => 'required|string|min:3|max:50',
+        'surname' => 'required|string|min:3|max:50',
+        'patronymic' => 'required|string|min:3|max:50',
+        'email' => 'required|string|max:50',
+        'phone' => 'regex:/^\+7\d{10}$/',
+        'stage_id' => 'nullable|numeric',
+        'location' => 'string|max:100',
+        'quickInfo' => 'string|min:3|max:255',
+        'education' => 'string|max:100',
+        'link' => 'nullable|string|max:255',
+        'vacancy' => 'required|nullable|string|max:100',
+        'experience' => 'string|max:50',
+        'telegram' => 'nullable|string|max:50',
+        'skype' => 'nullable|string|max:50',
+        'icon' => 'nullable|string|max:50',
+        'imagePath' => 'nullable|string|max:50',
+        'isPng' => 'nullable|boolean',
+        'resume' => 'nullable|string|max:50',
+        'resumePath' => 'nullable|string|max:50',
+        'coverPath' => 'nullable|string|max:50',
+    ];
+
+    private array $validUpdateFields = [
+        'firstname' => 'string|min:3|max:50',
+        'surname' => 'string|min:3|max:50',
+        'patronymic' => 'string|min:3|max:50',
+        'email' => 'string|max:50',
+        'phone' => 'regex:/^\+7\d{10}$/',
+        'stage_id' => 'nullable|numeric',
+        'location' => 'string|max:100',
+        'quickInfo' => 'string|min:3|max:255',
+        'education' => 'string|max:100',
+        'link' => 'nullable|string|max:255',
+        'vacancy' => 'nullable|string|max:100',
+        'experience' => 'string|max:50',
+        'telegram' => 'nullable|string|max:50',
+        'skype' => 'nullable|string|max:50',
+        'icon' => 'nullable|string|max:50',
+        'imagePath' => 'nullable|string|max:50',
+        'isPng' => 'nullable|boolean',
+        'resume' => 'nullable|string|max:50',
+        'resumePath' => 'nullable|string|max:50',
+        'coverPath' => 'nullable|string|max:50',
+    ];
+
+    private array $editFields = [
+        'customer_id' => 'customer',
+        'vacancy_id' => 'vacancy',
+        'stage_id' => 'stage'
+    ];
+
+    public function index(Request $request): JsonResponse
     {
         $customerId = $request->attributes->get('customer_id');
-        $candidates = Candidate::with('customFields')->get();
-//        where('customer_id', $customerId)
-//
-//            ->paginate();
-//        ->get();
+        $candidates = Candidate::where('customer_id', $customerId)->paginate();
+        $candidates->getCollection()->transform(function ($candidate) {
+            $this->replaceFields($this->editFields, $candidate);
+
+            $customFields = CandidateCustomField::all()->where('candidate_id', $candidate->id)->pluck(['custom_field_id']);
+            $candidate->customFields = CustomField::whereIn('id', $customFields)->get();
+
+            $skills = CandidateSkill::all()->where('candidate_id', $candidate->id)->pluck('skill_id');
+            $candidate->skills = Skill::whereIn('id', $skills)->get();
+
+            $tags = CandidateTag::all()->where('candidate_id', $candidate->id)->pluck('tag_id');
+            $candidate->tags = Tag::whereIn('id', $tags)->get();
+
+            return $candidate;
+        });
 
         return response()->json([
             'message' => 'Success',
@@ -30,55 +97,50 @@ class CandidateController extends Controller
         ]);
     }
 
-    public function show(Request $request, int $id)
+    public function show(Request $request, int $id): JsonResponse
     {
         $customerId = $request->attributes->get('customer_id');
-        $candidates = Candidate::where('customer_id', $customerId)->find($id);
-        if (!empty($candidates)) {
-            $candidates['tags'] = $candidates->tags;
-            $candidates['customFields'] = $candidates->customFields;
-            $candidates['skills'] = $candidates->attachments;
+        $candidate = Candidate::with('attachments')->where('customer_id', $customerId)->find($id);
+        if (!empty($candidate)) {
+            $this->replaceFields($this->editFields, $candidate);
+
+            $related = CandidateSkill::all()->where('candidate_id', $id)->pluck('skill_id');
+            $candidate['skills'] = Skill::whereIn('id', $related)->get();
+
+            $related = CandidateTag::all()->where('candidate_id', $id)->pluck('tag_id');
+            $candidate['tags'] = Tag::whereIn('id', $related)->get();
+
+            $related = AttachmentCandidate::all()->where('candidate_id', $id)->pluck('attachment_id');
+            $candidate['attachments'] = AttachmentCandidate::whereIn('id', $related)->get();
+
+            $related = CandidateCustomField::all()->where('candidate_id', $id)->pluck('custom_field_id');
+            $candidate['customFields'] = CustomField::whereIn('id', $related)->get();
         } else {
             return response()->json([
                 'message' => 'Кандидата с id = ' . $id . ' не существует',
-                'data' => $candidates
+                'data' => $candidate
             ], 404);
         }
 
         return response()->json([
             'message' => 'Success',
-            'data' => $candidates
+            'data' => $candidate
         ]);
     }
 
-    public function update(Request $request, int $id)
+    public function update(Request $request, int $id): JsonResponse
     {
         $customerId = $request->attributes->get('customer_id');
-        $candidate = Candidate::where('customer_id', $customerId)->with(['fields'])->find($id);
+        $candidate = Candidate::with('attachments')->where('customer_id', $customerId)->find($id);
         if (empty($candidate)) {
             return response()->json([
                 'message' => 'Кандидата с id = ' . $id . ' не существует',
                 'data' => $candidate
             ], 404);
         }
+
         try {
-            $data = $request->validate([
-                'name' => 'nullable|string|min:3|max:255',
-                'email' => 'nullable|string|max:50',
-                'phone' => 'regex:/^\+7\d{10}$/',
-                'job' => 'string|max:255',
-                'location' => 'string|max:100',
-                'description' => 'nullable|string|min:3|max:255',
-                'education' => 'nullable|string|max:100',
-                'link' => 'nullable|string|max:255',
-                'vacancy' => 'nullable|string|max:100',
-                'experience' => 'nullable|string|max:50',
-                'telegram' => 'nullable|string|max:50',
-                'skype' => 'nullable|string|max:50',
-                'imagePath' => 'nullable|string|max:50',
-                'resumePath' => 'nullable|string|max:50',
-                'coverPath' => 'nullable|string|max:50',
-            ]);
+            $data = $request->validate($this->validUpdateFields);
         } catch (\Throwable $th) {
             return response()->json([
                 'message' => 'Ошибка валидации',
@@ -86,12 +148,51 @@ class CandidateController extends Controller
         }
 
         $candidate->update($data);
+        $this->replaceFields($this->editFields, $candidate);
 
-//        if (isset($request->fields)) {
-//            var_dump($request->fields);
-//            $fields= array_filter($request->fields);
-//            $candidate->fields()->sync($fields);
-//        }
+        if(isset($request->skills)) {
+            $related = array_map(fn($el) => intval($el), $request->skills);
+            $candidate->skills()->detach();
+            $candidate->skills()->attach($request->skills);
+        } else {
+            $related = CandidateSkill::all()->where('candidate_id', $id)->pluck('skill_id');
+        }
+        $candidate['skills'] = Skill::whereIn('id', $related)->get();
+
+        if(isset($request->tags)) {
+            $related = array_map(fn($el) => intval($el), $request->tags);
+            $candidate->tags()->detach();
+            $candidate->tags()->attach($request->tags);
+        } else {
+            $related = CandidateTag::all()->where('candidate_id', $id)->pluck('tag_id');
+        }
+        $candidate['tags'] = Tag::whereIn('id', $related)->get();
+
+        if(isset($request->customFields)) {
+            $related = array_map(fn($el) => intval($el), $request->customFields);
+            $candidate->customFields()->detach();
+            $candidate->tags()->attach($request->customFieldss);
+        } else {
+            $related = CandidateCustomField::all()->where('candidate_id', $id)->pluck('custom_field_id');
+        }
+        $candidate['customFields'] = CustomField::whereIn('id', $related)->get();
+
+        if (isset($request->attachments)) {
+            $attachmentsData = [];
+            foreach ($request->attachments as $item) {
+                $attachmentsData[] = ['link' => $item];
+            }
+            $candidate->attachments()->delete();
+            $attachments = [];
+//            var_dump($candidate->attachments->toArray());
+            foreach ($attachmentsData as $data) {
+                $attachments[] = $candidate->attachments()->create($data)->toArray();
+            }
+            $candidate['attachments'] = $attachments;
+//
+//            $candidate->attachments = $candidate->attachments()->saveMany($attachments);
+
+        }
 
         return response()->json([
                 'message' => 'Success',
@@ -99,31 +200,10 @@ class CandidateController extends Controller
             ]);
     }
 
-    public function create(Request $request)
+    public function create(Request $request): JsonResponse
     {
         try {
-            $data = $request->validate([
-                'firstname' => 'required|string|min:3|max:50',
-                'surname' => 'required|string|min:3|max:50',
-                'patronymic' => 'required|string|min:3|max:50',
-                'email' => 'required|string|max:50',
-                'phone' => 'regex:/^\+7\d{10}$/',
-                'stage_id' => 'nullable|numeric',
-                'location' => 'string|max:100',
-                'quickInfo' => 'string|min:3|max:255',
-                'education' => 'string|max:100',
-                'link' => 'nullable|string|max:255',
-                'vacancy' => 'required|nullable|string|max:100',
-                'experience' => 'string|max:50',
-                'telegram' => 'nullable|string|max:50',
-                'skype' => 'nullable|string|max:50',
-                'icon' => 'nullable|string|max:50',
-                'imagePath' => 'nullable|string|max:50',
-                'isPng' => 'nullable|boolean',
-                'resume' => 'nullable|string|max:50',
-                'resumePath' => 'nullable|string|max:50',
-                'coverPath' => 'nullable|string|max:50',
-            ]);
+            $data = $request->validate($this->validFields);
         } catch (\Throwable $th) {
             return response()->json([
                 'message' => 'Ошибка валидации',
@@ -154,6 +234,7 @@ class CandidateController extends Controller
 
         try {
             $candidate = Candidate::create($data);
+
         } catch (\Throwable $th) {
             echo $th->getMessage();
             return response()->json([
@@ -166,8 +247,7 @@ class CandidateController extends Controller
 
         $customerId = $request->attributes->get('customer_id');
         $candidate->customer = $customerId;
-        $candidate->vacancy = $candidate->vacancy_id;
-        $candidate->stage = $candidate->stage_id;
+        $this->replaceFields($this->editFields, $candidate);
         $candidate->makeHidden(['customer_id', 'stage_id', 'vacancy_id']);
 
         if(isset($request->skills)) {
@@ -180,11 +260,12 @@ class CandidateController extends Controller
             $tags = Tag::whereIn('id', $request->tags)->get();
             $candidate->tags = $tags->toArray();
         }
-//
-//        if(isset($request->customFields)) {
-//            $candidate->customFields()->attach($request->customFields);
-//        }
-//
+
+        if(isset($request->customFields)) {
+            $customFields = CustomField::whereIn('id', $request->customFields)->get();
+            $candidate->customFields = $customFields->toArray();
+        }
+
         if(isset($request->attachments)) {
             if (!empty($request->attachments)) {
                 $attachments = [];
@@ -204,5 +285,25 @@ class CandidateController extends Controller
                 . $data['patronymic'] . ' успешно создан',
             'data' => $candidate
         ]);
+    }
+
+    public function delete(Request $request, int $id): JsonResponse
+    {
+        $customerId = $request->attributes->get('customer_id');
+
+        $candidate = Candidate::where('customer_id', $customerId)->find($id);
+        if ($candidate) {
+            $name = $candidate->surname . ' '  . $candidate->firstname . ' ' . $candidate->patronymic;
+            $candidate->attachments()->delete();
+            $candidate->delete();
+
+            return response()->json([
+                'massage' => 'Вакансия ' . $name . ' успешно удалена'
+            ]);
+        } else {
+            return response()->json([
+                'message' => 'Вакансия не найдена'
+            ], 404);
+        }
     }
 }

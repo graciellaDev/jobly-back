@@ -17,4 +17,9 @@ class AttachmentCandidate extends Model
     ];
 
     public $timestamps = false;
+
+    public function candidate()
+    {
+        return $this->belongsTo(Candidate::class);
+    }
 }

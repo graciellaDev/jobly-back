@@ -286,7 +286,7 @@ class VacancyController extends Controller
                 }
                 $vacancy['additions'] = $additions;
             } catch (\Throwable $th) {
-                var_dump($th->getMessage());
+
                 return response()->json([
                     'message' => 'Ошибка обновления связаных данных',
                     ], 409);

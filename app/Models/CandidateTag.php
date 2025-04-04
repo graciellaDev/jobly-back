@@ -4,13 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class CandidateSkill extends Model
+class CandidateTag extends Model
 {
     protected $fillable = [
         'id',
         'candidate_id',
-        'skill_id'
+        'tag_id'
     ];
 
-    protected $table = 'candidate_skill';
+    protected $table = 'candidate_tag';
 }
