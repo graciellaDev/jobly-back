@@ -10,6 +10,8 @@ class Tag extends Model
         'name'
     ];
 
+    public $timestamps = false;
+
     public function candidates()
     {
         return $this->belongsToMany(Candidate::class);
