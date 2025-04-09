@@ -8,9 +8,4 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post('candidates', [CandidateController::class, 'create']);
     Route::put('candidates/{id}', [CandidateController::class, 'update']);
     Route::delete('candidates/{id}', [CandidateController::class, 'delete']);
-
-    Route::get('tags', [TagController::class, 'index']);
-    Route::get('tags/{id}', [TagController::class, 'show']);
-    Route::post('tags', [TagController::class, 'create']);
-    Route::delete('tags/{id}', [TagController::class, 'delete']);
 });
