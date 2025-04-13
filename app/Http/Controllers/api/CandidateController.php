@@ -25,6 +25,7 @@ class CandidateController extends Controller
         'surname' => 'required|string|min:3|max:50',
         'patronymic' => 'required|string|min:3|max:50',
         'email' => 'required|string|max:50',
+        'age' => 'nullable|numeric',
         'phone' => 'regex:/^\+7\d{10}$/',
         'stage_id' => 'nullable|numeric',
         'location' => 'string|max:100',
@@ -48,6 +49,7 @@ class CandidateController extends Controller
         'surname' => 'string|min:3|max:50',
         'patronymic' => 'string|min:3|max:50',
         'email' => 'string|max:50',
+        'age' => 'nullable|numeric',
         'phone' => 'regex:/^\+7\d{10}$/',
         'stage_id' => 'nullable|numeric',
         'location' => 'string|max:100',
@@ -100,7 +102,7 @@ class CandidateController extends Controller
     public function show(Request $request, int $id): JsonResponse
     {
         $customerId = $request->attributes->get('customer_id');
-        $candidate = Candidate::with('attachments')->where('customer_id', $customerId)->find($id);
+        $candidate = Candidate::with(['attachments'])->where('customer_id', $customerId)->find($id);
         if (!empty($candidate)) {
             $this->replaceFields($this->editFields, $candidate);
 
@@ -109,9 +111,6 @@ class CandidateController extends Controller
 
             $related = CandidateTag::all()->where('candidate_id', $id)->pluck('tag_id');
             $candidate['tags'] = Tag::whereIn('id', $related)->get();
-
-            $related = AttachmentCandidate::all()->where('candidate_id', $id)->pluck('attachment_id');
-            $candidate['attachments'] = AttachmentCandidate::whereIn('id', $related)->get();
 
             $related = CandidateCustomField::all()->where('candidate_id', $id)->pluck('custom_field_id');
             $candidate['customFields'] = CustomField::whereIn('id', $related)->get();

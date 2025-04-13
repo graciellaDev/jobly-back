@@ -127,6 +127,10 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        'inviteCandidate' => [
+            'path' => storage_path('logs/invite-candidate.log')
+        ]
+
     ],
 
 ];

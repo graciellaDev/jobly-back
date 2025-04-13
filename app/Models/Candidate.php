@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Candidate extends Model
 {
@@ -11,6 +12,7 @@ class Candidate extends Model
         'surname',
         'patronymic',
         'email',
+        'age',
         'phone',
         'location',
         'stage_id',
@@ -56,7 +58,7 @@ class Candidate extends Model
         return $this->belongsToMany(Skill::class);
     }
 
-    public function attachments()
+    public function attachments(): HasMany
     {
         return $this->hasMany(AttachmentCandidate::class);
     }
