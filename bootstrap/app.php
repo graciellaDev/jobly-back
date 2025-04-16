@@ -25,7 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     ->name('tag.')
                     ->group(base_path('routes/api-tag.php'));
                 Route::middleware('customer-auth')
-                    ->prefix('api')
+                    ->prefix('api/action')
                     ->name('action.')
                     ->group(base_path('routes/api-action.php'));
             });

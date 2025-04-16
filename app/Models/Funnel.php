@@ -19,6 +19,6 @@ class Funnel extends Model
 
     public function stages()
     {
-        return $this->belongsToMany(Stage::class);
+        return $this->belongsToMany(Stage::class, 'funnel_stage', 'funnel_id', 'stage_id');
     }
 }

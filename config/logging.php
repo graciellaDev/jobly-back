@@ -128,7 +128,13 @@ return [
         ],
 
         'inviteCandidate' => [
-            'path' => storage_path('logs/invite-candidate.log')
+            'driver' => 'single',
+            'path' => storage_path('logs/invite_candidate.log')
+        ],
+
+        'stageCandidate' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/stage_candidate.log')
         ]
 
     ],

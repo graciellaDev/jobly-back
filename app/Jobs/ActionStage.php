@@ -2,14 +2,14 @@
 
 namespace App\Jobs;
 
-use App\Mail\register\Success;
+use App\Mail\action\InviteCandidate;
 use App\Models\Candidate;
 use Carbon\Carbon;
-use http\Env\Request;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Mockery\Exception;
 
 class ActionStage implements ShouldQueue
 {
@@ -30,15 +30,21 @@ class ActionStage implements ShouldQueue
      */
     public function handle(): void
     {
-        $this->candidate->stage_id = 2;
-        $this->candidate->save();
-        $dataEmail = [
-            'subject' => 'Приглашение на собеседование',
-            'name' => $this->candidate->name
-        ];
-        Mail::to($this->candidate->email)->send(new Success($dataEmail));
-        echo $this->candidate->email;
-        Log::channel('inviteCandidate')->info('Приглашение кандидата на собеседование', ['time' =>
-            Carbon::now()]);
+        try {
+            $candidate = $this->candidate->toArray();
+            $this->candidate->stage_id = 2;
+            $this->candidate->save();
+            $dataEmail = [
+                'subject' => 'Приглашение на собеседование',
+                'name' => $candidate['surname'] . ' ' . $candidate['firstname'] . ' ' . $candidate['patronymic']
+            ];
+            Mail::to($candidate['email'])->send(new InviteCandidate($dataEmail));
+            Log::channel('inviteCandidate')->info('Приглашение кандидата на собеседование', ['time' =>
+                Carbon::now(), 'candidate' => $candidate['surname'] . ' ' . $candidate['firstname'] . ' ' . $candidate['patronymic']]);
+        } catch (Exception $error) {
+            Log::channel('inviteCandidate')->info('Ошибка задачи - пригласить кандидата', ['time' =>
+                Carbon::now(), 'candidate' => $candidate['surname'] . ' ' . $candidate['firstname'] . ' ' .
+                $candidate['patronymic'], 'error' => $error->getMessage()]);
+        }
     }
 }

@@ -4,12 +4,13 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\ActionStage;
-use App\Mail\register\Success;
+use App\Jobs\MoveStage;
 use App\Models\Candidate;
+use App\Models\Stage;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Http\Resources\Json\JsonResource;
 
 class ActionController extends Controller
 {
@@ -39,123 +40,183 @@ class ActionController extends Controller
             'interval'
         ]
     ];
-    private $times = [
-        1, 10, 30, 60, 180, 720, 1440
+
+    private array $response = [
+        'message' => '',
+        'status' => 200
     ];
-    public function invite(Request $request)
+    private bool $isAction;
+    private int $time;
+    private Candidate $candidate;
+    private int $customerId;
+    private $times = [
+        0, 10, 30, 60, 180, 720, 1440
+    ];
+
+    public function init(Request $request)
     {
-        $customer = $request->attributes->get('customer_id');
+        $this->customerId = $request->attributes->get('customer_id');
+
         try {
             $data = $request->validate($this->validData);
         } catch (\Throwable $th) {
-            return response()->json([
-                'message' => 'Ошибка валидации',
-            ], 422);
+            $this->response['message'] = 'Ошибка валидации';
+            $this->response['status'] = 422;
+            return;
         }
 
-        $candidate = Candidate::with('attachments')->where('customer_id', $customer)->first();
-        if (!$candidate) {
-            return response()->json([
-                'message' => 'Кандидат с id ' . $data['candidate_id'] . ' не найден',
-            ], 409);
+        $this->candidate = Candidate::with('attachments')->where('customer_id', $this->customerId)->first();
+        if (!$this->candidate) {
+            $this->response['message'] = 'Кандидат с id ' . $data['candidate_id'] . ' не найден';
+            $this->response['status'] = 409;
+            return;
         }
-        $arCandidate = $candidate->toArray();
+        $arCandidate = $this->candidate->toArray();
         $condition = '=';
-        $attachments = $candidate->attachments->pluck('link')->toArray();
-        $isAction = false;
+        $attachments = $this->candidate->attachments->pluck('link')->toArray();
+        $this->isAction = false;
 
         switch ($data['conditions']) {
             case 'true':
                 if ($data['field'] == 'attachments' && !isEmpty($attachments)) {
-                    $isAction = true;
+                    $this->isAction = true;
                 } else {
                     if (!is_null($arCandidate[$data['field']])) {
-                        $isAction = true;
+                        $this->isAction = true;
                     }
                 }
                 break;
             case 'false':
                 if ($data['field'] == 'attachments' && isEmpty($attachments)) {
-                    $isAction = true;
+                    $this->isAction = true;
                 } else {
                     if (is_null($arCandidate[$data['field']])) {
-                        $isAction = true;
+                        $this->isAction = true;
                     }
                 }
                 break;
             case '=':
                 if (!isset($data['value'])) {
-                    return response()->json([
-                        'message' => 'Поле значения не заполнено'
-                    ], 409);
+                    $this->response['message'] = 'Поле значения не заполнено';
+                    $this->response['status'] = 409;
+                    return;
                 }
                 if ($data['field'] == 'attachments' && in_array($data['value'], $attachments)) {
-                    $isAction = true;
+                    $this->isAction = true;
                 } else {
                     if ($arCandidate[$data['field']] == $data['value']) {
-                        $isAction = true;
+                        $this->isAction = true;
                     }
                 }
                 break;
             case '!=':
                 if (!isset($data['value'])) {
-                    return response()->json([
-                        'message' => 'Поле значения не заполнено'
-                    ], 409);
+                    $this->response['message'] = 'Поле значения не заполнено';
+                    $this->response['status'] = 409;
+                    return;
                 }
                 if ($data['field'] == 'attachments' && !in_array($data['value'], $attachments)) {
-                    $isAction = true;
+                    $this->isAction = true;
                 } else {
                     if ($arCandidate[$data['field']] != $data['value']) {
-                        $isAction = true;
+                        $this->isAction = true;
                     }
                 }
                 break;
             case '>':
                 if ($data['fieldType'] == 'number') {
                     if ($arCandidate[$data['field']] > intval($data['value'])) {
-                        $isAction = true;
+                        $this->isAction = true;
                     }
                 }
                 break;
             case '<':
                 if ($data['fieldType'] == 'number') {
                     if ($arCandidate[$data['field']] < intval($data['value'])) {
-                        $isAction = true;
+                        $this->isAction = true;
                     }
                 }
                 break;
             case 'interval':
                 if (!isset($data['from']) || !isset($data['to'])) {
-                    return response()->json([
-                        'message' => 'Нет одной из границ интервала'
-                    ], 409);
+                    $this->response['message'] = 'Нет одной из границ интервала';
+                    $this->response['status'] = 409;
+                    return;
                 }
                 if ($arCandidate[$data['field']] >= $data['from'] && $arCandidate[$data['field']] <= $data['to']) {
-                    $isAction = true;
+                    $this->isAction = true;
                 }
                 break;
         }
 
-        if (!$candidate) {
-            return response()->json([
-                'message' => 'Кандидат с id ' . $data['candidate_id'] . ' не найден',
-            ], 409);
+        if (!$this->candidate) {
+            $this->response['message'] = 'Кандидат с id ' . $data['candidate_id'] . ' не найден';
+            $this->response['status'] = 409;
+            return;
         }
 
         if (isset($data['time']) && !in_array($data['time'], $this->times)) {
-            return response()->json([
-                'message' => 'Неверное время',
-            ], 409);
+            $this->response['message'] = 'Неверное время';
+            $this->response['status'] = 409;
+            return;
         }
+        $this->time = intval($data['time']);
+    }
+    public function invite(Request $request)
+    {
+        $this->init($request);
 
-        if ($isAction) {
-//            ActionStage::dispatch($candidate)->delay(Carbon::now()->addMinutes(intval($data['time'])));
-            ActionStage::dispatch($candidate)->delay(now()->addMinutes(intval($data['time'])));
+        if ($this->isAction) {
+            ActionStage::dispatch($this->candidate)->delay(now()->addMinutes($this->time));
         }
 
         return response()->json([
-            'message' => 'Success',
+            'message' => 'Триггер по перемещению кандидата '
+                . $this->candidate->firstname . ' '
+                . $this->candidate->surname . ' '
+                . $this->candidate->patronymic
+                . ' перемещен на этап Подходящие'
+        ]);
+    }
+
+    public function moveStage(Request $request): JsonResponse
+    {
+        $this->init($request);
+        try {
+            $data = $request->validate(['stage_id' => 'required|numeric']);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Ошибка валидации этапа воронки',
+            ], 422);
+        }
+        $stage = Stage::find($data['stage_id']);
+
+        if (is_null($stage)) {
+            return response()->json([
+                'message' => 'Этапа не существует',
+            ], 409);
+        }
+
+        if (!$stage->fixed) {
+            $funnel = Stage::find($data['stage_id'])->funnels()->where('customer_id', $this->customerId)->pluck('funnel_id');
+            if (is_null($funnel)) {
+                return response()->json([
+                    'message' => 'Этапа  не существует',
+                ], 409);
+            }
+        }
+
+        if ($this->isAction) {
+            MoveStage::dispatch($this->candidate, $stage)->delay(now()->addMinutes(0));
+        }
+
+        return response()->json([
+            'message' => 'Триггер по перемещению кандидата '
+                . $this->candidate->firstname . ' '
+                . $this->candidate->surname . ' '
+                . $this->candidate->patronymic . ' '
+                . ' на этап ' .
+                $stage->name . ' запущен',
         ]);
     }
 

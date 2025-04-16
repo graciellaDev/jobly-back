@@ -4,6 +4,7 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Funnel;
+use App\Models\FunnelStage;
 use App\Models\Stage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -60,6 +61,7 @@ class FunnelController extends Controller
     }
 
     public function createStage(Request $request, int $id) {
+        $customer_id = $request->attributes->get('customer_id');
         try {
             $data = $request->validate([
                 'name' => 'required|string|min:3|max:255'
@@ -73,7 +75,7 @@ class FunnelController extends Controller
         $stages = Stage::where('name', $request->name)->where('fixed', true)->get();
         if (!$stages->isEmpty()) {
             return response()->json([
-                'message' => 'Этап ' . $request->name . ' нельзя создавать, он фиксирован'
+                'message' => 'Этап с названием' . $request->name . ' нельзя создавать, он существует и фиксирован'
             ], 409);
         }
 
@@ -83,31 +85,15 @@ class FunnelController extends Controller
                 'message' => 'Воронка не найдена'
             ], 404);
         }
-
-        $stages = Stage::all()->where('name', $request->name)->select(['id']);
-        $stageIds = [];
-
-        if (!$stages->isEmpty()) {
-            foreach ($stages->toArray() as $stage) {
-                $stageIds[] = $stage['id'];
-            }
-
-            $funnelStages = $funnel->stages;
-            if (!empty($funnelStages)) {
-//                $stages = $stages->whereIn($stageIds)->toArray();
-                $stages = $funnelStages->select(['id'])->toArray();
-                foreach ($stages as $stage) {
-                    if (in_array($stage['id'], $stageIds)) {
-                        return response()->json([
-                            'message' => 'Этап ' . $request->name . ' уже существует в воронке ' . $funnel->name
-                        ], 409);
-                    }
-                }
-            }
+        $stages = $funnel->stages()->where('customer_id', $customer_id)->pluck('name')->toArray();
+        if (!is_null($stages) && in_array($request->name, $stages)) {
+            return response()->json([
+                'message' => 'Этап ' . $request->name . ' уже существует в воронке ' . $funnel->name
+            ], 409);
         }
 
         $stages = Stage::create($data);
-        $funnel->stages()->attach($stages->id);
+        $funnel->stages()->sync([$stages->id => ['customer_id' => $customer_id]]);
 
         return response()->json([
             'message' => 'Этап ' . $request->name . ' в воронке ' . $funnel->name . ' успешно создан',
@@ -116,6 +102,7 @@ class FunnelController extends Controller
     }
 
     public function deleteStage(Request $request, int $id) {
+        $customer_id = $request->attributes->get('customer_id');
         try {
             $data = $request->validate([
                 'stage_id' => 'required|numeric'
@@ -132,6 +119,7 @@ class FunnelController extends Controller
                 'message' => 'Воронка не найдена'
             ], 404);
         }
+
         $stage = Stage::find($request->stage_id);
         if (empty($stage)) {
             return response()->json([
@@ -145,12 +133,17 @@ class FunnelController extends Controller
         return response()->json([
             'message' => 'Этап ' . $stageName . ' в воронке ' . $funnel->name . ' успешно удален',
         ]);
+//        return response()->json([
+//            'message' => 'Этап '  . ' в воронке ' . $funnel->name . ' успешно удален',
+//        ]);
     }
 
-    public function indexStage(int $id) {
+    public function indexStage(Request $request, int $id) {
+        $customer_id = $request->attributes->get('customer_id');
         $fixStages = Stage::all()->where('fixed', 1)->toArray();
 
-        $funnel = Funnel::find($id);
+        $funnel = FunnelStage::where('customer_id', $customer_id)->pluck('stage_id')->toArray();
+        $stages = Stage::whereIn('id', $funnel)->get()->toArray();
         if (empty($funnel)) {
             return response()->json([
                 'message' => 'Воронка не найдена'
@@ -159,7 +152,7 @@ class FunnelController extends Controller
 
         return response()->json([
             'message' => 'Success',
-            'data' => array_merge($fixStages, $funnel->stages->toArray())
+            'data' => array_merge($fixStages, $stages)
         ]);
     }
 }
