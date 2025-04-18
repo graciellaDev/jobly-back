@@ -207,7 +207,7 @@ class ActionController extends Controller
         }
 
         if ($this->isAction) {
-            MoveStage::dispatch($this->candidate, $stage)->delay(now()->addMinutes(0));
+            MoveStage::dispatch($this->candidate, $stage)->delay(now()->addMinutes($this->time));
         }
 
         return response()->json([
