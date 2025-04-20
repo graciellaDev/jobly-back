@@ -135,7 +135,23 @@ return [
         'stageCandidate' => [
             'driver' => 'single',
             'path' => storage_path('logs/stage_candidate.log')
+        ],
+
+        'refuseCandidate' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/refuse_candidate.log')
+        ],
+
+        'noCallCandidate' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/no_call_candidate.log')
+        ],
+
+        'emailCandidate' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/email_candidate.log')
         ]
+
 
     ],
 

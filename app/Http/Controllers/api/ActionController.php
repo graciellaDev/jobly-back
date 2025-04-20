@@ -3,14 +3,22 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
-use App\Jobs\ActionStage;
-use App\Jobs\MoveStage;
+use App\Jobs\candidate\Invate;
+use App\Jobs\candidate\MoveStage;
+use App\Jobs\candidate\NoCall;
+use App\Jobs\candidate\Refuse;
+use App\Jobs\candidate\SendEmail;
+use App\Mail\action\NoCallCandidate;
+use App\Mail\action\RefuseCandidate;
 use App\Models\Candidate;
 use App\Models\Stage;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
-use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+
+use function Symfony\Component\String\s;
 
 class ActionController extends Controller
 {
@@ -22,7 +30,7 @@ class ActionController extends Controller
         'from' => 'numeric',
         'to' => 'numeric',
         'conditions' => 'required|in:true,false,=,!=,>,<,interval',
-        'time' => 'numeric|min:1|max:1440'
+        'time' => 'numeric|min:1|max:1440',
     ];
 
     private $fieldConditions = [
@@ -167,7 +175,7 @@ class ActionController extends Controller
         $this->init($request);
 
         if ($this->isAction) {
-            ActionStage::dispatch($this->candidate)->delay(now()->addMinutes($this->time));
+            Invate::dispatch($this->candidate)->onQueue('invite-candidate')->delay(now()->addMinutes($this->time));
         }
 
         return response()->json([
@@ -175,7 +183,7 @@ class ActionController extends Controller
                 . $this->candidate->firstname . ' '
                 . $this->candidate->surname . ' '
                 . $this->candidate->patronymic
-                . ' перемещен на этап Подходящие'
+                . ' в Подходящие'
         ]);
     }
 
@@ -207,7 +215,8 @@ class ActionController extends Controller
         }
 
         if ($this->isAction) {
-            MoveStage::dispatch($this->candidate, $stage)->delay(now()->addMinutes($this->time));
+            MoveStage::dispatch($this->candidate, $stage)->onQueue('move-stage-candidate')->delay(now()->addMinutes
+            ($this->time));
         }
 
         return response()->json([
@@ -220,12 +229,62 @@ class ActionController extends Controller
         ]);
     }
 
-    public function show()
+    public function refuse(Request $request)
     {
-        ActionStage::dispatch()->delay(Carbon::now()->addMinutes(1));
+        $this->init($request);
+
+        if ($this->isAction) {
+            Refuse::dispatch($this->candidate)->onQueue('refuse-candidate')->delay(now()->addMinutes($this->time));
+        }
 
         return response()->json([
-            'message' => 'Еще одно задание отправлено в очередь',
+            'message' => 'Триггер по перемещению кандидата '
+                . $this->candidate->firstname . ' '
+                . $this->candidate->surname . ' '
+                . $this->candidate->patronymic
+                . ' в Отклоненные'
         ]);
+    }
+
+    public function noCall(Request $request)
+    {
+        $this->init($request);
+
+        if ($this->isAction) {
+            NoCall::dispatch($this->candidate)->onQueue('refuse-candidate')->delay(now()->addMinutes($this->time));
+        }
+
+        return response()->json([
+            'message' => 'Триггер по отправке письма кандидату '
+                . $this->candidate->firstname . ' '
+                . $this->candidate->surname . ' '
+                . $this->candidate->patronymic
+        ]);
+    }
+
+    function sendMail(Request $request)
+    {
+        $this->init($request);
+
+        try {
+            $data = $request->validate(['typeEmail' => 'required|string|in:invite,refuse,no-call']);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Ошибка валидации шаблона письма'
+            ], 422);
+        }
+
+        if ($this->isAction) {
+            SendEmail::dispatch($this->candidate, $data['typeEmail'])->onQueue('email-candidate')->delay(now()
+                ->addMinutes($this->time));
+        }
+
+        return response()->json([
+            'message' => 'Триггер по отправке письма кандидату '
+                . $this->candidate->firstname . ' '
+                . $this->candidate->surname . ' '
+                . $this->candidate->patronymic
+        ]);
+
     }
 }

@@ -8,7 +8,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class InviteCandidate extends Mailable
+class RefuseCandidate extends Mailable
 {
     use Queueable, SerializesModels;
     public array $data;
@@ -37,7 +37,7 @@ class InviteCandidate extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.candidate.invite',
+            view: 'emails.candidate.refuse',
         );
     }
 

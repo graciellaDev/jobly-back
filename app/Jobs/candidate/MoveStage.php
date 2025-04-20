@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Jobs\candidate;
 
-use App\Mail\register\Success;
 use App\Models\Candidate;
 use App\Models\Stage;
 use Carbon\Carbon;

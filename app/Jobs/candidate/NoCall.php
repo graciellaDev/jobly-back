@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Jobs\candidate;
 
-use App\Mail\action\InviteCandidate;
+use App\Mail\action\NoCallCandidate;
+use App\Mail\action\RefuseCandidate;
 use App\Models\Candidate;
 use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -11,10 +12,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Mockery\Exception;
 
-class ActionStage implements ShouldQueue
+class NoCall implements ShouldQueue
 {
     use Queueable;
-
     protected Candidate $candidate;
 
     /**
@@ -30,19 +30,18 @@ class ActionStage implements ShouldQueue
      */
     public function handle(): void
     {
+        $candidate = $this->candidate->toArray();
         try {
-            $candidate = $this->candidate->toArray();
-            $this->candidate->stage_id = 2;
-            $this->candidate->save();
             $dataEmail = [
-                'subject' => 'Приглашение на собеседование',
+                'subject' => 'Не смогли дозвониться',
                 'name' => $candidate['surname'] . ' ' . $candidate['firstname'] . ' ' . $candidate['patronymic']
             ];
-            Mail::to($candidate['email'])->send(new InviteCandidate($dataEmail));
-            Log::channel('inviteCandidate')->info('Приглашение кандидата на собеседование', ['time' =>
+
+            Mail::to($candidate['email'])->send(new NoCallCandidate($dataEmail));
+            Log::channel('noCallCandidate')->info('Не смогли дозвониться кандидату', ['time' =>
                 Carbon::now(), 'candidate' => $candidate['surname'] . ' ' . $candidate['firstname'] . ' ' . $candidate['patronymic']]);
         } catch (Exception $error) {
-            Log::channel('inviteCandidate')->info('Ошибка задачи - пригласить кандидата', ['time' =>
+            Log::channel('noCallCandidate')->info('Ошибка задачи - не смогли дозвониться кандидату', ['time' =>
                 Carbon::now(), 'candidate' => $candidate['surname'] . ' ' . $candidate['firstname'] . ' ' .
                 $candidate['patronymic'], 'error' => $error->getMessage()]);
         }

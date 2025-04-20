@@ -3,12 +3,13 @@
 namespace App\Mail\action;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class InviteCandidate extends Mailable
+class NoCallCandidate extends Mailable
 {
     use Queueable, SerializesModels;
     public array $data;
@@ -27,7 +28,7 @@ class InviteCandidate extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: $this->data['subject'],
+            subject: 'Не смогли дозвониться',
         );
     }
 
@@ -37,7 +38,7 @@ class InviteCandidate extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.candidate.invite',
+            view: 'emails.candidate.no-call',
         );
     }
 
@@ -53,6 +54,6 @@ class InviteCandidate extends Mailable
 
     public function build()
     {
-        return $this->view('emails.candidate.invite')->with($this->data);
+        return $this->view('emails.candidate.no-call')->with($this->data);
     }
 }
