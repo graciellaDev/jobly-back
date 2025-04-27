@@ -150,8 +150,12 @@ return [
         'emailCandidate' => [
             'driver' => 'single',
             'path' => storage_path('logs/email_candidate.log')
-        ]
+        ],
 
+        'changeManagerCandidate' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/change_manager_candidate.log')
+        ]
 
     ],
 

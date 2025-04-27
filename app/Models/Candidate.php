@@ -38,6 +38,11 @@ class Candidate extends Model
         return $this->belongsTo(Customer::class);
     }
 
+    public function manager()
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
     public function tags()
     {
         return $this->belongsToMany(Tag::class);

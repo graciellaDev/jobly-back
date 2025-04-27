@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Http\Middleware\api\ApiCustomerMiddleware;
+use App\Http\Middleware\api\CustomerPermissionMiddleware;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -13,6 +14,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app['router']->aliasMiddleware('customer-auth', ApiCustomerMiddleware::class);
+        $this->app['router']->aliasMiddleware('customer-admin-auth', CustomerPermissionMiddleware::class);
     }
 
     /**

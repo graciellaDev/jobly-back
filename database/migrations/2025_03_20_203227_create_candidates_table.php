@@ -36,6 +36,7 @@ return new class extends Migration
             $table->foreignId('vacancy_id')->constrained()->onDelete('cascade');
             $table->foreignId('customer_id')->constrained()->onDelete('cascade');
             $table->foreignId('stage_id')->constrained()->onDelete('cascade');
+            $table->foreignId('manager_id')->nullable()->constrained('customers')->onDelete('cascade');
         });
     }
 

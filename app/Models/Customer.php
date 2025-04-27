@@ -13,6 +13,11 @@ class Customer extends Model
         'password',
         'phone',
         'site',
-        'from_source'
+        'from_source',
+        'role_id'
+    ];
+
+    protected $hidden = [
+        'role_id',
     ];
 }

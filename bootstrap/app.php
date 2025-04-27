@@ -28,6 +28,12 @@ return Application::configure(basePath: dirname(__DIR__))
                     ->prefix('api/action')
                     ->name('action.')
                     ->group(base_path('routes/api-action.php'));
+                Route::group(['middleware' => 'customer-auth'], function () {
+                    Route::middleware('customer-admin-auth')
+                        ->prefix('api')
+                        ->name('roles.')
+                        ->group(base_path('routes/api-role.php'));
+                });
             });
         })
 //        then: function () {

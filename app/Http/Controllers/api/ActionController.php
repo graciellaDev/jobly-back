@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\candidate\ChangeManager;
 use App\Jobs\candidate\Invate;
 use App\Jobs\candidate\MoveStage;
 use App\Jobs\candidate\NoCall;
@@ -11,6 +12,7 @@ use App\Jobs\candidate\SendEmail;
 use App\Mail\action\NoCallCandidate;
 use App\Mail\action\RefuseCandidate;
 use App\Models\Candidate;
+use App\Models\Customer;
 use App\Models\Stage;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -53,7 +55,7 @@ class ActionController extends Controller
         'message' => '',
         'status' => 200
     ];
-    private bool $isAction;
+    private bool $isAction = false;
     private int $time;
     private Candidate $candidate;
     private int $customerId;
@@ -82,7 +84,6 @@ class ActionController extends Controller
         $arCandidate = $this->candidate->toArray();
         $condition = '=';
         $attachments = $this->candidate->attachments->pluck('link')->toArray();
-        $this->isAction = false;
 
         switch ($data['conditions']) {
             case 'true':
@@ -176,15 +177,19 @@ class ActionController extends Controller
 
         if ($this->isAction) {
             Invate::dispatch($this->candidate)->onQueue('invite-candidate')->delay(now()->addMinutes($this->time));
-        }
 
-        return response()->json([
-            'message' => 'Триггер по перемещению кандидата '
-                . $this->candidate->firstname . ' '
-                . $this->candidate->surname . ' '
-                . $this->candidate->patronymic
-                . ' в Подходящие'
-        ]);
+            return response()->json([
+                'message' => 'Триггер по перемещению кандидата '
+                    . $this->candidate->firstname . ' '
+                    . $this->candidate->surname . ' '
+                    . $this->candidate->patronymic
+                    . ' в Подходящие'
+            ]);
+        } else {
+            return response()->json([
+                'message' => $this->response['message']
+            ], $this->response['status']);
+        }
     }
 
     public function moveStage(Request $request): JsonResponse
@@ -215,18 +220,23 @@ class ActionController extends Controller
         }
 
         if ($this->isAction) {
-            MoveStage::dispatch($this->candidate, $stage)->onQueue('move-stage-candidate')->delay(now()->addMinutes
-            ($this->time));
-        }
-
-        return response()->json([
-            'message' => 'Триггер по перемещению кандидата '
+            MoveStage::dispatch($this->candidate, $stage)->onQueue('move-stage-candidate')->delay(
+                now()->addMinutes
+                (
+                    $this->time
+                )
+            );
+            $this->response['message'] = 'Триггер по перемещению кандидата '
                 . $this->candidate->firstname . ' '
                 . $this->candidate->surname . ' '
                 . $this->candidate->patronymic . ' '
                 . ' на этап ' .
-                $stage->name . ' запущен',
-        ]);
+                $stage->name . ' запущен';
+        }
+
+        return response()->json([
+            'message' => $this->response['message']
+        ], $this->response['status']);
     }
 
     public function refuse(Request $request)
@@ -235,15 +245,17 @@ class ActionController extends Controller
 
         if ($this->isAction) {
             Refuse::dispatch($this->candidate)->onQueue('refuse-candidate')->delay(now()->addMinutes($this->time));
-        }
-
-        return response()->json([
-            'message' => 'Триггер по перемещению кандидата '
+            $this->response['message'] = 'Триггер по перемещению кандидата '
                 . $this->candidate->firstname . ' '
                 . $this->candidate->surname . ' '
                 . $this->candidate->patronymic
-                . ' в Отклоненные'
-        ]);
+                . ' в Отклоненные';
+            $this->response['status'] = 200;
+        }
+
+        return response()->json([
+            $this->response['message']
+        ], $this->response['status']);
     }
 
     public function noCall(Request $request)
@@ -252,17 +264,18 @@ class ActionController extends Controller
 
         if ($this->isAction) {
             NoCall::dispatch($this->candidate)->onQueue('refuse-candidate')->delay(now()->addMinutes($this->time));
+            $this->response['message'] = 'Триггер по отправке письма кандидату '
+                . $this->candidate->firstname . ' '
+                . $this->candidate->surname . ' '
+                . $this->candidate->patronymic;
         }
 
         return response()->json([
-            'message' => 'Триггер по отправке письма кандидату '
-                . $this->candidate->firstname . ' '
-                . $this->candidate->surname . ' '
-                . $this->candidate->patronymic
-        ]);
+            $this->response['message']
+        ], $this->response['status']);
     }
 
-    function sendMail(Request $request)
+    public function sendMail(Request $request)
     {
         $this->init($request);
 
@@ -277,14 +290,95 @@ class ActionController extends Controller
         if ($this->isAction) {
             SendEmail::dispatch($this->candidate, $data['typeEmail'])->onQueue('email-candidate')->delay(now()
                 ->addMinutes($this->time));
+            $this->response['message'] = 'Триггер по отправке письма кандидату '
+                . $this->candidate->firstname . ' '
+                . $this->candidate->surname . ' '
+                . $this->candidate->patronymic;
         }
 
         return response()->json([
-            'message' => 'Триггер по отправке письма кандидату '
-                . $this->candidate->firstname . ' '
-                . $this->candidate->surname . ' '
-                . $this->candidate->patronymic
-        ]);
+            $this->response['message']
+        ], $this->response['status']);
+    }
 
+    public function changeManager(Request $request)
+    {
+        $this->init($request);
+
+        try {
+            $data = $request->validate(['managerId' => 'required|numeric']);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Ошибка валидации ответственного'
+            ], 422);
+        }
+
+        $manager = Customer::find($data['managerId']);
+
+        if (is_null($manager)) {
+            return response()->json([
+                'message' => 'Ответственного с id = ' . $data['managerId'] . ' не существует'
+            ], 409);
+        }
+
+        if ($this->isAction) {
+            ChangeManager::dispatch($this->candidate, $manager)->onQueue('change-manager-candidate')->delay(now()
+                ->addMinutes($this->time));
+        }
+
+
+        if (!in_array($manager->role_id, [1, 3])) {
+            return response()->json([
+                'message' => 'Невалидный ответственный'
+            ], 422);
+        }
+
+        if ($manager->role_id == 1) {
+            if ($this->candidate->customer()->first()->id == $manager->id) {
+                if (!is_null($this->candidate->manager_id)) {
+                    $this->candidate->manager()->associate(null);
+                    $this->candidate->save();
+                    return response()->json([
+                        'message' => 'Ответственный '
+                            . $manager->name
+                            . ' успешно назначен для кандидата '
+                            . $this->candidate->surname . ' '
+                            . $this->candidate->patronymic . ' '
+                            . $this->candidate->surname
+                    ]);
+                } else {
+                    return response()->json([
+                        'message' => 'Ответственный '
+                            . $manager->name
+                            . ' уже назначен'
+                    ]);
+                }
+
+            } else {
+                return response()->json([
+                    'message' => 'Невалидный ответственный'
+                ], 422);
+            }
+        } else {
+            if ($this->candidate->manager_id == $data['managerId']) {
+                return response()->json([
+                    'message' => 'Ответственный '
+                        . $manager->name
+                        . ' уже назначен'
+                ]);
+            }
+            $this->candidate->manager()->associate($manager);
+            $this->candidate->save();
+
+            return response()->json([
+                'message' => 'Ответственный '
+                    . $manager->name
+                    . ' успешно назначен для кандидата '
+                    . $this->candidate->surname . ' '
+                    . $this->candidate->patronymic . ' '
+                    . $this->candidate->surname
+            ]);
+
+        }
     }
 }
