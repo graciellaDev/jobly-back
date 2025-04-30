@@ -14,15 +14,23 @@ return new class extends Migration
         Schema::create('applications', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->unsignedBigInteger('vacancy_id');
-            $table->foreign('vacancy_id')->references('id')->on('vacancies');
-            $table->unsignedBigInteger('status_id')->default(1);
-            $table->foreign('status_id')->references('id')->on('statuses');
-            $table->unsignedBigInteger('client_id');
-            $table->foreign('client_id')->references('id')->on('clients');
-            $table->unsignedBigInteger('executor_id');
-            $table->foreign('executor_id')->references('id')->on('executors');
-            $table->string('city');
+            $table->string('position', 50);
+            $table->string('division', 50)->nullable();
+            $table->integer('count')->nullable();
+            $table->integer('salaryFrom')->nullable();
+            $table->integer('salaryTo')->nullable();
+            $table->string('currency', 50)->nullable();
+            $table->string('require', 200)->nullable();
+            $table->string('duty', 200)->nullable();
+            $table->string('reason', 50)->nullable();
+            $table->date('dateStart')->nullable();
+            $table->date('dateWork')->nullable();
+            $table->foreignId('customer_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('vacancy_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('status_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('client_id')->nullable()->constrained('customers')->onDelete('set null');
+            $table->foreignId('executor_id')->nullable()->constrained('customers')->onDelete('set null');
+            $table->string('city')->nullable();
         });
     }
 

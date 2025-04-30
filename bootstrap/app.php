@@ -34,6 +34,10 @@ return Application::configure(basePath: dirname(__DIR__))
                         ->name('roles.')
                         ->group(base_path('routes/api-role.php'));
                 });
+                Route::middleware('customer-auth')
+                    ->prefix('api/applications')
+                    ->name('applications')
+                    ->group(base_path('routes/api-application.php'));
             });
         })
 //        then: function () {

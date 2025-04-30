@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::create('candidates', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
             $table->string('firstname', 50);
             $table->string('surname', 50);
             $table->string('patronymic', 50);
@@ -21,6 +20,9 @@ return new class extends Migration
             $table->string('phone', 50)->nullable();
             $table->string('email', 50);
             $table->integer('age')->nullable();
+            $table->integer('salaryFrom')->nullable();
+            $table->integer('salaryTo')->nullable();
+            $table->string('currency', 50)->nullable();
             $table->string('quickInfo', 255)->nullable();
             $table->string('education', 100)->nullable();
             $table->string('link', 100)->nullable();
@@ -37,6 +39,7 @@ return new class extends Migration
             $table->foreignId('customer_id')->constrained()->onDelete('cascade');
             $table->foreignId('stage_id')->constrained()->onDelete('cascade');
             $table->foreignId('manager_id')->nullable()->constrained('customers')->onDelete('cascade');
+            $table->timestamps();
         });
     }
 
