@@ -75,11 +75,17 @@ class ActionController extends Controller
             return;
         }
 
-        $this->candidate = Candidate::with('attachments')->where('customer_id', $this->customerId)->first();
-        if (!$this->candidate) {
+        $candidate = Candidate::with('attachments')
+            ->where('customer_id', $this->customerId)
+            ->where('id', $data['candidate_id'])
+            ->first();
+
+        if (is_null($candidate)) {
             $this->response['message'] = 'Кандидат с id ' . $data['candidate_id'] . ' не найден';
             $this->response['status'] = 409;
             return;
+        } else {
+            $this->candidate = $candidate;
         }
         $arCandidate = $this->candidate->toArray();
         $condition = '=';
@@ -304,6 +310,11 @@ class ActionController extends Controller
     public function changeManager(Request $request)
     {
         $this->init($request);
+        if ($this->response['status'] != 200) {
+            return response()->json([
+                'message' => $this->response['message']
+            ], $this->response['status']);
+        }
 
         try {
             $data = $request->validate(['managerId' => 'required|numeric']);
@@ -321,31 +332,18 @@ class ActionController extends Controller
             ], 409);
         }
 
-        if ($this->isAction) {
-            ChangeManager::dispatch($this->candidate, $manager)->onQueue('change-manager-candidate')->delay(now()
-                ->addMinutes($this->time));
-        }
-
-
-        if (!in_array($manager->role_id, [1, 3])) {
+        if (!in_array($manager->role_id, [1, 4])) {
             return response()->json([
                 'message' => 'Невалидный ответственный'
             ], 422);
         }
 
         if ($manager->role_id == 1) {
-            if ($this->candidate->customer()->first()->id == $manager->id) {
-                if (!is_null($this->candidate->manager_id)) {
-                    $this->candidate->manager()->associate(null);
-                    $this->candidate->save();
+            if (is_null($this->candidate->manager_id)) {
+                if ($this->candidate->customer()->first()->id != $manager->id) {
                     return response()->json([
-                        'message' => 'Ответственный '
-                            . $manager->name
-                            . ' успешно назначен для кандидата '
-                            . $this->candidate->surname . ' '
-                            . $this->candidate->patronymic . ' '
-                            . $this->candidate->surname
-                    ]);
+                        'message' => 'Невалидный ответственный'
+                    ], 422);
                 } else {
                     return response()->json([
                         'message' => 'Ответственный '
@@ -353,32 +351,33 @@ class ActionController extends Controller
                             . ' уже назначен'
                     ]);
                 }
-
-            } else {
-                return response()->json([
-                    'message' => 'Невалидный ответственный'
-                ], 422);
             }
-        } else {
-            if ($this->candidate->manager_id == $data['managerId']) {
-                return response()->json([
-                    'message' => 'Ответственный '
-                        . $manager->name
-                        . ' уже назначен'
-                ]);
-            }
-            $this->candidate->manager()->associate($manager);
-            $this->candidate->save();
-
-            return response()->json([
-                'message' => 'Ответственный '
-                    . $manager->name
-                    . ' успешно назначен для кандидата '
-                    . $this->candidate->surname . ' '
-                    . $this->candidate->patronymic . ' '
-                    . $this->candidate->surname
-            ]);
-
         }
+
+        if ($this->isAction) {
+            ChangeManager::dispatch($this->candidate, $manager)->onQueue('change-manager-candidate')->delay(now()
+                ->addMinutes($this->time));
+        }
+
+        return response()->json([
+            'message' => 'Триггер смены ответственного '
+                . $manager->name
+                . ' для кандидата '
+                . $this->candidate->surname . ' '
+                . $this->candidate->patronymic . ' '
+                . $this->candidate->surname
+        ]);
+    }
+
+    public function editField(Request $request)
+    {
+        $this->init($request);
+        if ($this->response['status'] != 200) {
+            return response()->json([
+                'message' => $this->response['message']
+            ], $this->response['status']);
+        }
+
+
     }
 }

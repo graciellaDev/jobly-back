@@ -252,7 +252,8 @@ class CandidateController extends Controller
         if(isset($request->skills)) {
             $candidate->skills()->attach($request->skills);
             $skills = Skill::whereIn('id', $request->skills)->get();
-            $candidate->skills = $skills->toArray();
+            $skills = $skills->toArray();
+            $candidate->skills = $skills;
         }
 
         if(isset($request->tags)) {
