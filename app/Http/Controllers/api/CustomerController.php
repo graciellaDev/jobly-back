@@ -275,4 +275,13 @@ class CustomerController extends Controller
             'message' => 'Пароль успешно обновлен',
         ]);
     }
+
+    public function getManagers()
+    {
+        $managers = Customer::where('role_id', 4)->with('role')->select(['id', 'name', 'role_id'])->get();
+
+        return response()->json([
+            'data' => $managers
+        ]);
+    }
 }

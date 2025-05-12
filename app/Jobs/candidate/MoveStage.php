@@ -35,10 +35,12 @@ class MoveStage implements ShouldQueue
             $this->candidate->save();
 
             Log::channel('stageCandidate')->info('Перемещение кандидата на этап ' . $this->stage->name, ['time' =>
-                Carbon::now()]);
+                Carbon::now(), 'candidate' => $this->candidate['surname'] . ' ' . $this->candidate['firstname'] . ' ' .
+                $this->candidate['patronymic']]);
         } catch (Exception $error) {
             Log::channel('stageCandidate')->info('Ошибка  - переместить кандидата на этап ' . $this->stage->name, ['time' =>
-                Carbon::now(), 'name' => $this->candidate->surname, 'error' => $error->getMessage()]);
+                Carbon::now(), 'candidate' => $this->candidate['surname'] . ' ' . $this->candidate['firstname'] . ' ' .
+                $this->candidate['patronymic']]);
         }
     }
 }
