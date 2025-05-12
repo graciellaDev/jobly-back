@@ -56,7 +56,7 @@ class ApplicationController extends Controller
     public function index(Request $request)
     {
         $customerId = $request->attributes->get('customer_id');
-        $applications = Application::with(['client', 'vacancy', 'status', 'executor'])->get();
+        $applications = Application::with(['client', 'vacancy', 'status', 'executor'])->paginate(10);
 
         return response()->json([
             'message' => 'Success',
