@@ -33,6 +33,14 @@ class ApplicationController extends Controller
         'client' => 'nullable'
     ];
 
+    private array $validSort = [
+        'dateStart',
+        'dateWork',
+        'status',
+        'client',
+        'executor'
+    ];
+
     private array $validUpdateFields = [
         'position' => 'string|min:3|max:50',
         'division' => 'string|min:3|max:50',
@@ -56,7 +64,67 @@ class ApplicationController extends Controller
     public function index(Request $request)
     {
         $customerId = $request->attributes->get('customer_id');
-        $applications = Application::with(['client', 'vacancy', 'status', 'executor'])->paginate(10);
+        $sort = $request->get('sort');
+
+        if (!empty($sort) && in_array($sort, $this->validSort)) {
+            $asc = $request->get('asc') == 0 ? 'desc' : 'asc';
+            var_dump($asc);
+            if ($sort == 'dateStart' || $sort == 'dateWork') {
+                $applications = Application::select([
+                    'id',
+                    'position',
+                    'city',
+                    'dateStart',
+                    'dateWork',
+                    'status_id',
+                    'client_id',
+                    'executor_id',
+                    'vacancy_id'
+                ])
+                    ->orderBy($sort, $asc)
+                    ->with(['client', 'vacancy', 'status', 'executor'])
+                    ->paginate(10);
+            } else {
+                $table = match ($sort) {
+                    'client', 'executor' => 'customers',
+                    'status' => 'statuses',
+                };
+                $tableCol = match ($sort) {
+                    'client' => 'client_id',
+                    'executor' => 'executor_id',
+                    'status' => 'status_id',
+                };
+                $applications = Application::select([
+                    'applications.id',
+                    'applications.position',
+                    'applications.city',
+                    'applications.dateStart',
+                    'applications.dateWork',
+                    'applications.status_id',
+                    'applications.client_id',
+                    'applications.executor_id',
+                    'applications.vacancy_id'
+                ])
+                    ->join($table, "$table.id", '=', "applications.$tableCol")
+                    ->orderBy("$table.name", $asc)
+                    ->with(['client', 'vacancy', 'status', 'executor'])
+                    ->paginate(10);
+            }
+        } else {
+            $applications = Application::select([
+                'id',
+                'position',
+                'city',
+                'dateStart',
+                'dateWork',
+                'status_id',
+                'client_id',
+                'executor_id',
+                'vacancy_id'
+            ])
+                ->with(['client', 'vacancy', 'status', 'executor'])
+                ->paginate(10);
+        }
 
         return response()->json([
             'message' => 'Success',
