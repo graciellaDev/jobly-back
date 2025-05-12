@@ -67,8 +67,7 @@ class ApplicationController extends Controller
         $sort = $request->get('sort');
 
         if (!empty($sort) && in_array($sort, $this->validSort)) {
-            $asc = $request->get('asc') == 0 ? 'desc' : 'asc';
-            var_dump($asc);
+            $asc = $request->get('asc') === '0' ? 'desc' : 'asc';
             if ($sort == 'dateStart' || $sort == 'dateWork') {
                 $applications = Application::select([
                     'id',

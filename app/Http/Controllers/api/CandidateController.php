@@ -74,10 +74,23 @@ class CandidateController extends Controller
         'stage_id' => 'stage'
     ];
 
+    private array $validSort = [
+        'dateCreate'
+    ];
+
     public function index(Request $request): JsonResponse
     {
         $customerId = $request->attributes->get('customer_id');
-        $candidates = Candidate::where('customer_id', $customerId)->paginate();
+        $sort = $request->get('sort');
+        $candidates = Candidate::where('customer_id', $customerId);
+        if (!empty($sort) && in_array($sort, $this->validSort)) {
+            $sort = match ($sort) {
+                'dateCreate' => 'created_at'
+            };
+            $asc = $request->get('asc') === '0' ? 'desc' : 'asc';
+            $candidates = $candidates->orderBy($sort, $asc);
+        }
+        $candidates = $candidates->paginate();
         $candidates->getCollection()->transform(function ($candidate) {
             $this->replaceFields($this->editFields, $candidate);
 
