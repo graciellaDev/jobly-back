@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class DatabaseSeeder extends Seeder
 {
@@ -20,6 +21,14 @@ class DatabaseSeeder extends Seeder
 //            'email' => 'test@example.com',
 //        ]);
 
-        $this->call(PermissionsTableSeeder::class);
+        $permissions = DB::table('permissions')->exists();
+        if (!$permissions) {
+            $this->call(PermissionsTableSeeder::class);
+        }
+
+        $taskTypes = DB::table('task_types')->exists();
+        if (!$taskTypes) {
+            $this->call(TastTypesTableSeeder::class);
+        }
     }
 }

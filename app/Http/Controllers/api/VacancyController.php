@@ -4,8 +4,11 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Addition;
+use App\Models\Application;
+use App\Models\Candidate;
 use App\Models\ConditionVacancy;
 use App\Models\Currency;
+use App\Models\Customer;
 use App\Models\Driver;
 use App\Models\DriverVacancy;
 use App\Models\Education;
@@ -18,19 +21,100 @@ use Illuminate\Http\Request;
 use App\Models\Employment;
 use App\Models\AdditionVacancy;
 
+use function Symfony\Component\String\b;
+
 class VacancyController extends Controller
 {
+    private $statuses = [
+      'active',  'draft', 'archive'
+    ];
+
+    private array $sort = [
+        'asc', 'desc'
+    ];
+
+    private array $filters = [
+        'status',
+        'city',
+        'executor',
+        'client',
+        'id',
+        'notCandidate',
+        'isApplication',
+        'notExecutor'
+    ];
     public function index(Request $request)
     {
         $customerId = $request->attributes->get('customer_id');
-//        var_dump(Vacancy::where('customer_id', $customerId)->select(['id', 'name as title', 'location as city'])->paginate());
-        $vacancies = Vacancy::where('customer_id', $customerId)->select(['id', 'name as title', 'location as city'])->paginate();
+        $sort = $request->get('sort');
+        $sort = !empty($sort) && in_array($sort, $this->sort) ? $sort : null;
+        $filters = $request->get('filters');
+
+        $vacancies = Vacancy::where('customer_id', $customerId);
+        if (!empty($filters)) {
+            foreach ($filters as $key => $value) {
+                switch ($key) {
+                    case $this->filters[0]:
+                        if (in_array($value, $this->statuses)) {
+                            $vacancies = $vacancies->where($key, $value);
+                        }
+                        break;
+                    case $this->filters[1]:
+                        $vacancies = $vacancies->where('location', 'like', "$value%");
+                        break;
+                    case $this->filters[2]:
+                        if (!empty($value)) {
+                            $vacancies->where('executor_id', $value);
+                        }
+                        break;
+                    case $this->filters[3]:
+                        $isApplications = Application::where('client_id', $value)
+                            ->select('vacancy_id')
+                            ->pluck('vacancy_id')
+                            ->toArray();
+                        $vacancies->whereIn('id', $isApplications);
+                        break;
+                    case $this->filters[4]:
+                        $vacancies = $vacancies->where('id', $value);
+                        break;
+                    case $this->filters[5]:
+                        if ($value == 'true') {
+                            $notCandidate = Candidate::whereNotNull('vacancy_id')->select('vacancy_id')->pluck('vacancy_id')->toArray();
+                            $vacancies->whereNotIn('id', $notCandidate);
+                        }
+                        break;
+                    case $this->filters[6]:
+                        $applications = Application::whereNotNull('vacancy_id')
+                            ->select('vacancy_id')
+                            ->pluck('vacancy_id')
+                            ->toArray();
+                        $vacancies->whereIn('id', $applications);
+                        break;
+                    case $this->filters[7]:
+                        if ($value == 'true') {
+                            $vacancies->whereNull('executor_id');
+                        }
+                        break;
+                }
+            }
+        }
+
+        $vacancies = $vacancies->select(['id', 'name as title', 'location as city', 'executor_id']);
+        if (!empty($sort)) {
+            $vacancies = $vacancies->orderBy('title', $sort);
+        }
+        $vacancies = $vacancies->paginate();
         $vacancies->getCollection()->transform(function ($vacancy) {
+            $responsible = 'Не назначен';
+            if (!empty($vacancy->executor_id)) {
+                $responsible = Customer::select(['id', 'name'])->find($vacancy->executor_id);
+            }
             $vacancy->footerData = [
                 'sites' => 0,
-                'responsible' => 'Не назначен',
+                'responsible' => $responsible,
                 'itemId' => $vacancy->id . ' ID'
             ];
+            unset($vacancy->executor_id);
             return $vacancy;
         });
 
@@ -108,10 +192,10 @@ class VacancyController extends Controller
                 'place' => 'nullable|numeric|max:255',
                 'location' => 'nullable|string|max:255',
                 'phrases' => 'nullable|string|max:255',
-                'customer_id' => 'nullable|numeric',
-                'customer_name' => 'nullable|string',
-                'customer_phone' => 'nullable|regex:/^\+7\d{10}$/',
-                'customer_email' => 'nullable|string'
+                'executor_id' => 'nullable|numeric',
+                'executor_name' => 'nullable|string',
+                'executor_phone' => 'nullable|regex:/^\+7\d{10}$/',
+                'executor_email' => 'nullable|string'
             ]);
         } catch (\Throwable $th) {
             return response()->json([
@@ -136,6 +220,7 @@ class VacancyController extends Controller
         $data['places'] = $data['place'];
         unset($data['place']);
         $data['customer_id'] = $request->attributes->get('customer_id');
+        $data['status'] = 'active';
 
         try {
             $vacancy = Vacancy::create($data);
@@ -218,7 +303,8 @@ class VacancyController extends Controller
                     'currency' => 'nullable|string|max:255',
                     'place' => 'nullable|string|max:255',
                     'location' => 'nullable|string|max:255',
-                    'phrases' => 'nullable|string|max:255'
+                    'phrases' => 'nullable|string|max:255',
+                    'status' => 'nullable|string|in:active,draft,archive'
                 ]);
             } catch (\Throwable $th) {
                 return response()->json([

@@ -38,6 +38,10 @@ return Application::configure(basePath: dirname(__DIR__))
                     ->prefix('api/applications')
                     ->name('applications')
                     ->group(base_path('routes/api-application.php'));
+                Route::middleware('customer-auth')
+                    ->prefix('api/tasks')
+                    ->name('task.')
+                    ->group(base_path('routes/api-task.php'));
             });
         })
 //        then: function () {

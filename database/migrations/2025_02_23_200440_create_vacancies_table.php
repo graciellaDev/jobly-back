@@ -30,9 +30,11 @@ return new class extends Migration
             $table->string('location')->nullable();
             $table->text('phrases')->nullable();
             $table->foreignId('customer_id')->nullable()->constrained()->onDelete('set null');
-            $table->string('customer_name')->nullable();
-            $table->string('customer_email')->nullable();
-            $table->string('customer_phone')->nullable();
+            $table->string('executor_name')->nullable();
+            $table->string('executor_email')->nullable();
+            $table->string('executor_phone')->nullable();
+            $table->foreignId('executor_id')->nullable()->constrained('customers')->onDelete('set null');
+            $table->string('status', 50);
         });
     }
 

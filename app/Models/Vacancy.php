@@ -27,9 +27,11 @@ class Vacancy extends Model
         'phrases',
         'footerData',
         'customer_id',
-        'customer_name',
-        'customer_phone',
-        'customer_email',
+        'executor_name',
+        'executor_phone',
+        'executor_email',
+        'executor_id',
+        'status'
     ];
 
     public function drivers(): BelongsToMany
