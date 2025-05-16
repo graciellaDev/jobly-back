@@ -15,6 +15,7 @@ use App\Models\Education;
 use App\Models\Experience;
 use App\Models\Condition;
 use App\Models\Funnel;
+use App\Models\FunnelStage;
 use App\Models\Place;
 use App\Models\Schedule;
 use App\Models\Stage;
@@ -101,7 +102,7 @@ class VacancyController extends Controller
             }
         }
 
-        $vacancies = $vacancies->select(['id', 'name as title', 'location as city', 'executor_id']);
+        $vacancies = $vacancies->select(['id', 'name as title', 'location as city', 'executor_id', 'customer_id']);
         if (!empty($sort)) {
             $vacancies = $vacancies->orderBy('title', $sort);
         }
@@ -112,21 +113,40 @@ class VacancyController extends Controller
                 $responsible = Customer::select(['id', 'name'])->find($vacancy->executor_id);
             }
             $candidates = Candidate::where('vacancy_id', $vacancy->id)->get();
-            $stageDefault = Stage::where('fixed', 1)->where(function ($stage) {
-                $data = $stage->get()->toArray();
-                var_dump($data);
-                return $stage;
-            })->get()->toArray();
-//            var_dump($stageDefault);
+           $vacancyStages = [
+               [
+                   'name' => 'Все',
+                   'count' => $candidates->count()
+               ]
+           ];
+            $stagesDefault = Stage::where('fixed', 1)->get();
+            foreach ($stagesDefault as $stage) {
+                $count = $stage->countVacancyCandidates($vacancy->id);
+                if ($count) {
+                    $vacancyStages[] = [
+                        'name' => $stage->name,
+                        'count' => $count
+                    ];
+                }
+            }
+            $stagesUser = FunnelStage::where('customer_id', $vacancy->customer_id)->pluck('stage_id')->toArray();
+            $stagesUser = Stage::find($stagesUser);
+            foreach ($stagesUser as $stage) {
+                $count = $stage->countVacancyCandidates($vacancy->id);
+                if ($count) {
+                    $vacancyStages[] = [
+                        'name' => $stage->name,
+                        'count' => $count
+                    ];
+                }
+            }
 
             $vacancy->footerData = [
                 'sites' => 0,
                 'responsible' => $responsible,
                 'itemId' => $vacancy->id . ' ID'
             ];
-            $vacancy->stages = [
-                'all' => $candidates->count()
-            ];
+            $vacancy->stages = $vacancyStages;
             unset($vacancy->executor_id);
             return $vacancy;
         });

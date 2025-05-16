@@ -25,4 +25,14 @@ class Stage extends Model
     {
         return $this->hasMany(Candidate::class);
     }
+
+    public function countCandidates()
+    {
+        return $this->candidates()->count();
+    }
+
+    public function countVacancyCandidates(int $vacancyId)
+    {
+        return $this->candidates()->where('vacancy_id', $vacancyId)->count();
+    }
 }
