@@ -75,7 +75,7 @@ class Candidate extends Model
 
     public function stage()
     {
-        return $this->belongsTo(Stage::class, 'stages');
+        return $this->belongsTo(Stage::class);
     }
 
     public function vacancy()

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Models\CustomerFunnel;
 use App\Models\Funnel;
 use App\Models\FunnelStage;
 use App\Models\Stage;
@@ -11,15 +12,22 @@ use Illuminate\Support\Facades\Storage;
 
 class FunnelController extends Controller
 {
-    public function index() {
+    public function index(Request $request) {
+        $customerId = $request->attributes->get('customer_id');
+        $defaultFunnel = Funnel::where('fixed', 1)->get()->toArray();
+        $customers = CustomerFunnel::where('customer_id', $customerId)->pluck('funnel_id')->toArray();
+        $funnel = Funnel::find($customers)->toArray();
+        $funnel = array_merge($defaultFunnel, $funnel);
 
         return response()->json([
             'message' => 'Success',
-            'data' => Funnel::all()->toArray()
+            'data' => $funnel
         ]);
     }
 
-    public function create(Request $request) {
+    public function create(Request $request)
+    {
+        $customerId = $request->attributes->get('customer_id');
         try {
             $data = $request->validate([
                 'name' => 'required|string|min:3|max:255'
@@ -29,12 +37,30 @@ class FunnelController extends Controller
                 'message' => 'Ошибка валидации',
             ], 422);
         }
-
+        $customers = CustomerFunnel::where('customer_id', $customerId)->pluck('funnel_id');
         try {
-            $funnel = Funnel::create($data);
+            $funnel = Funnel::where('name', $data['name'])->first();
+            $defaultFunnel = Funnel::where('fixed', 1)->get()->toArray();
+            if (empty($funnel)) {
+                $funnel = Funnel::create($data);
+                $funnel->customers()->attach([$customerId]);
+                $funnel = [$funnel->toArray()];
+            } else {
+                $isFunnels = CustomerFunnel::where('customer_id', $customerId)->pluck('funnel_id')->toArray();
+                if (empty($isFunnels)) {
+                    $funnel->customers()->attach([$customerId]);
+                    $isFunnels[0] = $funnel->id;
+                } else {
+                    return response()->json([
+                        'message' => 'Воронка ' . $funnel->name. ' уже создана'
+                    ], 409);
+                }
+                $funnel = Funnel::find($isFunnels)->toArray();
+            }
+            $funnel = array_merge($defaultFunnel, $funnel);
         } catch (\Throwable $th) {
             return response()->json([
-                'message' => 'Воронка ' . $request->name . ' уже создана создана',
+                'message' => 'Воронка ' . $request->name . ' уже создана',
             ], 409);
         }
 
@@ -44,11 +70,33 @@ class FunnelController extends Controller
         ]);
     }
 
-    public function delete (int $id) {
+    public function delete (Request $request, int $id) {
+        $customerId = $request->attributes->get('customer_id');
         $funnel = Funnel::find($id);
+
         if (!empty($funnel)) {
             $name = $funnel->name;
-            $funnel->delete();
+
+            if ($funnel->fixed) {
+                return response()->json([
+                    'message' => 'Ворноку ' . $name . ' удалять нельзя'
+                ], 409);
+            }
+
+            $customers = CustomerFunnel::where('funnel_id', $id)->pluck('customer_id')->toArray();
+            if (!empty($customers) && in_array($customerId, $customers)) {
+                if (count($customers) == 1) {
+                    $funnel->delete();
+                } else {
+                    $funnel->customers()->detach($customerId);
+                }
+            } else {
+                return response()->json([
+                    'message' => 'Воронка не найдена'
+                ], 404);
+            }
+
+//            $funnel->delete();
 
             return response()->json([
                 'massage' => 'Воронка ' . $name . ' успешно удалена'
@@ -126,6 +174,13 @@ class FunnelController extends Controller
                 'message' => 'Этап с идентификатором ' . $request->stage_id . ' в воронке ' . $funnel->name . ' не найден'
             ], 404);
         }
+        $stages = $funnel->stages()->where('customer_id', $customer_id)->where('stage_id', $data['stage_id'])->pluck('stage_id')
+            ->toArray();
+        if (empty($stages)) {
+            return response()->json([
+                'message' => 'Этап с идентификатором ' . $request->stage_id . ' в воронке ' . $funnel->name . ' не найден'
+            ], 404);
+        }
         $stageName = $stage->name;
         $funnel->stages()->detach();
         $stage->delete();
@@ -133,22 +188,23 @@ class FunnelController extends Controller
         return response()->json([
             'message' => 'Этап ' . $stageName . ' в воронке ' . $funnel->name . ' успешно удален',
         ]);
-//        return response()->json([
-//            'message' => 'Этап '  . ' в воронке ' . $funnel->name . ' успешно удален',
-//        ]);
     }
 
     public function indexStage(Request $request, int $id) {
-        $customer_id = $request->attributes->get('customer_id');
-        $fixStages = Stage::all()->where('fixed', 1)->toArray();
-
-        $funnel = FunnelStage::where('customer_id', $customer_id)->pluck('stage_id')->toArray();
-        $stages = Stage::whereIn('id', $funnel)->get()->toArray();
-        if (empty($funnel)) {
+        $isFunnel = Funnel::find($id);
+        if (empty($isFunnel)) {
             return response()->json([
                 'message' => 'Воронка не найдена'
             ], 404);
         }
+
+        $customer_id = $request->attributes->get('customer_id');
+        $fixStages = Stage::all()->where('fixed', 1)->toArray();
+
+        $funnel = FunnelStage::where('customer_id', $customer_id)->where('funnel_id', $id)->pluck('stage_id')
+            ->toArray();
+        $stages = Stage::whereIn('id', $funnel)->get()->toArray();
+
 
         return response()->json([
             'message' => 'Success',

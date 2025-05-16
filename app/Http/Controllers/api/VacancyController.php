@@ -14,8 +14,10 @@ use App\Models\DriverVacancy;
 use App\Models\Education;
 use App\Models\Experience;
 use App\Models\Condition;
+use App\Models\Funnel;
 use App\Models\Place;
 use App\Models\Schedule;
+use App\Models\Stage;
 use App\Models\Vacancy;
 use Illuminate\Http\Request;
 use App\Models\Employment;
@@ -109,10 +111,21 @@ class VacancyController extends Controller
             if (!empty($vacancy->executor_id)) {
                 $responsible = Customer::select(['id', 'name'])->find($vacancy->executor_id);
             }
+            $candidates = Candidate::where('vacancy_id', $vacancy->id)->get();
+            $stageDefault = Stage::where('fixed', 1)->where(function ($stage) {
+                $data = $stage->get()->toArray();
+                var_dump($data);
+                return $stage;
+            })->get()->toArray();
+//            var_dump($stageDefault);
+
             $vacancy->footerData = [
                 'sites' => 0,
                 'responsible' => $responsible,
                 'itemId' => $vacancy->id . ' ID'
+            ];
+            $vacancy->stages = [
+                'all' => $candidates->count()
             ];
             unset($vacancy->executor_id);
             return $vacancy;

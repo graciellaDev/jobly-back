@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('funnels', function (Blueprint $table) {
+        Schema::create('customer_funnel', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
-            $table->boolean('fixed')->default(false);
+            $table->foreignId('funnel_id')->constrained()->onDelete('cascade');
+            $table->foreignId('customer_id')->constrained()->onDelete('cascade');
         });
     }
 
@@ -23,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('funnels');
+        Schema::dropIfExists('customer_funnel');
     }
 };
