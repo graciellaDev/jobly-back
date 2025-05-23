@@ -64,7 +64,7 @@ class ApplicationController extends Controller
         'responsible' => 'nullable'
     ];
 
-    protected int $roleId = 5;
+    protected int $roleClient = 5;
     public function index(Request $request)
     {
         $customerId = $request->attributes->get('customer_id');
@@ -194,21 +194,21 @@ class ApplicationController extends Controller
         }
 
         if (isset($data['client'])) {
-            $client = Client::where('role_id', $this->roleId)->find(intval($data['client']));
+            $client = Client::where('role_id', $this->roleClient)->find(intval($data['client']));
             if (!empty($client)) {
                 $data['client_id'] = $client->id;
             }
         }
 
         if (isset($data['executor'])) {
-            $executor = Customer::where('role_id', 4)->find(intval($data['executor']));
+            $executor = Customer::whereIn('role_id', $this->roleExecutors)->find(intval($data['executor']));
             if (!empty($executor)) {
                 $data['executor_id'] = $executor->id;
             }
         }
 
         if (isset($data['responsible'])) {
-            $responsible = Customer::where('role_id', 4)->find(intval($data['responsible']));
+            $responsible = Customer::whereIn('role_id', $this->roleExecutors)->find(intval($data['responsible']));
             if (!empty($responsible)) {
                 $data['responsible_id'] = $responsible->id;
             }
@@ -284,7 +284,7 @@ class ApplicationController extends Controller
         }
 
         if (isset($data['client'])) {
-            $client = Client::where('role_id', $this->roleId)->find(intval($data['client']));
+            $client = Client::where('role_id', $this->roleClient)->find(intval($data['client']));
             if (!empty($client)) {
                 $data['client_id'] = $client->id;
             }
