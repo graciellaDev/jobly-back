@@ -14,6 +14,8 @@ use Illuminate\Http\Request;
 
 class ApplicationController extends Controller
 {
+    private array $roleExecutors = [3, 4];
+    private int $roleManager = 4;
     private array $validFields = [
         'position' => 'required|string|min:3|max:50',
         'division' => 'string|min:3|max:50',
@@ -30,7 +32,8 @@ class ApplicationController extends Controller
         'vacancy' => 'nullable',
         'status' => 'nullable',
         'executor' => 'nullable',
-        'client' => 'nullable'
+        'client' => 'nullable',
+        'responsible' => 'nullable'
     ];
 
     private array $validSort = [
@@ -138,7 +141,7 @@ class ApplicationController extends Controller
     public function show(Request $request, int $id)
     {
         $customerId = $request->attributes->get('customer_id');
-        $application = Application::with(['client', 'vacancy', 'status', 'executor', 'reponsible'])
+        $application = Application::with(['client', 'vacancy', 'status', 'executor', 'responsible'])
             ->where('customer_id', $customerId)
             ->find($id);
 
@@ -204,6 +207,13 @@ class ApplicationController extends Controller
             }
         }
 
+        if (isset($data['responsible'])) {
+            $responsible = Customer::where('role_id', 4)->find(intval($data['responsible']));
+            if (!empty($responsible)) {
+                $data['responsible_id'] = $responsible->id;
+            }
+        }
+
         try {
             $application = Application::create($data);
         } catch (\Throwable $th) {
@@ -217,6 +227,7 @@ class ApplicationController extends Controller
         $application['vacancy'] = $application->vacancy;
         $application['status'] = $application->status;
         $application['executor'] = $application->executor;
+        $application['responsible'] = $application->responsible;
 
         return response()->json([
             'message' => 'Заявка успешно ' . $data['position'] . ' создана',
@@ -243,7 +254,7 @@ class ApplicationController extends Controller
             ]);
         }
 
-        $application = Application::with(['client', 'vacancy', 'status', 'executor'])->find($id);
+        $application = Application::with(['client', 'vacancy', 'status', 'executor', 'responsible'])->find($id);
         if (empty($application)) {
             return response()->json([
                 'message' => 'Заявка с id = ' . $id . ' не найдена'
@@ -280,9 +291,16 @@ class ApplicationController extends Controller
         }
 
         if (isset($data['executor'])) {
-            $executor = Customer::where('role_id', 4)->find(intval($data['executor']));
+            $executor = Customer::whereIn('role_id', $this->roleExecutors)->find(intval($data['executor']));
             if (!empty($executor)) {
                 $data['executor_id'] = $executor->id;
+            }
+        }
+
+        if (isset($data['responsible'])) {
+            $responsible = Customer::whereIn('role_id', $this->roleExecutors)->find(intval($data['responsible']));
+            if (!empty($responsible)) {
+                $data['responsible_id'] = $responsible->id;
             }
         }
 
