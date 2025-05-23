@@ -281,7 +281,18 @@ class CustomerController extends Controller
         $managers = Customer::where('role_id', 4)->with('role')->select(['id', 'name', 'role_id'])->get();
 
         return response()->json([
+            'message' => 'Success',
             'data' => $managers
+        ]);
+    }
+
+    public function getExecutors()
+    {
+        $executors = Customer::whereIn('role_id', [3, 4])->with('role')->select(['id', 'name', 'role_id'])->get();
+
+        return response()->json([
+            'message' => 'Success',
+            'data' => $executors
         ]);
     }
 }

@@ -4,6 +4,7 @@ use App\Http\Controllers\api\FunnelController;
 use App\Http\Controllers\api\CustomFieldController;
 use App\Http\Controllers\api\CustomFieldTypeController;
 use App\Http\Controllers\api\CustomerController;
+use App\Http\Controllers\api\ClientController;
 
 Route::group(['middleware' => 'auth:api'], function () {
     Route::get('vacancy-fields', [VacancyController::class, 'fields']);
@@ -24,6 +25,10 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post('custom-fields', [CustomFieldController::class, 'create']);
     Route::get('custom-fields-types', [CustomFieldTypeController::class, 'index']);
 
+    Route::get('clients', [ClientController::class, 'index']);
+    Route::get('clients/{id}', [ClientController::class, 'show']);
+
     Route::get('managers', [CustomerController::class, 'getManagers']);
+    Route::get('executors', [CustomerController::class, 'getExecutors']);
 });
 
