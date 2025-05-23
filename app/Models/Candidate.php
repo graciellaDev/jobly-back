@@ -55,7 +55,7 @@ class Candidate extends Model
             'candidate_custom_field_values',
             'candidate_id',
             'custom_field_id'
-        );
+        )->withPivot('value');
     }
 
     public function skills()

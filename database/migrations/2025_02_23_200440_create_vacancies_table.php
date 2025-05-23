@@ -35,6 +35,7 @@ return new class extends Migration
             $table->string('executor_phone')->nullable();
             $table->foreignId('executor_id')->nullable()->constrained('customers')->onDelete('set null');
             $table->string('status', 50);
+            $table->string('resource', 100)->nullable();
         });
     }
 

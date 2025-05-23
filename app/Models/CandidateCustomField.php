@@ -9,7 +9,8 @@ class CandidateCustomField extends Model
     protected $fillable = [
         'id',
         'candidate_id',
-        'custom_field_id'
+        'custom_field_id',
+        'value'
     ];
 
     protected $table = 'candidate_custom_field_values';

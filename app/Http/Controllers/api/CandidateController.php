@@ -42,6 +42,7 @@ class CandidateController extends Controller
         'resume' => 'nullable|string|max:50',
         'resumePath' => 'nullable|string|max:50',
         'coverPath' => 'nullable|string|max:50',
+        'customFields' => 'nullable|numeric',
     ];
 
     private array $validUpdateFields = [
@@ -66,6 +67,7 @@ class CandidateController extends Controller
         'resume' => 'nullable|string|max:50',
         'resumePath' => 'nullable|string|max:50',
         'coverPath' => 'nullable|string|max:50',
+        'customFields' => 'nullable|numeric',
     ];
 
     private array $editFields = [
@@ -182,8 +184,14 @@ class CandidateController extends Controller
 
         if(isset($request->customFields)) {
             $related = array_map(fn($el) => intval($el), $request->customFields);
-            $candidate->customFields()->detach();
-            $candidate->tags()->attach($request->customFieldss);
+            $fields = CandidateCustomField::all()->where('candidate_id', $id)->pluck('custom_field_id')->toArray();
+            foreach ($request->customFields as $key => $field) {
+                if (in_array($key, $field)) {
+                    $candidate->customFields()->updateExistingPivot($key, $field);
+                } else {
+                    $candidate->customFields()->sync([$key => $fields]);
+                }
+            }
         } else {
             $related = CandidateCustomField::all()->where('candidate_id', $id)->pluck('custom_field_id');
         }
@@ -196,12 +204,10 @@ class CandidateController extends Controller
             }
             $candidate->attachments()->delete();
             $attachments = [];
-//            var_dump($candidate->attachments->toArray());
             foreach ($attachmentsData as $data) {
                 $attachments[] = $candidate->attachments()->create($data)->toArray();
             }
             $candidate['attachments'] = $attachments;
-//
 //            $candidate->attachments = $candidate->attachments()->saveMany($attachments);
 
         }
@@ -290,7 +296,6 @@ class CandidateController extends Controller
             }
         }
 
-
         return response()->json([
             'message' => 'Кандидат '
                 . $data['surname'] . ' '
@@ -318,5 +323,20 @@ class CandidateController extends Controller
                 'message' => 'Вакансия не найдена'
             ], 404);
         }
+    }
+
+    public function reply(Request $request): JsonResponse
+    {
+
+        try {
+            $data = $request->validate($this->validFields);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Ошибка валидации',
+            ], 422);
+        }
+        return response()->json([
+            'message' => 'Отклик по вакансии'
+        ]);
     }
 }

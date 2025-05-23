@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('candidate_custom_field_values', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('value');
             $table->unsignedBigInteger('custom_field_id');
             $table->unsignedBigInteger('candidate_id');
 

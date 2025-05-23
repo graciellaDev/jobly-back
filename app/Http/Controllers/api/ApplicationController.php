@@ -69,7 +69,7 @@ class ApplicationController extends Controller
         if (!empty($sort) && in_array($sort, $this->validSort)) {
             $asc = $request->get('asc') === '0' ? 'desc' : 'asc';
             if ($sort == 'dateStart' || $sort == 'dateWork') {
-                $applications = Application::select([
+                $applications = Application::where('customer_id', $customerId)->select([
                     'id',
                     'position',
                     'city',
@@ -93,7 +93,7 @@ class ApplicationController extends Controller
                     'executor' => 'executor_id',
                     'status' => 'status_id',
                 };
-                $applications = Application::select([
+                $applications = Application::where('customer_id', $customerId)->select([
                     'applications.id',
                     'applications.position',
                     'applications.city',
@@ -110,7 +110,7 @@ class ApplicationController extends Controller
                     ->paginate(10);
             }
         } else {
-            $applications = Application::select([
+            $applications = Application::where('customer_id', $customerId)->select([
                 'id',
                 'position',
                 'city',
