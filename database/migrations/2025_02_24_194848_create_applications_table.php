@@ -30,6 +30,7 @@ return new class extends Migration
             $table->foreignId('status_id')->nullable()->constrained()->onDelete('set null');
             $table->foreignId('client_id')->nullable()->constrained('customers')->onDelete('set null');
             $table->foreignId('executor_id')->nullable()->constrained('customers')->onDelete('set null');
+            $table->foreignId('responsible_id')->nullable()->constrained('customers')->onDelete('set null');
             $table->string('city')->nullable();
         });
     }

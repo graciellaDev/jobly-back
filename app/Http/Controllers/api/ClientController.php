@@ -13,7 +13,7 @@ class ClientController extends Controller
     public  function index(Request $request)
     {
         $customerId = $request->attributes->get('customer_id');
-        $clients = Customer::where('role_id', $this->role)->select(['id', 'name'])->get();
+        $clients = Customer::where('role_id', $this->role)->select(['id', 'name', 'role_id'])->get();
 
         return response()->json([
             'message' => 'Success',

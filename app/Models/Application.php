@@ -23,6 +23,7 @@ class Application extends Model
         'status_id',
         'client_id',
         'executor_id',
+        'responsible_id',
         'city'
     ];
 
@@ -32,6 +33,7 @@ class Application extends Model
         'status_id',
         'client_id',
         'executor_id',
+        'responsible_id'
     ];
     protected $casts = [
         'created_at' => 'date:d.m.Y',
@@ -61,6 +63,11 @@ class Application extends Model
     }
 
     public function executor()
+    {
+        return $this->belongsTo(Customer::class)->with('role')->select(['id', 'name', 'role_id']);
+    }
+
+    public function responsible()
     {
         return $this->belongsTo(Customer::class)->with('role')->select(['id', 'name', 'role_id']);
     }

@@ -17,6 +17,8 @@ use Illuminate\Support\Str;
 
 class CustomerController extends Controller
 {
+    private array $roleExecutors = [3, 4];
+    private int $roleManager = 4;
     public function login(Request $request)
     {
         $cookieAuth = $request->cookie('auth_user');
@@ -278,7 +280,7 @@ class CustomerController extends Controller
 
     public function getManagers()
     {
-        $managers = Customer::where('role_id', 4)->with('role')->select(['id', 'name', 'role_id'])->get();
+        $managers = Customer::where('role_id', $this->roleManager)->with('role')->select(['id', 'name', 'role_id'])->get();
 
         return response()->json([
             'message' => 'Success',
@@ -288,7 +290,7 @@ class CustomerController extends Controller
 
     public function getExecutors()
     {
-        $executors = Customer::whereIn('role_id', [3, 4])->with('role')->select(['id', 'name', 'role_id'])->get();
+        $executors = Customer::whereIn('role_id', $this->roleExecutors)->with('role')->select(['id', 'name', 'role_id'])->get();
 
         return response()->json([
             'message' => 'Success',

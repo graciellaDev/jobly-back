@@ -57,7 +57,8 @@ class ApplicationController extends Controller
         'vacancy' => 'nullable',
         'status' => 'nullable',
         'executor' => 'nullable',
-        'client' => 'nullable'
+        'client' => 'nullable',
+        'responsible' => 'nullable'
     ];
 
     protected int $roleId = 5;
@@ -78,10 +79,11 @@ class ApplicationController extends Controller
                     'status_id',
                     'client_id',
                     'executor_id',
-                    'vacancy_id'
+                    'vacancy_id',
+                    'responsible_id'
                 ])
                     ->orderBy($sort, $asc)
-                    ->with(['client', 'vacancy', 'status', 'executor'])
+                    ->with(['client', 'vacancy', 'status', 'executor', 'responsible'])
                     ->paginate(10);
             } else {
                 $table = match ($sort) {
@@ -102,11 +104,12 @@ class ApplicationController extends Controller
                     'applications.status_id',
                     'applications.client_id',
                     'applications.executor_id',
-                    'applications.vacancy_id'
+                    'applications.vacancy_id',
+                    'applications.responsible_id'
                 ])
                     ->join($table, "$table.id", '=', "applications.$tableCol")
                     ->orderBy("$table.name", $asc)
-                    ->with(['client', 'vacancy', 'status', 'executor'])
+                    ->with(['client', 'vacancy', 'status', 'executor', 'resposible'])
                     ->paginate(10);
             }
         } else {
@@ -119,9 +122,10 @@ class ApplicationController extends Controller
                 'status_id',
                 'client_id',
                 'executor_id',
-                'vacancy_id'
+                'vacancy_id',
+                'responsible_id'
             ])
-                ->with(['client', 'vacancy', 'status', 'executor'])
+                ->with(['client', 'vacancy', 'status', 'executor', 'responsible'])
                 ->paginate(10);
         }
 
@@ -134,7 +138,7 @@ class ApplicationController extends Controller
     public function show(Request $request, int $id)
     {
         $customerId = $request->attributes->get('customer_id');
-        $application = Application::with(['client', 'vacancy', 'status', 'executor'])
+        $application = Application::with(['client', 'vacancy', 'status', 'executor', 'reponsible'])
             ->where('customer_id', $customerId)
             ->find($id);
 
