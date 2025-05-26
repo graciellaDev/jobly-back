@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Application extends Model
 {
@@ -47,9 +48,9 @@ class Application extends Model
         return $this->belongsTo(Customer::class);
     }
 
-    public function vacancy()
+    public function vacancy(): BelongsTo
     {
-        return $this->belongsTo(Vacancy::class)->select(['id', 'name']);
+        return $this->belongsTo(Vacancy::class)->select(['id', 'name'])->withCount('candidates');
     }
 
     public function status()
@@ -69,6 +70,6 @@ class Application extends Model
 
     public function responsible()
     {
-        return $this->belongsTo(Customer::class)->with('role')->select(['id', 'name', 'role_id']);
+        return $this->belongsTo(Customer::class)->select(['id', 'name', 'role_id']);
     }
 }
