@@ -98,7 +98,7 @@ class ApplicationController extends Controller
                     'executor' => 'executor_id',
                     'status' => 'status_id',
                 };
-                var_dump($tableCol);
+
                 $applications = Application::where('customer_id', $customerId)->select([
                     'applications.id',
                     'applications.position',
