@@ -98,6 +98,7 @@ class ApplicationController extends Controller
                     'executor' => 'executor_id',
                     'status' => 'status_id',
                 };
+                var_dump($tableCol);
                 $applications = Application::where('customer_id', $customerId)->select([
                     'applications.id',
                     'applications.position',
@@ -110,9 +111,9 @@ class ApplicationController extends Controller
                     'applications.vacancy_id',
                     'applications.responsible_id'
                 ])
-                    ->join($table, "$table.id", '=', "applications.$tableCol")
+                    ->leftJoin($table, "$table.id", '=', "applications.$tableCol")
                     ->orderBy("$table.name", $asc)
-                    ->with(['client', 'vacancy', 'status', 'executor', 'resposible'])
+                    ->with(['client', 'vacancy', 'status', 'executor', 'responsible'])
                     ->paginate(10);
             }
         } else {
@@ -310,9 +311,10 @@ class ApplicationController extends Controller
 
         $application->update($data);
 
+
         return response()->json([
             'message' => 'Заявка обновлена',
-            'data' => $application
+            'data' => $application->responsible
         ]);
     }
 
