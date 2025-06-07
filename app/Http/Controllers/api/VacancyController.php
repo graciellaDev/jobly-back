@@ -16,6 +16,8 @@ use App\Models\Experience;
 use App\Models\Condition;
 use App\Models\Funnel;
 use App\Models\FunnelStage;
+use App\Models\Phrase;
+use App\Models\PhraseVacancy;
 use App\Models\Place;
 use App\Models\Schedule;
 use App\Models\Stage;
@@ -195,6 +197,10 @@ class VacancyController extends Controller
             $additions = Addition::whereIn('id', $additions)->get();
             $vacancy['additions'] = $additions;
 
+            $phrases = PhraseVacancy::all()->where('vacancy_id', $id)->pluck(['phrase_id']);
+            $phrases = Phrase::whereIn('id', $phrases)->get();
+            $vacancy['phrases'] = $phrases;
+
             $vacancy['place'] = $vacancy->places;
             unset($vacancy['places']);
         }
@@ -224,7 +230,6 @@ class VacancyController extends Controller
                 'currency' => 'nullable|string|max:255',
                 'place' => 'nullable|numeric|max:255',
                 'location' => 'nullable|string|max:255',
-                'phrases' => 'nullable|string|max:255',
                 'executor_id' => 'nullable|numeric',
                 'executor_name' => 'nullable|string',
                 'executor_phone' => 'nullable|regex:/^\+7\d{10}$/',
@@ -250,8 +255,6 @@ class VacancyController extends Controller
             ], 409);
         }
 
-        $data['places'] = $data['place'];
-        unset($data['place']);
         $data['customer_id'] = $request->attributes->get('customer_id');
         $data['status'] = 'active';
 
@@ -268,6 +271,7 @@ class VacancyController extends Controller
             if (!empty($place)) {
                 $vacancy->places = $request->place;
             }
+            unset($data['place']);
         }
 
         if(isset($request->conditions)) {
@@ -284,6 +288,11 @@ class VacancyController extends Controller
             $vacancy->drivers()->attach($request->drivers);
             $additions = Addition::whereIn('id', $request->additions)->get();
             $vacancy->additions = $additions;
+        }
+        if (isset($request->phrases)) {
+            $vacancy->phrases()->attach($request->phrases);
+            $phrases = Phrase::whereIn('id', $request->phrases)->get();
+            $vacancy->phrases = $phrases->toArray();
         }
 
         $place = Place::find($vacancy->places);
@@ -336,7 +345,6 @@ class VacancyController extends Controller
                     'currency' => 'nullable|string|max:255',
                     'place' => 'nullable|string|max:255',
                     'location' => 'nullable|string|max:255',
-                    'phrases' => 'nullable|string|max:255',
                     'status' => 'nullable|string|in:active,draft,archive'
                 ]);
             } catch (\Throwable $th) {
@@ -404,6 +412,17 @@ class VacancyController extends Controller
                     $additions = Driver::whereIn('id', $additions)->get();
                 }
                 $vacancy['additions'] = $additions;
+
+                if (isset($request->phrases)) {
+                    $phrases= array_map(fn($el) => intval($el), $request->phrases);
+                    $vacancy->phrases()->detach();
+                    $vacancy->phrases()->sync($phrases);
+                    $phrases = Phrase::whereIn('id', $phrases)->get();
+                } else {
+                    $phrases = PhraseVacancy::all()->where('vacancy_id', $id)->pluck(['phrase_id']);
+                    $phrases = Phrase::whereIn('id', $phrases)->get();
+                }
+                $vacancy['phrases'] = $phrases;
             } catch (\Throwable $th) {
 
                 return response()->json([

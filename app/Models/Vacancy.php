@@ -24,7 +24,6 @@ class Vacancy extends Model
         'places',
         'currency',
         'location',
-        'phrases',
         'footerData',
         'customer_id',
         'executor_name',
@@ -73,5 +72,10 @@ class Vacancy extends Model
     public function candidates()
     {
         return $this->belongsToMany(Candidate::class);
+    }
+
+    public function phrases()
+    {
+        return $this->belongsToMany(Phrase::class);
     }
 }

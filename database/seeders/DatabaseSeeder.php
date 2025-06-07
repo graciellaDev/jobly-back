@@ -20,15 +20,26 @@ class DatabaseSeeder extends Seeder
 //            'name' => 'Test User',
 //            'email' => 'test@example.com',
 //        ]);
+        $defaultData = [
+            [
+                'dbName' => 'permissions',
+                'seederClass' => PermissionsTableSeeder::class
+            ],
+            [
+                'dbName' => 'task_types',
+                'seederClass' => TastTypesTableSeeder::class
+            ],
+            [
+                'dbName' => 'phrases',
+                'seederClass' => PhrasesTableSeeder::class
+            ],
+        ];
 
-        $permissions = DB::table('permissions')->exists();
-        if (!$permissions) {
-            $this->call(PermissionsTableSeeder::class);
-        }
-
-        $taskTypes = DB::table('task_types')->exists();
-        if (!$taskTypes) {
-            $this->call(TastTypesTableSeeder::class);
+        foreach ($defaultData as $data) {
+            $isData = DB::table($data['dbName'])->exists();
+            if (!$isData) {
+                $this->call($data['seederClass']);
+            }
         }
     }
 }
