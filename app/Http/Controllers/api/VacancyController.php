@@ -255,6 +255,14 @@ class VacancyController extends Controller
             ], 409);
         }
 
+        if(isset($request->place)) {
+            $place = Place::all()->find($request->place);
+            if (!empty($place)) {
+                $data['places'] = $request->place;
+            }
+            unset($data['place']);
+        }
+
         $data['customer_id'] = $request->attributes->get('customer_id');
         $data['status'] = 'active';
 

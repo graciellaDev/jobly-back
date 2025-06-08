@@ -23,8 +23,8 @@ return new class extends Migration
             $table->string('schedule')->nullable();
             $table->string('experience')->nullable();
             $table->string('education')->nullable();
-            $table->string('salary_from')->nullable();
-            $table->string('salary_to')->nullable();
+            $table->integer('salary_from')->nullable();
+            $table->integer('salary_to')->nullable();
             $table->string('currency')->nullable();
             $table->foreignId('places')->nullable()->constrained()->onDelete('set null');
             $table->string('location')->nullable();
