@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('education')->nullable();
             $table->integer('salary_from')->nullable();
             $table->integer('salary_to')->nullable();
+            $table->string('salary_type')->nullable();
             $table->string('currency')->nullable();
             $table->foreignId('places')->nullable()->constrained()->onDelete('set null');
             $table->string('location')->nullable();
@@ -36,6 +37,7 @@ return new class extends Migration
             $table->foreignId('executor_id')->nullable()->constrained('customers')->onDelete('set null');
             $table->string('status', 50);
             $table->string('resource', 100)->nullable();
+            $table->boolean('show_executor')->nullable();
         });
     }
 

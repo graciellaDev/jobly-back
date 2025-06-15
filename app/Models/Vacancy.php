@@ -21,6 +21,7 @@ class Vacancy extends Model
         'education',
         'salary_from',
         'salary_to',
+        'salary_type',
         'places',
         'currency',
         'location',
@@ -30,7 +31,8 @@ class Vacancy extends Model
         'executor_phone',
         'executor_email',
         'executor_id',
-        'status'
+        'status',
+        'show_executor'
     ];
 
     public function drivers(): BelongsToMany

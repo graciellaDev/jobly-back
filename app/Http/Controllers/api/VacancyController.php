@@ -225,6 +225,7 @@ class VacancyController extends Controller
                 'schedule' => 'nullable|string|max:255',
                 'experience' => 'nullable|string|max:255',
                 'education' => 'nullable|string|max:255',
+                'salary_type' => 'nullable|string|max:100',
                 'salary_from' => 'nullable|string|max:255',
                 'salary_to' => 'nullable|string|max:255',
                 'currency' => 'nullable|string|max:255',
@@ -233,7 +234,8 @@ class VacancyController extends Controller
                 'executor_id' => 'nullable|numeric',
                 'executor_name' => 'nullable|string',
                 'executor_phone' => 'nullable|regex:/^\+7\d{10}$/',
-                'executor_email' => 'nullable|string'
+                'executor_email' => 'nullable|string',
+                'show_executor' => 'nullable|boolean'
             ]);
         } catch (\Throwable $th) {
             return response()->json([
@@ -350,10 +352,16 @@ class VacancyController extends Controller
                     'education' => 'nullable|string|max:255',
                     'salary_from' => 'nullable|string|max:255',
                     'salary_to' => 'nullable|string|max:255',
+                    'salary_type' => 'nullable|string|max:100',
                     'currency' => 'nullable|string|max:255',
                     'place' => 'nullable|string|max:255',
                     'location' => 'nullable|string|max:255',
-                    'status' => 'nullable|string|in:active,draft,archive'
+                    'status' => 'nullable|string|in:active,draft,archive',
+                    'executor_id' => 'nullable|numeric',
+                    'executor_name' => 'nullable|string',
+                    'executor_phone' => 'nullable|regex:/^\+7\d{10}$/',
+                    'executor_email' => 'nullable|string',
+                    'show_executor' => 'nullable|boolean'
                 ]);
             } catch (\Throwable $th) {
                 return response()->json([
