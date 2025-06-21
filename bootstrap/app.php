@@ -46,7 +46,10 @@ return Application::configure(basePath: dirname(__DIR__))
                     ->prefix('api/phrases')
                     ->name('phrases.')
                     ->group(base_path('routes/api-phrase.php'));
-
+                Route::middleware('customer-auth')
+                    ->prefix('api/hh')
+                    ->name('hh.')
+                    ->group(base_path('routes/api-hh.php'));
             });
         })
 //        then: function () {
