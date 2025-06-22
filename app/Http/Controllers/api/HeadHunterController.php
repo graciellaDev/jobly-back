@@ -133,6 +133,7 @@ class HeadHunterController extends Controller
     {
         $customerId = $request->attributes->get('customer_id');
         $userHh = HeadHunter::where('customer_id', $customerId)->first();
+
         if (!$userHh) {
             return response()->json([
                 'message' => 'Пользователеь не еще не авторизован',

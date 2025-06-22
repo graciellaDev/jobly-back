@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('head_hunter', function (Blueprint $table) {
+        Schema::create('head_hunters', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
             $table->foreignId('customer_id')->constrained()->onDelete('cascade');
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('head_hunter');
+        Schema::dropIfExists('head_hunters');
     }
 };
