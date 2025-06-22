@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\api;
 
+use App\Models\Customer;
 use App\Models\HeadHunter;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cookie;
@@ -16,12 +17,14 @@ class HeadHunterController extends Controller
     private int $status = 200;
     private string $COOKIE_ID_CLIENT = 'hh_id';
     private string $COOKIE_ID_SECRET = 'hh_secret';
-    public function auth(string $clientId = null, string $secretId = null): JsonResponse
+
+    private string $COOKIE_ID_CUSTOMER = 'customer_id';
+    public function auth(Request $request): JsonResponse
     {
-        if ($clientId && $secretId) {
+        if (!isset($request->client_id) && !isset($request->secret_id)) {
             $this->url = config('hh.auth_url')
                 . '?response_type=code&'
-                . "client_id=$clientId&"
+                . "client_id=$request->client_id&"
                 . "force_login=true&"
                 . config('hh.redirect_url');
             $this->message = 'Success';
@@ -36,30 +39,38 @@ class HeadHunterController extends Controller
         ], $this->status);
     }
 
-    public function code(Request $request): JsonResponse
+    public function code(Request $request)
     {
-        $customerId = $request->attributes->get('customer_id');
         $code = $request->get('code');
         if (!$code) {
             $clientId = $request->get('clientId');
             $clientSecret = $request->get('clientSecret');
-            if ($clientId && $clientSecret) {
-                $this->setClientCookie($clientId, $clientSecret);
-            } else {
-                $this->message = 'Роут не найден';
+            $customerToken = $request->get('customerToken');
+            $customer = Customer::where('auth_token', $customerToken)->first();
+            if (!$customer || !$customerToken) {
+                $this->message = 'Пользователь не найден';
                 $this->status = 404;
+            }else {
+                if ($clientId && $clientSecret) {
+                    $this->setClientCookie($clientId, $clientSecret, $customer->id);
+                    return redirect(config('hh.front_save_ids') . '&message=success');
+                } else {
+                    return redirect(config('hh.front_save_ids') . '&message=Не заполнено поле');
+                }
             }
         } else {
             $clientId = Cookie::get($this->COOKIE_ID_CLIENT);
             $clientSecret = Cookie::get($this->COOKIE_ID_SECRET);
+            $customerId = Cookie::get($this->COOKIE_ID_CUSTOMER);
             if ($clientId && $clientSecret) {
                 $data = $this->getToken($clientId, $clientSecret, $code);
+                var_dump($data);
                 if ($data) {
                     $data['customer'] = $customerId;
                     HeadHunter::create($data);
                     $this->message = 'Success';
                 }
-                } else {
+            } else {
                 $this->message = 'Роут не найден';
                 $this->status = 404;
             }
@@ -71,10 +82,11 @@ class HeadHunterController extends Controller
         ], $this->status);
     }
 
-    private function setClientCookie(string $clientId, string $clientSecret): void
+    private function setClientCookie(string $clientId, string $clientSecret, string $customerId): void
     {
         Cookie::queue($this->COOKIE_ID_CLIENT, $clientId, 60);
         Cookie::queue($this->COOKIE_ID_SECRET, $clientSecret, 60);
+        Cookie::queue($this->COOKIE_ID_CUSTOMER, $customerId, 60);
         redirect(config('hh.front_save_ids'));
     }
 
@@ -90,6 +102,7 @@ class HeadHunterController extends Controller
                 'redirect_uri' => config('hh.redirect_url'),
                 'code' => $code
             ]);
+            var_dump($response);
             if ($response->status() == 200) {
                 $data = $response->json();
                 return [

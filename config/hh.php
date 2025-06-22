@@ -11,7 +11,7 @@
 return [
     'auth_url' => 'https://hh.ru/oauth/authorize',
     'redirect_url' => env('APP_URL') . '/api/hh/auth',
-    'front_save_ids' => 'https://job-ly.ru/vacancies/PremiumPlatforms?service=hh?popup_account=true',
+    'front_save_ids' => 'https://job-ly.ru/vacancies/PremiumPlatforms?popup_account=true&platform=hh',
     'get_token_url' => 'https://api.hh.ru/token',
     'get_profile_url' => 'https://api.hh.ru/me'
 ];
