@@ -21,10 +21,11 @@ class HeadHunterController extends Controller
     private string $COOKIE_ID_CUSTOMER = 'customer_id';
     public function auth(Request $request): JsonResponse
     {
-        if (!isset($request->client_id) && !isset($request->secret_id)) {
+        $clientId = Cookie::get($this->COOKIE_ID_CLIENT);
+        if ($clientId) {
             $this->url = config('hh.auth_url')
                 . '?response_type=code&'
-                . "client_id=$request->client_id&"
+                . "client_id=$clientId&"
                 . "force_login=true&"
                 . config('hh.redirect_url');
             $this->message = 'Success';
