@@ -22,7 +22,7 @@ class HeadHunterController extends Controller
     public function auth(Request $request): JsonResponse
     {
         $clientId = Cookie::get($this->COOKIE_ID_CLIENT);
-        if ($clientId) {
+        if (!empty($clientId)) {
             $this->url = config('hh.auth_url')
                 . '?response_type=code&'
                 . "client_id=$clientId&"
