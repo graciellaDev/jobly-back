@@ -65,10 +65,10 @@ class HeadHunterController extends Controller
             $customerId = Cookie::get($this->COOKIE_ID_CUSTOMER);
             if ($clientId && $clientSecret) {
                 $data = $this->getToken($clientId, $clientSecret, $code);
-                var_dump($data);
                 if ($data) {
                     $data['customer'] = $customerId;
                     HeadHunter::create($data);
+                    return redirect(config('hh.front_save_ids') . '&status_auth=true&message=Авторизация прошла успешно');
                     $this->message = 'Success';
                 }
             } else {
