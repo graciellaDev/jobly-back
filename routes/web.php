@@ -18,5 +18,5 @@ Route::get('/clear-cache', function () {
 });
 
 Route::get('/reg-success/{id}', [CustomerController::class, 'regSuccess']);
-Route::get('/code-hh', [HeadHunterController::class, 'code']);
+Route::get('/api/code-hh', [HeadHunterController::class, 'code']);
 //Route::get('/restore-success/{id}', CustomerController::class, 'restoreSuccess');
