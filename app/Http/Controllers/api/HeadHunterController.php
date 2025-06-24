@@ -103,7 +103,7 @@ class HeadHunterController extends Controller
                 'redirect_uri' => config('hh.redirect_url'),
                 'code' => $code
             ]);
-            var_dump($response->message());
+            var_dump($response->body());
 
             if ($response->status() == 200) {
                 $data = $response->json();
