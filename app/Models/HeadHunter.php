@@ -13,4 +13,9 @@ class HeadHunter extends Model
         'access_token',
         'refresh_token'
     ];
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
+    }
 }
