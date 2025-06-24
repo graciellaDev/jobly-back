@@ -45,21 +45,20 @@ class HeadHunterController extends Controller
         if (!$code) {
             $customerToken = $request->get('customerToken');
             $customer = Customer::where('auth_token', $customerToken)->first();
+
             if (!$customer || !$customerToken) {
                 $this->message = 'Пользователь не найден';
                 $this->status = 404;
-            }else {
-                if ($clientId && $clientSecret) {
-                    Cookie::queue($this->COOKIE_ID_CUSTOMER, $customer->id, 60);
-                    return redirect(
-                        config('hh.auth_url')
-                        . '?force_login=true&response_type=code'
-                        . '&client_id=' . config('hh.client_id')
-                        . 'redirect_uri=' . config('hh.redirect_url')
-                    );
-                } else {
-                    return redirect(config('hh.front_save_ids') . '&message=Не заполнено поле');
-                }
+            } else {
+                Cookie::queue($this->COOKIE_ID_CUSTOMER, $customer->id, 60);
+                $url = config('hh.auth_url');
+                $queryParams = [
+                    'force_login' => 'true',
+                    'response_type' => 'code',
+                    'client_id' => config('hh.client_id'),
+                    'redirect_uri' => config('hh.redirect_url')
+                ];
+                return redirect($url . '?' . http_build_query($queryParams));
             }
         } else {
             $customerId = Cookie::get($this->COOKIE_ID_CUSTOMER);
