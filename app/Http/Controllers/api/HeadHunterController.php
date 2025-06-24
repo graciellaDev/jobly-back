@@ -63,7 +63,7 @@ class HeadHunterController extends Controller
         } else {
             $customerId = Cookie::get($this->COOKIE_ID_CUSTOMER);
             if ($customerId) {
-                $data = $this->getToken($clientId, $clientSecret, $code);
+                $data = $this->getToken($code, $clientId, $clientSecret);
                 if ($data) {
                     $data['customer'] = $customerId;
                     HeadHunter::create($data);
