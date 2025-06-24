@@ -96,21 +96,22 @@ class HeadHunterController extends Controller
         if (!$code || !$clientId || !$secretId) {
             return false;
         } else {
-            $response = Http::post(config('hh.get_token_url'), [
+            $response = Http::withHeaders([
+                'Content-Type'  => 'application/x-www-form-urlencoded',
+            ])->asForm()->post(config('hh.get_token_url'), [
                 'client_id' => $clientId,
                 'client_secret' => $secretId,
-                'grant_type' => 'client_credentials',
+                'grant_type' => 'authorization_code',
                 'redirect_uri' => config('hh.redirect_url'),
                 'code' => $code
             ]);
-            var_dump($response->body());
 
             if ($response->status() == 200) {
                 $data = $response->json();
                 return [
                     'access_token' => $data['access_token'],
                     'token_type' => $data['token_type'],
-                    'expires_in' => $data['expires_in'],
+                    'expired_in' => $data['expires_in'],
                     'refresh_token' => $data['refresh_token']
                 ];
             } else {
@@ -124,7 +125,9 @@ class HeadHunterController extends Controller
         if (!$clientId || !$secretId) {
             return false;
         } else {
-            $response = Http::post(config('hh.get_token_url'), [
+            $response = Http::withHeaders([
+                'Content-Type'  => 'application/x-www-form-urlencoded',
+            ])->asForm()->post(config('hh.get_token_url'), [
                 'client_id' => $clientId,
                 'client_secret' => $secretId,
                 'grant_type' => 'refresh_token',
@@ -156,8 +159,10 @@ class HeadHunterController extends Controller
             ], 404);
         }
 
-        $response = Http::withHeaders(['Authorization' => 'Bearer ' . $userHh['access_token']])
-            ->get(config('hh.get_profile_url'));
+        $response = Http::withHeaders([
+            'Content-Type'  => 'application/x-www-form-urlencoded',
+            'Authorization' => 'Bearer ' . $userHh['access_token']
+        ])->asForm()->get(config('hh.get_profile_url'));
         if ($response->status() == 400) {
             return response()->json([
                 'message' => 'Ошибка запроса',
@@ -177,8 +182,10 @@ class HeadHunterController extends Controller
                 $data['refresh_token'] = $response['refresh_token'];
                 $data['expired_in'] = $response['expired_in'];
                 $userHh->update($data);
-                $response = Http::withHeaders(['Authorization' => 'Bearer ' . $response['access_token']])
-                    ->get(config('hh.get_profile_url'));
+                $response = Http::withHeaders([
+                    'Authorization' => 'Bearer ' . $response['access_token'],
+                    'Content-Type'  => 'application/x-www-form-urlencoded',
+                ])->asForm()->get(config('hh.get_profile_url'));
             }
         }
 
