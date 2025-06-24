@@ -99,7 +99,7 @@ class HeadHunterController extends Controller
             $response = Http::post(config('hh.get_token_url'), [
                 'client_id' => $clientId,
                 'client_secret' => $secretId,
-                'grant_type' => 'authorization_code',
+                'grant_type' => 'client_credentials',
                 'redirect_uri' => config('hh.redirect_url'),
                 'code' => $code
             ]);
