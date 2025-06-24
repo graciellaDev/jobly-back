@@ -67,7 +67,7 @@ class HeadHunterController extends Controller
                 if ($data) {
                     $data['customer_id'] = $customerId;
                     HeadHunter::create($data);
-                    $url = config(config('hh.front_save_ids'));
+                    $url = config('hh.front_save_ids');
                     $queryParams = [
                         'popup_account' => 'true',
                         'platform' => 'hh',
