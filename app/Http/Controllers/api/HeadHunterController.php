@@ -65,7 +65,7 @@ class HeadHunterController extends Controller
             if ($customerId) {
                 $data = $this->getToken($code, $clientId, $clientSecret);
                 if ($data) {
-                    $data['customer'] = $customerId;
+                    $data['customer_id'] = $customerId;
                     HeadHunter::create($data);
                     $url = config(config('hh.front_save_ids'));
                     $queryParams = [
