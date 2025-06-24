@@ -51,7 +51,12 @@ class HeadHunterController extends Controller
             }else {
                 if ($clientId && $clientSecret) {
                     Cookie::queue($this->COOKIE_ID_CUSTOMER, $customer->id, 60);
-                    return redirect(config('hh.front_save_ids') . '&message=success');
+                    return redirect(
+                        config('hh.auth_url')
+                        . '?force_login=true&response_type=code'
+                        . '&client_id=' . config('hh.client_id')
+                        . 'redirect_uri=' . config('hh.redirect_url')
+                    );
                 } else {
                     return redirect(config('hh.front_save_ids') . '&message=Не заполнено поле');
                 }
