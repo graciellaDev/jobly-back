@@ -67,8 +67,14 @@ class HeadHunterController extends Controller
                 if ($data) {
                     $data['customer'] = $customerId;
                     HeadHunter::create($data);
-                    return redirect(config('hh.front_save_ids') . '&status_auth=true&message=Авторизация прошла успешно');
-                    $this->message = 'Success';
+                    $url = config(config('hh.front_save_ids'));
+                    $queryParams = [
+                        'popup_account' => 'true',
+                        'platform' => 'hh',
+                        'status_auth' => 'true',
+                        'message' => 'Авторизация прошла успешно'
+                    ];
+                    return redirect($url . '?' . http_build_query($queryParams));
                 } else {
                     $this->message = 'Ошибка получения токена';
                     $this->status = 400;
@@ -97,8 +103,6 @@ class HeadHunterController extends Controller
                 'redirect_uri' => config('hh.redirect_url'),
                 'code' => $code
             ]);
-            var_dump($response->status());
-            var_dump($response->json());
 
             if ($response->status() == 200) {
                 $data = $response->json();
