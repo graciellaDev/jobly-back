@@ -74,7 +74,7 @@ class HeadHunterController extends Controller
                         'status_auth' => 'true',
                         'message' => 'Авторизация прошла успешно'
                     ];
-                    return redirect($url . '?' . http_build_query($queryParams));
+                    return redirect()->to($url . '?' . http_build_query($queryParams));
                 } else {
                     $this->message = 'Ошибка получения токена';
                     $this->status = 400;
