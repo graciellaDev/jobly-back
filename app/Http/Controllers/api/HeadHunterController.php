@@ -103,7 +103,8 @@ class HeadHunterController extends Controller
         ], $this->status);
     }
 
-    private function getToken(string $code = null, string $clientId = null, string $secretId = null): bool | array
+    private function getToken(string | null $code = null, string | null $clientId = null, string | null $secretId =
+    null): bool | array
     {
         if (!$code || !$clientId || !$secretId) {
             return false;
@@ -210,7 +211,8 @@ class HeadHunterController extends Controller
         ])->asForm()->get($url);
     }
 
-    private function requirePostPlatform(string $token, string $url, array $data): PromiseInterface | Response
+    private function requirePostPlatform(string | null $token = null, string $url, array $data): PromiseInterface |
+    Response
     {
         $headers = [
             'Content-Type'  => config('hh.content_type'),
