@@ -207,7 +207,7 @@ class HeadHunterController extends Controller
         ]);
     }
 
-    private function requirePlatform(sstring $token, string $url): PromiseInterface | Response
+    private function requirePlatform(string $token, string $url): PromiseInterface | Response
     {
         return  Http::withHeaders([
             'Content-Type'  => 'application/x-www-form-urlencoded',
