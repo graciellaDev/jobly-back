@@ -69,7 +69,7 @@ class HeadHunterController extends Controller
                 $data = $this->getToken($code, $clientId, $clientSecret);
                 if ($data) {
                     $data['customer_id'] = $customerId;
-                    $profile = $this->requirePlatform($data['access_token'], config('hh.get_profile_url'));
+                    $profile = $this->requireGetPlatform($data['access_token'], config('hh.get_profile_url'));
                     if ($profile->status() == 200) {
                         $profile = $profile->json();
                         $data['employer_id'] = $profile['employer']['id'];
@@ -108,15 +108,14 @@ class HeadHunterController extends Controller
         if (!$code || !$clientId || !$secretId) {
             return false;
         } else {
-            $response = Http::withHeaders([
-                'Content-Type'  => 'application/x-www-form-urlencoded',
-            ])->asForm()->post(config('hh.get_token_url'), [
+            $formData = [
                 'client_id' => $clientId,
                 'client_secret' => $secretId,
                 'grant_type' => 'authorization_code',
                 'redirect_uri' => config('hh.redirect_url'),
                 'code' => $code
-            ]);
+            ];
+            $response = $this->requirePostPlatform(null, config('hh.get_token_url'), $formData);
 
             if ($response->status() == 200) {
                 $data = $response->json();
@@ -131,7 +130,6 @@ class HeadHunterController extends Controller
             }
         }
     }
-
     private function getRefreshToken(string $accessToken = null, string $refreshToken = null): bool | array
     {
         if (!$accessToken || !$refreshToken) {
@@ -139,17 +137,16 @@ class HeadHunterController extends Controller
         } else {
 //            $clientId = config('hh.client_id');
 //            $clientSecret = config('hh.client_secret');
-            $response = Http::withHeaders([
-                'Content-Type'  => 'application/x-www-form-urlencoded',
-                'Authorization' => "Bearer $accessToken"
-            ])->asForm()->post(config('hh.get_token_url'), [
+            $formData = [
                 'refresh_token' => $refreshToken,
 //                'client_id'     => $clientId,
 //                'client_secret' => $clientSecret,
 //                'access_token' => $accessToken,
                 'grant_type' => 'refresh_token',
 //                'redirect_uri' => config('hh.redirect_url'),
-            ]);
+            ];
+            $response = $this->requirePostPlatform($accessToken, config('hh.get_token_url'), $formData);
+
             if ($response->status() == 200) {
                 $data = $response->json();
                 return [
@@ -175,10 +172,7 @@ class HeadHunterController extends Controller
             ], 404);
         }
 
-        $response = Http::withHeaders([
-            'Content-Type'  => 'application/x-www-form-urlencoded',
-            'Authorization' => 'Bearer ' . $userHh['access_token']
-        ])->asForm()->get(config('hh.get_profile_url'));
+        $response = $this->requireGetPlatform($userHh['access_token'], config('hh.get_profile_url'));
         if ($response->status() == 400) {
             return response()->json([
                 'message' => 'Ошибка запроса',
@@ -198,10 +192,7 @@ class HeadHunterController extends Controller
                 $data['refresh_token'] = $response['refresh_token'];
                 $data['expired_in'] = $response['expired_in'];
                 $userHh->update($data);
-                $response = Http::withHeaders([
-                    'Authorization' => 'Bearer ' . $response['access_token'],
-                    'Content-Type'  => 'application/x-www-form-urlencoded',
-                ])->asForm()->get(config('hh.get_profile_url'));
+                $response = $this->requireGetPlatform($response['access_token'], config('hh.get_profile_url'));
             }
         }
 
@@ -211,12 +202,24 @@ class HeadHunterController extends Controller
         ]);
     }
 
-    private function requirePlatform(string $token, string $url): PromiseInterface | Response
+    private function requireGetPlatform(string $token, string $url): PromiseInterface | Response
     {
         return  Http::withHeaders([
-            'Content-Type'  => 'application/x-www-form-urlencoded',
+            'Content-Type'  => config('hh.content_type'),
             'Authorization' => 'Bearer ' . $token
         ])->asForm()->get($url);
+    }
+
+    private function requirePostPlatform(string $token, string $url, array $data): PromiseInterface | Response
+    {
+        $headers = [
+            'Content-Type'  => config('hh.content_type'),
+        ];
+        if (!empty($token)) {
+            $headers['Authorization'] = "Bearer $token";
+        }
+
+        return  Http::withHeaders($headers)->asForm()->post($url, $data);
     }
 
     public function getPublications(Request $request): JsonResponse
@@ -245,7 +248,7 @@ class HeadHunterController extends Controller
         }
 
         $pubEndpoint = config('hh.get_publications')['url'] . $userHh->employer_id . config('hh.get_publications')['folder'];
-        $data = $this->requirePlatform($accessToken, $pubEndpoint);
+        $data = $this->requireGetPlatform($accessToken, $pubEndpoint);
 
         return response()->json([
             'message' => $this->message,
