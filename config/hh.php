@@ -15,5 +15,9 @@ return [
     'redirect_url' => env('APP_URL') . '/api/code-hh',
     'front_save_ids' => 'https://job-ly.ru/vacancies/PremiumPlatforms',
     'get_token_url' => 'https://api.hh.ru/token',
-    'get_profile_url' => 'https://api.hh.ru/me'
+    'get_profile_url' => 'https://api.hh.ru/me',
+    'get_publications' => [
+        'url' => 'https://api.hh.ru/employers/',
+        'folder' => '/vacancies/active'
+    ]
 ];

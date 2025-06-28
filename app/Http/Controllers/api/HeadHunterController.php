@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Cookie;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
+use GuzzleHttp\Promise\PromiseInterface;
+use Illuminate\Http\Client\Response;
 
 class HeadHunterController extends Controller
 {
@@ -66,7 +68,13 @@ class HeadHunterController extends Controller
                 $data = $this->getToken($code, $clientId, $clientSecret);
                 if ($data) {
                     $data['customer_id'] = $customerId;
+                    $profile = $this->getProfile();
+                    if ($profile->status() == 200) {
+                        $data['employer_id'] = $profile['data']['employer']['id'];
+                    }
+
                     HeadHunter::create($data);
+                    Cookie::forget($this->COOKIE_ID_CUSTOMER);
                     $url = config('hh.front_save_ids');
                     $queryParams = [
                         'popup_account' => 'true',
@@ -111,7 +119,7 @@ class HeadHunterController extends Controller
                 return [
                     'access_token' => $data['access_token'],
                     'token_type' => $data['token_type'],
-                    'expired_in' => $data['expires_in'],
+                    'expired_in' => time() + $data['expires_in'],
                     'refresh_token' => $data['refresh_token']
                 ];
             } else {
@@ -120,25 +128,32 @@ class HeadHunterController extends Controller
         }
     }
 
-    private function getRefreshToken(string $clientId = null, string $secretId = null): bool | array
+    private function getRefreshToken(string $accessToken = null, string $refreshToken = null): bool | array
     {
-        if (!$clientId || !$secretId) {
+        if (!$accessToken || !$refreshToken) {
             return false;
         } else {
+            var_dump($accessToken);
+            var_dump($refreshToken);
+
+            $clientId = config('hh.client_id');
+            $clientSecret = config('hh.client_secret');
             $response = Http::withHeaders([
                 'Content-Type'  => 'application/x-www-form-urlencoded',
+                'Authorization' => "Bearer $accessToken"
             ])->asForm()->post(config('hh.get_token_url'), [
-                'client_id' => $clientId,
-                'client_secret' => $secretId,
+                'refresh_token' => $refreshToken,
+                'client_id'     => $clientId,
+                'client_secret' => $clientSecret,
+//                'access_token' => $accessToken,
                 'grant_type' => 'refresh_token',
-                'redirect_uri' => config('hh.redirect_url'),
+//                'redirect_uri' => config('hh.redirect_url'),
             ]);
             if ($response->status() == 200) {
                 $data = $response->json();
                 return [
                     'access_token' => $data['access_token'],
-                    'token_type' => $data['token_type'],
-                    'expires_in' => $data['expires_in'],
+                    'expires_in' => $data['expires_in'] + time(),
                     'refresh_token' => $data['refresh_token']
                 ];
             } else {
@@ -193,5 +208,50 @@ class HeadHunterController extends Controller
             'message' => 'Success',
             'data' => $response->json()
         ]);
+    }
+
+    private function requirePublications(string $employerId, string $token): PromiseInterface | Response
+    {
+        $pubEndpoint = config('hh.get_publications')['url'] . $employerId . config('hh.get_publications')['folder'];
+
+        return  Http::withHeaders([
+            'Content-Type'  => 'application/x-www-form-urlencoded',
+            'Authorization' => 'Bearer ' . $token
+        ])->asForm()->get($pubEndpoint);
+    }
+
+    public function getPublications(Request $request): JsonResponse
+    {
+        $customerId = $request->attributes->get('customer_id');
+
+        $userHh = HeadHunter::where('customer_id', $customerId)->first();
+        $data = [];
+        if (!$userHh) {
+            return response()->json([
+                'message' => 'Пользователь не авторизован на hh.ru',
+                'data' => $data
+            ], 404);
+        }
+        $accessToken = $userHh->access_token;
+        var_dump($userHh->expired_in- 60);
+        var_dump(time());
+        if ($userHh->expired_in - 60 < time()) {
+            $response = $this->getRefreshToken($userHh->access_token, $userHh->refresh_token);
+            if (!$response) {
+                return response()->json([
+                    'message' => 'Ошибка получения refresh токена',
+                    'data' => []
+                ], 404);
+            }
+            $userHh->update($response);
+            $accessToken = $response['access_token'];
+        }
+
+        $data = $this->requirePublications($userHh->employer_id, $accessToken);
+
+        return response()->json([
+            'message' => $this->message,
+            'data' => $data->json()
+        ], $this->status);
     }
 }
