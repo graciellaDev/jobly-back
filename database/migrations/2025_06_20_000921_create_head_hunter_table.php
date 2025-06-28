@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
             $table->foreignId('customer_id')->constrained()->onDelete('cascade');
-            $table->string('expired_in');
+            $table->integer('expired_in');
             $table->string('access_token')->nullable();
             $table->string('refresh_token')->nullable();
             $table->string('employer_id')->nullable();

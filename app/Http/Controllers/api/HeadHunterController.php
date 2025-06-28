@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Response;
+use PHPUnit\Framework\Attributes\Ticket;
 
 class HeadHunterController extends Controller
 {
@@ -136,15 +137,15 @@ class HeadHunterController extends Controller
         if (!$accessToken || !$refreshToken) {
             return false;
         } else {
-            $clientId = config('hh.client_id');
-            $clientSecret = config('hh.client_secret');
+//            $clientId = config('hh.client_id');
+//            $clientSecret = config('hh.client_secret');
             $response = Http::withHeaders([
                 'Content-Type'  => 'application/x-www-form-urlencoded',
                 'Authorization' => "Bearer $accessToken"
             ])->asForm()->post(config('hh.get_token_url'), [
                 'refresh_token' => $refreshToken,
-                'client_id'     => $clientId,
-                'client_secret' => $clientSecret,
+//                'client_id'     => $clientId,
+//                'client_secret' => $clientSecret,
 //                'access_token' => $accessToken,
                 'grant_type' => 'refresh_token',
 //                'redirect_uri' => config('hh.redirect_url'),
