@@ -161,39 +161,8 @@ class HeadHunterController extends Controller
 
     public function getProfile(Request $request): JsonResponse
     {
-        $customerId = $request->attributes->get('customer_id');
-        $userHh = HeadHunter::where('customer_id', $customerId)->first();
-
-        if (!$userHh) {
-            return response()->json([
-                'message' => 'Пользователеь не еще не авторизован',
-                'data' => []
-            ], 404);
-        }
-
-        $response = $this->requireGetPlatform($userHh['access_token'], config('hh.get_profile_url'));
-        if ($response->status() == 400) {
-            return response()->json([
-                'message' => 'Ошибка запроса',
-                'data' => []
-            ], 400);
-        }
-        if ($response->status() == 403) {
-            $response = $this->getRefreshToken($userHh['id_client'], $userHh['id_secret']);
-            if (!$response) {
-                return response()->json([
-                    'message' => 'Ошибка получения refresh токена',
-                    'data' => []
-                ], 400);
-            } else {
-                $data = [];
-                $data['access_token'] = $response['access_token'];
-                $data['refresh_token'] = $response['refresh_token'];
-                $data['expired_in'] = $response['expired_in'];
-                $userHh->update($data);
-                $response = $this->requireGetPlatform($response['access_token'], config('hh.get_profile_url'));
-            }
-        }
+        $customerToken = $request->attributes->get('token');
+        $response = $this->requireGetPlatform($customerToken, config('hh.get_profile_url'));
 
         return response()->json([
             'message' => 'Success',
@@ -209,7 +178,7 @@ class HeadHunterController extends Controller
         ])->asForm()->get($url);
     }
 
-    private function requirePostPlatform(string | null $token = null, string $url, array $data): PromiseInterface |
+    private function requirePostPlatform(string | null $token, string $url, array $data): PromiseInterface |
     Response
     {
         $headers = [
@@ -222,37 +191,71 @@ class HeadHunterController extends Controller
         return  Http::withHeaders($headers)->asForm()->post($url, $data);
     }
 
-    public function getPublications(Request $request): JsonResponse
+    public function getPublicationList(Request $request): JsonResponse
     {
-        $customerId = $request->attributes->get('customer_id');
-
-        $userHh = HeadHunter::where('customer_id', $customerId)->first();
         $data = [];
-        if (!$userHh) {
+        $customerToken = [
+            'token' => $request->attributes->get('token'),
+            'employer_id' => $request->attributes->get('employer_id')
+        ];
+
+        if (empty($customerToken['employer_id'])) {
             return response()->json([
-                'message' => 'Пользователь не авторизован на hh.ru',
+                'message' => 'Ваш аккаунт не может иметь публикаций',
                 'data' => $data
             ], 404);
         }
-        $accessToken = $userHh->access_token;
-        if ($userHh->expired_in - 60 < time()) {
-            $response = $this->getRefreshToken($userHh->access_token, $userHh->refresh_token);
-            if (!$response) {
-                return response()->json([
-                    'message' => 'Ошибка получения refresh токена',
-                    'data' => []
-                ], 404);
-            }
-            $userHh->update($response);
-            $accessToken = $response['access_token'];
-        }
 
-        $pubEndpoint = config('hh.get_publications')['url'] . $userHh->employer_id . config('hh.get_publications')['folder'];
-        $data = $this->requireGetPlatform($accessToken, $pubEndpoint);
+        $pubEndpoint = config('hh.get_publications')['url'] . $customerToken['employer_id']  . config('hh.get_publications')['folder'];
+        $data = $this->requireGetPlatform($customerToken['token'], $pubEndpoint)->json();
 
         return response()->json([
-            'message' => $this->message,
-            'data' => $data->json()
-        ], $this->status);
+            'message' => 'Success',
+            'data' => $data
+        ]);
+    }
+
+    public function getPublication(Request $request, int $id): JsonResponse
+    {
+        $customerToken = $request->attributes->get('token');
+
+        $response = $this->requireGetPlatform($customerToken, config('hh.get_publication') . 'id');
+
+        if ($response->status() != 200) {
+            return response()->json([
+                'message' => $response->status() == 404 ? 'Публикация не найдена' : 'Ошибка получения вакансии',
+                'data' => []
+            ], $response->status());
+        }
+
+        return response()->json([
+            'message' => 'Success',
+            'data' => $response->json()
+        ]);
+    }
+
+    public function updatePublication(Request $request, int $id): JsonResponse
+    {
+
+        return response()->json([]);
+    }
+
+    public function getDraftList(Request $request): JsonResponse
+    {
+        $customerToken = $request->attributes->get('token');
+
+        $response = $this->requireGetPlatform($customerToken, config('hh.get_drafts'));
+
+        if ($response->status() != 200) {
+            return response()->json([
+                'message' => $response->status() == 404 ? 'Публикация не найдена' : 'Ошибка получения вакансии',
+                'data' => []
+            ], $response->status());
+        }
+
+        return response()->json([
+            'message' => 'Success',
+            'data' => $response->json()
+        ]);
     }
 }
