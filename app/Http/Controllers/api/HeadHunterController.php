@@ -68,9 +68,9 @@ class HeadHunterController extends Controller
                 $data = $this->getToken($code, $clientId, $clientSecret);
                 if ($data) {
                     $data['customer_id'] = $customerId;
-                    $profile = $this->getProfile($request);
+                    $profile = $this->requirePlatform($data['access_token'], config('hh.get_profile_url'));
                     if ($profile->status() == 200) {
-                        $data['employer_id'] = $profile['data']['employer']['id'];
+                        $data['employer_id'] = $profile->json()['employer']['id'];
                     }
 
                     HeadHunter::create($data);
@@ -133,9 +133,6 @@ class HeadHunterController extends Controller
         if (!$accessToken || !$refreshToken) {
             return false;
         } else {
-            var_dump($accessToken);
-            var_dump($refreshToken);
-
             $clientId = config('hh.client_id');
             $clientSecret = config('hh.client_secret');
             $response = Http::withHeaders([
@@ -210,14 +207,12 @@ class HeadHunterController extends Controller
         ]);
     }
 
-    private function requirePublications(string $employerId, string $token): PromiseInterface | Response
+    private function requirePlatform(sstring $token, string $url): PromiseInterface | Response
     {
-        $pubEndpoint = config('hh.get_publications')['url'] . $employerId . config('hh.get_publications')['folder'];
-
         return  Http::withHeaders([
             'Content-Type'  => 'application/x-www-form-urlencoded',
             'Authorization' => 'Bearer ' . $token
-        ])->asForm()->get($pubEndpoint);
+        ])->asForm()->get($url);
     }
 
     public function getPublications(Request $request): JsonResponse
@@ -233,8 +228,6 @@ class HeadHunterController extends Controller
             ], 404);
         }
         $accessToken = $userHh->access_token;
-        var_dump($userHh->expired_in- 60);
-        var_dump(time());
         if ($userHh->expired_in - 60 < time()) {
             $response = $this->getRefreshToken($userHh->access_token, $userHh->refresh_token);
             if (!$response) {
@@ -247,7 +240,8 @@ class HeadHunterController extends Controller
             $accessToken = $response['access_token'];
         }
 
-        $data = $this->requirePublications($userHh->employer_id, $accessToken);
+        $pubEndpoint = config('hh.get_publications')['url'] . $userHh->employer_id . config('hh.get_publications')['folder'];
+        $data = $this->requirePlatform($accessToken, $pubEndpoint);
 
         return response()->json([
             'message' => $this->message,
