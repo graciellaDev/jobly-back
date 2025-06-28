@@ -11,7 +11,8 @@ class HeadHunter extends Model
         'customer_id',
         'expired_in',
         'access_token',
-        'refresh_token'
+        'refresh_token',
+        'employer_id'
     ];
 
     public function customer(): BelongsTo

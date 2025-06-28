@@ -72,9 +72,7 @@ class HeadHunterController extends Controller
                     $profile = $this->requireGetPlatform($data['access_token'], config('hh.get_profile_url'));
                     if ($profile->status() == 200) {
                         $profile = $profile->json();
-                        $data['employer_id'] = json_encode($profile);
-                    } else {
-                        $data['employer_id'] = 'Не назначен';
+                        $data['employer_id'] = $profile['employer']['id'];
                     }
 
                     HeadHunter::create($data);
