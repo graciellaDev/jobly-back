@@ -68,7 +68,7 @@ class HeadHunterController extends Controller
                 $data = $this->getToken($code, $clientId, $clientSecret);
                 if ($data) {
                     $data['customer_id'] = $customerId;
-                    $profile = $this->getProfile();
+                    $profile = $this->getProfile($request);
                     if ($profile->status() == 200) {
                         $data['employer_id'] = $profile['data']['employer']['id'];
                     }

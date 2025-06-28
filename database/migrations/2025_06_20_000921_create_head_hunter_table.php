@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('expired_in');
             $table->string('access_token')->nullable();
             $table->string('refresh_token')->nullable();
+            $table->string('employer_id')->nullable();
         });
     }
 
