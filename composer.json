@@ -26,6 +26,9 @@
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
         },
+        "files": [
+            "app/Helpers/PlatformHh.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

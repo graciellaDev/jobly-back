@@ -2,16 +2,13 @@
 
 namespace App\Http\Controllers\api;
 
+use App\Helpers\PlatformHh;
+use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\HeadHunter;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Cookie;
-use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
-use GuzzleHttp\Promise\PromiseInterface;
-use Illuminate\Http\Client\Response;
-use PHPUnit\Framework\Attributes\Ticket;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
 
 class HeadHunterController extends Controller
 {
@@ -69,7 +66,7 @@ class HeadHunterController extends Controller
                 $data = $this->getToken($code, $clientId, $clientSecret);
                 if ($data) {
                     $data['customer_id'] = $customerId;
-                    $profile = $this->requireGetPlatform($data['access_token'], config('hh.get_profile_url'));
+                    $profile = PlatformHh::requireGetPlatform($data['access_token'], config('hh.get_profile_url'));
                     if ($profile->status() == 200) {
                         $profile = $profile->json();
                         $data['employer_id'] = $profile['employer']['id'];
@@ -114,43 +111,14 @@ class HeadHunterController extends Controller
                 'redirect_uri' => config('hh.redirect_url'),
                 'code' => $code
             ];
-            $response = $this->requirePostPlatform(null, config('hh.get_token_url'), $formData);
+            $response = PlatformHh::requirePostPlatform(null, config('hh.get_token_url'), $formData);
 
             if ($response->status() == 200) {
                 $data = $response->json();
                 return [
                     'access_token' => $data['access_token'],
                     'token_type' => $data['token_type'],
-                    'expired_in' => time() + $data['expires_in'],
-                    'refresh_token' => $data['refresh_token']
-                ];
-            } else {
-                return false;
-            }
-        }
-    }
-    private function getRefreshToken(string $accessToken = null, string $refreshToken = null): bool | array
-    {
-        if (!$accessToken || !$refreshToken) {
-            return false;
-        } else {
-//            $clientId = config('hh.client_id');
-//            $clientSecret = config('hh.client_secret');
-            $formData = [
-                'refresh_token' => $refreshToken,
-//                'client_id'     => $clientId,
-//                'client_secret' => $clientSecret,
-//                'access_token' => $accessToken,
-                'grant_type' => 'refresh_token',
-//                'redirect_uri' => config('hh.redirect_url'),
-            ];
-            $response = $this->requirePostPlatform($accessToken, config('hh.get_token_url'), $formData);
-
-            if ($response->status() == 200) {
-                $data = $response->json();
-                return [
-                    'access_token' => $data['access_token'],
-                    'expires_in' => $data['expires_in'] + time(),
+                    'expired_in' => time() + $data['expired_in'],
                     'refresh_token' => $data['refresh_token']
                 ];
             } else {
@@ -162,6 +130,7 @@ class HeadHunterController extends Controller
     public function getProfile(Request $request): JsonResponse
     {
         $customerToken = $request->attributes->get('token');
+        var_dump($customerToken);
         $response = $this->requireGetPlatform($customerToken, config('hh.get_profile_url'));
 
         return response()->json([
@@ -170,25 +139,28 @@ class HeadHunterController extends Controller
         ]);
     }
 
-    private function requireGetPlatform(string $token, string $url): PromiseInterface | Response
+    public function getAvailableTypes(Request $request)
     {
-        return  Http::withHeaders([
-            'Content-Type'  => config('hh.content_type'),
-            'Authorization' => 'Bearer ' . $token
-        ])->asForm()->get($url);
-    }
-
-    private function requirePostPlatform(string | null $token, string $url, array $data): PromiseInterface |
-    Response
-    {
-        $headers = [
-            'Content-Type'  => config('hh.content_type'),
-        ];
-        if (!empty($token)) {
-            $headers['Authorization'] = "Bearer $token";
+        $customerToken = $request->attributes->get('token');
+        try {
+            $data = $request->validate([
+                'employer_id' => 'required|string|min:1|max:20',
+                'manager_id' => 'required|string|min:1|max:20',
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Ошибка валидации',
+            ], 422);
         }
+        $url = config('hh.get_available_types')['url'] . $data['employer_id'] . config('hh.get_available_types')
+            ['folder'] .
+            $data['manager_id'] . config('hh.get_available_types')['catalog'];
+        $response = $this->requireGetPlatform($customerToken, $url);
 
-        return  Http::withHeaders($headers)->asForm()->post($url, $data);
+        return response()->json([
+            'message' => 'Success',
+            'data' => $response->json()
+        ]);
     }
 
     public function getPublicationList(Request $request): JsonResponse
@@ -231,6 +203,39 @@ class HeadHunterController extends Controller
         return response()->json([
             'message' => 'Success',
             'data' => $response->json()
+        ]);
+    }
+
+    public function addPublication(Request $request)
+    {
+        $customerToken = $request->attributes->get('token');
+        try {
+            $data = $request->validate([
+                'name' => 'required|string|min:3|max:100',
+                'description' => 'required|string|min:1|max:1024',
+                'area' => 'numeric|default:1',
+                'billing_type' => 'in:free,standard,standard_plus,premium|default:free',
+                'code' => 'nullable|string|max:255',
+                'driver_license_types' => 'nullable', //
+                'manager' => 'numeric',
+                'previous_id' => 'numeric', // id архивной вакансии
+                'type' => 'in:open,closed,anonymous,direct|default:open',
+                'address' => 'numeric|default:1',
+                'experience' => 'in:noExperience,between1And3,between3And6,moreThan6',
+                'fly_in_fly_out_duration' => 'in:DAYS_15,DAYS_20',
+                'work_format' => 'in:ON_SITE,REMOTE,HYBRID,FIELD_WORK',
+                'schedule' => 'in:fullDay,shift,flexible,remote,flyInFlyOut'
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Ошибка валидации',
+            ], 422);
+        }
+//        $response = $this->requirePostPlatform($customerToken, config('hh.get_publication'), $data);
+
+        return response()->json([
+            'message' => 'Success',
+//            'data' => $response->json()
         ]);
     }
 

@@ -22,5 +22,10 @@ return [
         'folder' => '/vacancies/active'
     ],
     'get_publication' => env('HH_DOMAIN') . '/vacancies/',
-    'get_drafts' => env('HH_DOMAIN') . '/vacancies/drafts'
+    'get_drafts' => env('HH_DOMAIN') . '/vacancies/drafts',
+    'get_available_types' => [
+        'url' => env('HH_DOMAIN') . '/employers/',
+        'folder' => '/managers/',
+        'catalog' => '/vacancies/available_types'
+    ],
 ];

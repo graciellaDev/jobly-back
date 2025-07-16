@@ -10,6 +10,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::get('/publications', [HeadHunterController::class, 'getPublicationList']);
         Route::get('/publications/{id}', [HeadHunterController::class, 'getPublication']);
         Route::get('/drafts', [HeadHunterController::class, 'getDraftList']);
+        Route::post('/avalibale-types', [HeadHunterController::class, 'getAvailableTypes']);
     });
 });
 

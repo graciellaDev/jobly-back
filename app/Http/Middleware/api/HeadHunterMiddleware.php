@@ -6,7 +6,6 @@ use App\Models\HeadHunter;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Closure;
-
 class HeadHunterMiddleware
 {
     public function handle(Request $request, Closure $next): Response
@@ -26,7 +25,8 @@ class HeadHunterMiddleware
 
         $token = $userHh->access_token;
         if ($userHh->expired_in < time()) {
-            $token = $this->getRefreshToken($token, $userHh->refresh_token);
+//            $token = $userHh->getRefreshToken($token, $userHh->refresh_token);
+            $token = $userHh->getRefreshToken();
 
             if (!$token) {
                 return response()->json([
