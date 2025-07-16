@@ -9,7 +9,6 @@ use App\Models\HeadHunter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
-use App\Helpers\PlatformHh;
 
 class HeadHunterController extends Controller
 {
