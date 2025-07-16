@@ -10,7 +10,7 @@ class HeadHunter extends Model
     protected $fillable = [
         'id',
         'customer_id',
-        'expired_in',
+        'expires_in',
         'access_token',
         'refresh_token',
         'employer_id'
@@ -30,11 +30,7 @@ class HeadHunter extends Model
         } else {
             $formData = [
                 'refresh_token' => $this->refresh_token,
-//                'client_id'     => $clientId,
-//                'client_secret' => $clientSecret,
-//                'access_token' => $this->access_token,
                 'grant_type' => 'refresh_token',
-//                'redirect_uri' => config('hh.redirect_url'),
             ];
 
             $response = PlatformHh::requirePostPlatform($this->access_token, config('hh.get_token_url'), $formData);
@@ -43,7 +39,7 @@ class HeadHunter extends Model
                 $data = $response->json();
                 return [
                     'access_token' => $data['access_token'],
-                    'expired_in' => $data['expires_in'] + time(),
+                    'expires_in' => $data['expires_in'] + time(),
                     'refresh_token' => $data['refresh_token']
                 ];
             } else {

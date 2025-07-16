@@ -24,7 +24,7 @@ class HeadHunterMiddleware
         }
 
         $token = $userHh->access_token;
-        if ($userHh->expired_in < time()) {
+        if ($userHh->expires_in < time()) {
 //            $token = $userHh->getRefreshToken($token, $userHh->refresh_token);
             $token = $userHh->getRefreshToken();
 
@@ -38,7 +38,7 @@ class HeadHunterMiddleware
             $data = [];
             $data['access_token'] = $token['access_token'];
             $data['refresh_token'] = $token['refresh_token'];
-            $data['expired_in'] = $token['expired_in'];
+            $data['expires_in'] = $token['expires_in'];
             $userHh->update($data);
             $token = $token['access_token'];
         }

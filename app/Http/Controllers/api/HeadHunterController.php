@@ -118,7 +118,7 @@ class HeadHunterController extends Controller
                 return [
                     'access_token' => $data['access_token'],
                     'token_type' => $data['token_type'],
-                    'expired_in' => time() + $data['expired_in'],
+                    'expires_in' => time() + $data['expires_in'],
                     'refresh_token' => $data['refresh_token']
                 ];
             } else {
