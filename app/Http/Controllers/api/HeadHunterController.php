@@ -9,6 +9,7 @@ use App\Models\HeadHunter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
+use App\Helpers\PlatformHh;
 
 class HeadHunterController extends Controller
 {
@@ -130,8 +131,7 @@ class HeadHunterController extends Controller
     public function getProfile(Request $request): JsonResponse
     {
         $customerToken = $request->attributes->get('token');
-        var_dump($customerToken);
-        $response = $this->requireGetPlatform($customerToken, config('hh.get_profile_url'));
+        $response = PlatformHh::requireGetPlatform($customerToken, config('hh.get_profile_url'));
 
         return response()->json([
             'message' => 'Success',
@@ -155,7 +155,7 @@ class HeadHunterController extends Controller
         $url = config('hh.get_available_types')['url'] . $data['employer_id'] . config('hh.get_available_types')
             ['folder'] .
             $data['manager_id'] . config('hh.get_available_types')['catalog'];
-        $response = $this->requireGetPlatform($customerToken, $url);
+        $response = PlatformHh::requireGetPlatform($customerToken, $url);
 
         return response()->json([
             'message' => 'Success',
@@ -179,7 +179,7 @@ class HeadHunterController extends Controller
         }
 
         $pubEndpoint = config('hh.get_publications')['url'] . $customerToken['employer_id']  . config('hh.get_publications')['folder'];
-        $data = $this->requireGetPlatform($customerToken['token'], $pubEndpoint)->json();
+        $data = PlatformHh::requireGetPlatform($customerToken['token'], $pubEndpoint)->json();
 
         return response()->json([
             'message' => 'Success',
@@ -191,7 +191,7 @@ class HeadHunterController extends Controller
     {
         $customerToken = $request->attributes->get('token');
 
-        $response = $this->requireGetPlatform($customerToken, config('hh.get_publication') . 'id');
+        $response = PlatformHh::requireGetPlatform($customerToken, config('hh.get_publication') . 'id');
 
         if ($response->status() != 200) {
             return response()->json([
@@ -249,7 +249,7 @@ class HeadHunterController extends Controller
     {
         $customerToken = $request->attributes->get('token');
 
-        $response = $this->requireGetPlatform($customerToken, config('hh.get_drafts'));
+        $response = PlatformHh::requireGetPlatform($customerToken, config('hh.get_drafts'));
 
         if ($response->status() != 200) {
             return response()->json([
