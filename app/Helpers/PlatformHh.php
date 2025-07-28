@@ -20,20 +20,17 @@ class PlatformHh
     PromiseInterface |
     Response
     {
-        if ($jsonData) {
-            $headers = [
-                'Content-Type'  => config('hh.content-type-json'),
-            ];
-        } else {
-            $headers = [
-                'Content-Type'  => config('hh.content_type'),
-            ];
-        }
-
+        $headers = [];
         if (!empty($token)) {
             $headers['Authorization'] = "Bearer $token";
         }
 
-        return  Http::withHeaders($headers)->asForm()->post($url, $data);
+        if ($jsonData) {
+            $headers['Content-Type']  = config('hh.content-type-json');
+            return  Http::withHeaders($headers)->asJson()->post($url, $data);
+        } else {
+            $headers['Content-Type']  = config('hh.content_type');
+            return  Http::withHeaders($headers)->asForm()->post($url, $data);
+        }
     }
 }
