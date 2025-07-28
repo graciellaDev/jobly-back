@@ -233,7 +233,7 @@ class HeadHunterController extends Controller
 
         return response()->json([
             'message' => 'Success',
-//            'data' => $response->json()
+            'data' => $response->json()
         ]);
     }
 
@@ -262,11 +262,11 @@ class HeadHunterController extends Controller
                 'message' => 'Ошибка валидации',
             ], 422);
         }
-        $response = $this->requirePostPlatform($customerToken, config('hh.get_drafts'), $data);
+        $response = PlatformHh::requirePostPlatform($customerToken, config('hh.get_drafts'), $data);
 
         return response()->json([
             'message' => 'Success',
-//            'data' => $response->json()
+            'data' => $response->json()
         ]);
     }
 
