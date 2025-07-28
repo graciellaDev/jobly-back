@@ -13,6 +13,7 @@ return [
     'client_secret' => env('HH_CLIENT_SECRET'),
     'auth_url' => env('HH_AUTH_URL'),
     'content_type' => 'application/x-www-form-urlencoded',
+    'content-type-json' => 'application/json',
     'redirect_url' => env('APP_URL') . '/api/code-hh',
     'front_save_ids' => env('URL_FRONT') . '/vacancies/PremiumPlatforms',
     'get_token_url' => env('HH_DOMAIN') . '/token',

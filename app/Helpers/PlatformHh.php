@@ -16,12 +16,20 @@ class PlatformHh
         ])->asForm()->get($url);
     }
 
-    public static function requirePostPlatform(string | null $token, string $url, array $data): PromiseInterface |
+    public static function requirePostPlatform(string | null $token, string $url, array $data, bool $jsonData = false):
+    PromiseInterface |
     Response
     {
-        $headers = [
-            'Content-Type'  => config('hh.content_type'),
-        ];
+        if ($jsonData) {
+            $headers = [
+                'Content-Type'  => config('hh.content-type-json'),
+            ];
+        } else {
+            $headers = [
+                'Content-Type'  => config('hh.content_type'),
+            ];
+        }
+
         if (!empty($token)) {
             $headers['Authorization'] = "Bearer $token";
         }
