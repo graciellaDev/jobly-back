@@ -242,7 +242,10 @@ class VacancyController extends Controller
                 'message' => 'Ошибка валидации',
             ], 422);
         }
-        $isExists = Vacancy::where('code', $request->code)->where('customer_id', $customerId)->exists();
+        $isExists = null;
+        if (!empty($request->code)) {
+            $isExists = Vacancy::where('code', $request->code)->where('customer_id', $customerId)->exists();
+        }
 
         if ($isExists) {
             return response()->json([
