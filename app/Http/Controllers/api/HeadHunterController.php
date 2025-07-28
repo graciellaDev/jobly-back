@@ -212,8 +212,7 @@ class HeadHunterController extends Controller
             $data = $request->validate([
                 'name' => 'required|string|min:3|max:100',
                 'description' => 'required|string|min:1|max:1024',
-                'area' => 'numeric|default:1',
-                'billing_type' => 'in:free,standard,standard_plus,premium|default:free',
+                'area' => 'required',
                 'code' => 'nullable|string|max:255',
                 'driver_license_types' => 'nullable', //
                 'manager' => 'numeric',
@@ -230,7 +229,40 @@ class HeadHunterController extends Controller
                 'message' => 'Ошибка валидации',
             ], 422);
         }
-//        $response = $this->requirePostPlatform($customerToken, config('hh.get_publication'), $data);
+        $response = $this->requirePostPlatform($customerToken, config('hh.get_publication'), $data);
+
+        return response()->json([
+            'message' => 'Success',
+//            'data' => $response->json()
+        ]);
+    }
+
+    public function addDraft(Request $request)
+    {
+        $customerToken = $request->attributes->get('token');
+        try {
+            $data = $request->validate([
+                'name' => 'required|string|min:3|max:100',
+                'description' => 'required|string|min:1|max:1024',
+                'professional_roles' => 'required',
+                'area' => 'required|numeric',
+                'code' => 'nullable|string|max:255',
+                'driver_license_types' => 'nullable', //
+                'manager' => 'numeric',
+                'previous_id' => 'numeric', // id архивной вакансии
+                'type' => 'in:open,closed,anonymous,direct|default:open',
+                'address' => 'numeric|default:1',
+                'experience' => 'in:noExperience,between1And3,between3And6,moreThan6',
+                'fly_in_fly_out_duration' => 'in:DAYS_15,DAYS_20',
+                'work_format' => 'in:ON_SITE,REMOTE,HYBRID,FIELD_WORK',
+                'schedule' => 'in:fullDay,shift,flexible,remote,flyInFlyOut'
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Ошибка валидации',
+            ], 422);
+        }
+        $response = $this->requirePostPlatform($customerToken, config('hh.get_drafts'), $data);
 
         return response()->json([
             'message' => 'Success',
