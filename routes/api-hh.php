@@ -12,6 +12,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::get('/drafts', [HeadHunterController::class, 'getDraftList']);
         Route::post('/drafts', [HeadHunterController::class, 'addDraft']);
         Route::post('/avalibale-types', [HeadHunterController::class, 'getAvailableTypes']);
+        Route::get('/roles', [HeadHunterController::class, 'getProfessionals']);
     });
 });
 

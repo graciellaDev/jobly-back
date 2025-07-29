@@ -294,4 +294,23 @@ class HeadHunterController extends Controller
             'data' => $response->json()
         ]);
     }
+
+    public function getProfessionals(Request $request): JsonResponse
+    {
+        $customerToken = $request->attributes->get('token');
+
+        $response = PlatformHh::requireGetPlatform($customerToken, config('hh.get_professional_roles'));
+
+        if ($response->status() != 200) {
+            return response()->json([
+                'message' => $response->status() == 404 ? 'Роли не найдены' : 'Ошибка получения ролей',
+                'data' => []
+            ], $response->status());
+        }
+
+        return response()->json([
+            'message' => 'Success',
+            'data' => $response->json()
+        ]);
+    }
 }

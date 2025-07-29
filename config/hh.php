@@ -29,4 +29,5 @@ return [
         'folder' => '/managers/',
         'catalog' => '/vacancies/available_types'
     ],
+    'get_professional_roles' => env('HH_DOMAIN') . '/professional_roles'
 ];
