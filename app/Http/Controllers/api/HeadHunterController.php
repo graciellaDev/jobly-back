@@ -244,8 +244,8 @@ class HeadHunterController extends Controller
             $data = $request->validate([
                 'name' => 'required|string|min:3|max:100',
                 'description' => 'required|string|min:1|max:1024',
-                'professional_roles' => 'nullable|array',
-                'areas' => 'nullable|array',
+                'professional_roles' => 'nullable',
+                'areas' => 'nullable',
                 'code' => 'nullable|string|max:255',
                 'driver_license_types' => 'nullable', //
                 'manager' => 'numeric',
