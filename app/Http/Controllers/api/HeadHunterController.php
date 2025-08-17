@@ -177,7 +177,7 @@ class HeadHunterController extends Controller
             ], 404);
         }
 
-        $pubEndpoint = config('hh.get_publication');
+        $pubEndpoint = config('hh.get_publications')['url'] . $customerToken['employer_id']  . config('hh.get_publications')['folder'];
         $data = PlatformHh::requireGetPlatform($customerToken['token'], $pubEndpoint)->json();
 
         return response()->json([
