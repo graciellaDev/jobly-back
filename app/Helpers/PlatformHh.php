@@ -21,6 +21,7 @@ class PlatformHh
     Response
     {
         $headers = [];
+
         if (!empty($token)) {
             $headers['Authorization'] = "Bearer $token";
         }

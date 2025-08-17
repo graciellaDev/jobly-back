@@ -177,7 +177,7 @@ class HeadHunterController extends Controller
             ], 404);
         }
 
-        $pubEndpoint = config('hh.get_publications')['url'] . $customerToken['employer_id']  . config('hh.get_publications')['folder'];
+        $pubEndpoint = config('hh.get_publication');
         $data = PlatformHh::requireGetPlatform($customerToken['token'], $pubEndpoint)->json();
 
         return response()->json([
@@ -185,7 +185,6 @@ class HeadHunterController extends Controller
             'data' => $data
         ]);
     }
-
     public function getPublication(Request $request, int $id): JsonResponse
     {
         $customerToken = $request->attributes->get('token');
@@ -262,6 +261,7 @@ class HeadHunterController extends Controller
                 'message' => 'Ошибка валидации',
             ], 422);
         }
+
         $response = PlatformHh::requirePostPlatform($customerToken, config('hh.get_drafts'), $data, true);
 
         return response()->json([
