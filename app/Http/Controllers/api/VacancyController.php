@@ -412,7 +412,7 @@ class VacancyController extends Controller
                     $vacancy['conditions'] = $conditions;
 
                 if (isset($request->drivers)) {
-                    $relatedFields = array_map(fn($el) => intval($el), $request->drivers);
+                    $relatedFields = array_map(fn($el) => $el['id'], $request->drivers);
                     $vacancy->drivers()->detach();
                     $vacancy->drivers()->sync($relatedFields);
                     $drivers = Driver::whereIn('id', $relatedFields)->get();
