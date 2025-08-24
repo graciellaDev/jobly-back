@@ -213,7 +213,11 @@ class HeadHunterController extends Controller
                 'description' => 'required|string|min:1|max:1024',
                 'area' => 'required',
                 'code' => 'nullable|string|max:255',
-                'driver_license_types' => 'nullable', //
+                'employment_form' => 'nullable',
+                'work_schedule_by_days' => 'nullable',
+                'education_level' => 'nullable',
+                'experience' => 'nullable',
+                'driver_license_types' => 'nullable',
                 'manager' => 'numeric',
                 'previous_id' => 'numeric', // id архивной вакансии
                 'type' => 'in:open,closed,anonymous,direct|default:open',
@@ -221,7 +225,6 @@ class HeadHunterController extends Controller
                 'experience' => 'in:noExperience,between1And3,between3And6,moreThan6',
                 'fly_in_fly_out_duration' => 'in:DAYS_15,DAYS_20',
                 'work_format' => 'in:ON_SITE,REMOTE,HYBRID,FIELD_WORK',
-                'schedule' => 'in:fullDay,shift,flexible,remote,flyInFlyOut'
             ]);
         } catch (\Throwable $th) {
             return response()->json([
