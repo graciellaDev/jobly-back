@@ -257,10 +257,10 @@ class HeadHunterController extends Controller
                 'previous_id' => 'numeric',
                 'type' => 'in:open,closed,anonymous,direct|default:open',
                 'address' => 'numeric|default:1',
-                'experience' => 'in:noExperience,between1And3,between3And6,moreThan6',
-                'fly_in_fly_out_duration' => 'in:DAYS_15,DAYS_20',
-                'work_format' => 'in:ON_SITE,REMOTE,HYBRID,FIELD_WORK',
-                'schedule' => 'in:fullDay,shift,flexible,remote,flyInFlyOut'
+                'experience' => 'nullable',
+                'fly_in_fly_out_duration' => 'nullable',
+                'work_format' => 'nullable',
+                'schedule' => 'nullable'
             ]);
         } catch (\Throwable $th) {
             return response()->json([
