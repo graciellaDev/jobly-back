@@ -204,6 +204,28 @@ class HeadHunterController extends Controller
         ]);
     }
 
+    public function getVacancies(Request $request)
+    {
+        $customerToken = $request->attributes->get('token');
+
+        $response = PlatformHh::requireGetPlatform(
+            $customerToken,
+            config('hh.get_vacancies')['url'] . $customerToken['employer_id'] . config('hh.get_vacancies')['folder']
+        );
+
+        if ($response->status() != 200) {
+            return response()->json([
+                'message' => $response->status() == 404 ? 'Вакансий  не найдено' : 'Ошибка получения вакансий',
+                'data' => []
+            ], $response->status());
+        }
+
+        return response()->json([
+            'message' => 'Success',
+            'data' => $response->json()
+        ]);
+    }
+
     public function addPublication(Request $request)
     {
         $customerToken = $request->attributes->get('token');
@@ -215,6 +237,7 @@ class HeadHunterController extends Controller
                 'code' => 'nullable|string|max:255',
                 'employment_form' => 'nullable',
                 'working_hours' => 'nullable',
+                'work_schedule_by_days' => 'nullable',
                 'education_level' => 'nullable',
                 'experience' => 'nullable',
                 'driver_license_types' => 'nullable',
