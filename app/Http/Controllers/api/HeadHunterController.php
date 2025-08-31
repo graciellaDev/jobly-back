@@ -220,7 +220,7 @@ class HeadHunterController extends Controller
                 'driver_license_types' => 'nullable',
                 'manager' => 'numeric',
                 'previous_id' => 'numeric', // id архивной вакансии
-                'type' => 'in:open,closed,anonymous,direct|default:open',
+                'type' => 'nullable',
                 'address' => 'numeric|default:1',
                 'fly_in_fly_out_duration' => 'nullable',
                 'work_format' => 'nullable',
@@ -245,6 +245,7 @@ class HeadHunterController extends Controller
             $data = $request->validate([
                 'name' => 'required|string|min:3|max:100',
                 'description' => 'required|string|min:1|max:1024',
+                'billing_types' => 'nullable',
                 'professional_roles' => 'nullable',
                 'areas' => 'nullable',
                 'code' => 'nullable|string|max:255',
