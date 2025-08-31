@@ -249,9 +249,12 @@ class HeadHunterController extends Controller
                 'professional_roles' => 'nullable',
                 'areas' => 'nullable',
                 'code' => 'nullable|string|max:255',
-                'driver_license_types' => 'nullable', //
+                'employment_form' => 'nullable',
+                'driver_license_types' => 'nullable',
+                'work_schedule_by_days' => 'nullable',
+                'education_level' => 'nullable',
                 'manager' => 'numeric',
-                'previous_id' => 'numeric', // id архивной вакансии
+                'previous_id' => 'numeric',
                 'type' => 'in:open,closed,anonymous,direct|default:open',
                 'address' => 'numeric|default:1',
                 'experience' => 'in:noExperience,between1And3,between3And6,moreThan6',
@@ -307,6 +310,32 @@ class HeadHunterController extends Controller
         if ($response->status() != 200) {
             return response()->json([
                 'message' => $response->status() == 404 ? 'Роли не найдены' : 'Ошибка получения ролей',
+                'data' => []
+            ], $response->status());
+        }
+
+        return response()->json([
+            'message' => 'Success',
+            'data' => $response->json()
+        ]);
+    }
+
+    public function getVacancyResponses(Request $request, int $id): JsonResponse
+    {
+        $customerToken = $request->attributes->get('token');
+
+        if (!$id) {
+            return response()->json([
+                'message' => 'Не передан идентификатор вакансии',
+                'data' => []
+            ], 422);
+        }
+
+        $response = PlatformHh::requireGetPlatform($customerToken, config('hh.get_vacancy_responses') . $id);
+
+        if ($response->status() != 200) {
+            return response()->json([
+                'message' => $response->status() == 404 ? 'Отклики не найдены' : 'Ошибка получения откликов',
                 'data' => []
             ], $response->status());
         }
