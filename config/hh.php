@@ -34,5 +34,6 @@ return [
         'folder' => '/vacancies/active'
     ],
     'get_professional_roles' => env('HH_DOMAIN') . '/professional_roles',
-    'get_vacancy_responses' => env('HH_DOMAIN') . '/negotiations/response?vacancy_id='
+    'get_vacancy_responses' => env('HH_DOMAIN') . '/negotiations/response?vacancy_id=',
+    'get_vacancy_response' => env('HH_DOMAIN') . '/negotiations/'
 ];
