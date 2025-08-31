@@ -351,7 +351,7 @@ class VacancyController extends Controller
                     'industry' => 'nullable|string|max:255',
                     'employment' => 'nullable|string|max:255',
                     'schedule' => 'nullable|string|max:255',
-                    'experience' => 'nullable|string|max:255',
+                    'experience' => 'nullable|numeric',
                     'education' => 'nullable|string|max:255',
                     'drivers' => 'nullable|array',
                     'salary_from' => 'nullable|string|max:255',
