@@ -214,7 +214,7 @@ class HeadHunterController extends Controller
                 'area' => 'required',
                 'code' => 'nullable|string|max:255',
                 'employment_form' => 'nullable',
-                'work_schedule_by_days' => 'nullable',
+                'working_hours' => 'nullable',
                 'education_level' => 'nullable',
                 'experience' => 'nullable',
                 'driver_license_types' => 'nullable',
