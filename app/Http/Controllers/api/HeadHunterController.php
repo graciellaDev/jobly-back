@@ -127,6 +127,27 @@ class HeadHunterController extends Controller
         }
     }
 
+    public function sendUrl(Request $request): JsonResponse
+    {
+        $customerToken = $request->attributes->get('token');
+        try {
+            $data = $request->validate([
+                'url' => 'required|string|max:255'
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Ошибка валидации url',
+            ], 422);
+        }
+
+        $response = PlatformHh::requireGetPlatform($customerToken, $data['url']);
+
+        return response()->json([
+            'message' => 'Success',
+            'data' => $response->json()
+        ]);
+    }
+
     public function getProfile(Request $request): JsonResponse
     {
         $customerToken = $request->attributes->get('token');
