@@ -217,7 +217,7 @@ class VacancyController extends Controller
         try {
             $data = $request->validate([
                 'name' => 'required|string|min:3|max:255',
-                'description' => 'required|string|min:3|max:255',
+                'description' => 'required|string|min:3',
                 'code' => 'nullable|string|max:255',
                 'specializations' => 'nullable|string|max:255',
                 'industry' => 'nullable|string|max:255',
@@ -344,7 +344,7 @@ class VacancyController extends Controller
         if (!empty($vacancy)) {
             try {
                 $data = $request->validate([
-                    'name' => 'nullable|string|min:3',
+                    'name' => 'nullable|string|min:3|max:255',
                     'description' => 'nullable|string|min:3',
                     'code' => 'nullable|string|max:255',
                     'specializations' => 'nullable|string|max:255',
