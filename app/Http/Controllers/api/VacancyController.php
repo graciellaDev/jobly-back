@@ -351,9 +351,9 @@ class VacancyController extends Controller
                     'industry' => 'nullable|string|max:255',
                     'employment' => 'nullable|string|max:255',
                     'schedule' => 'nullable|string|max:255',
-                    'experience' => 'nullable|numeric',
+                    'experience' => 'nullable|string|max:255',
                     'education' => 'nullable|string|max:255',
-                    'drivers' => 'nullable|array',
+                    'drivers' => 'nullable',
                     'salary_from' => 'nullable|string|max:255',
                     'salary_to' => 'nullable|string|max:255',
                     'salary_type' => 'nullable|string|max:100',
@@ -387,7 +387,7 @@ class VacancyController extends Controller
             }
 
             if(isset($request->place)) {
-                $place = Place::all()->find($request->place);
+                $place = Place::all()->find(intval($request->place));
                 if (!empty($place)) {
                     $vacancy->places = $request->place;
                 }
