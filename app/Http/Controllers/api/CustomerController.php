@@ -4,6 +4,8 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Mail\register\Success;
+use App\Mail\register\SuccessClient;
+use App\Mail\register\SuccessRecruiter;
 use App\Mail\register\Restore;
 use App\Models\Customer;
 use Illuminate\Http\Request;
@@ -14,11 +16,15 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\RedirectResponse;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
+use App\Models\Role;
 
 class CustomerController extends Controller
 {
     private array $roleExecutors = [3, 4];
+    private int $roleAdmin = 1;
     private int $roleManager = 4;
+    private int $roleClient = 5;
+    private int $roleRecruiter = 3;
     public function login(Request $request)
     {
         $cookieAuth = $request->cookie('auth_user');
@@ -112,7 +118,9 @@ class CustomerController extends Controller
                 'password' => 'required|string|min:6',
                 'password_confirmation' => 'required|string|min:6',
                 'site' => 'nullable|string|max:50',
-                'from' => 'nullable|string|max:255'
+                'from' => 'nullable|string|max:255',
+                'role_id' => 'nullable|integer',
+                'user_id' => 'nullable|integer'
             ]);
         } catch (\Throwable $th) {
             return response()->json([
@@ -146,20 +154,44 @@ class CustomerController extends Controller
             }
         }
 
-        $customHash = Str::random(16) . time();
-        $authToken = Hash::make($customHash);
+        if (isset($request->role_id)) {
+            $role = Role::find($request->role_id);
+            if (empty($role)) {
+                return response()->json([
+                    'message' => 'Роль не найдена',
+                ], 422);
+            }
+            $data['role_id'] = $request->role_id;
+        } else {
+            $data['role_id'] = $this->roleAdmin;
+        }
+
         $data['password'] = Hash::make($request->password);
         $data['from_source'] = $data['from'];
         $user = Customer::create($data);
 
-
         $rootUrl = $request->root();
         $url = $rootUrl . '/reg-success/' . $user->id . '/?key=' . urldecode($user->password);
-        $data = [
+        $dataEmail = [
             'name' => $user->name,
             'url' => $url
         ];
-         Mail::to($user->email)->send(new Success($data));
+
+        if (!empty($request->user_id)) {
+            $userInvite = Customer::find($request->user_id);
+            $userInvite->relations()->attach($user->id);
+            $dataEmail['login'] = $user->login;
+            $dataEmail['email'] = $user->email;
+            $dataEmail['password'] = $request->password;
+            if ($data['role_id'] == $this->roleClient) {
+                Mail::to($user->email)->send(new SuccessClient($dataEmail));
+            }
+            if ($data['role_id'] == $this->roleRecruiter) {
+                Mail::to($user->email)->send(new SuccessRecruiter($dataEmail));
+            }
+        } else {
+            Mail::to($user->email)->send(new SuccessClient($dataEmail));
+        }
 
         return response()->json([
             'message' => 'Пользователь успешно зарегистрирован',
@@ -172,6 +204,46 @@ class CustomerController extends Controller
                 'from' => $user->from_source
             ]
         ]);
+    }
+
+    public function registerClient(request $request)
+    {
+        if (empty($request->email)) {
+            return response()->json([
+                'message' => 'Не указан email для регистрации клиента',
+            ], 422);
+        }
+
+        $request->merge(['user_id' => $request->attributes->get('customer_id')]);
+        $request->merge(['role_id' => $this->roleClient]);
+        $password = Str::random(8);
+        $request->merge(['login' => $request->email]);
+        $request->merge(['password' => $password]);
+        $request->merge(['password_confirmation' => $password]);
+        $request->merge(['from' => 'По приглашению из платформы']);
+        $request->merge(['site' => 'https://job-ly.ru']);
+
+        return  $this->register($request);
+    }
+
+    public function registerRecruiter(request $request)
+    {
+        if (empty($request->email)) {
+            return response()->json([
+                'message' => 'Не указан email для регистрации рекрутера',
+            ], 422);
+        }
+
+        $request->merge(['user_id' => $request->attributes->get('customer_id')]);
+        $request->merge(['role_id' => $this->roleRecruiter]);
+        $request->merge(['login' => $request->email]);
+        $password = Str::random(8);
+        $request->merge(['password' => $password]);
+        $request->merge(['password_confirmation' => $password]);
+        $request->merge(['from' => 'По приглашению из платформы']);
+        $request->merge(['site' => 'https://job-ly.ru']);
+
+        return  $this->register($request);
     }
     public function regSuccess(int $id, Request $request): RedirectResponse
     {

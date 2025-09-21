@@ -398,7 +398,6 @@ class VacancyController extends Controller
             $vacancy->place = $place;
             $vacancy->makeHidden('places');
 
-
             try{
                 if (isset($request->conditions)) {
                     $relatedFields = array_map(fn($el) => intval($el), $request->conditions);

@@ -32,4 +32,9 @@ class Customer extends Model
     {
         return $this->belongsToMany(Funnel::class);
     }
+
+    public function relations(): BelongsToMany
+    {
+        return $this->belongsToMany(Customer::class, 'customer_relations', 'user_id', 'customer_id');
+    }
 }
