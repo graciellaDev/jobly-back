@@ -9,14 +9,18 @@ use Illuminate\Http\Request;
 
 class ClientController extends Controller
 {
+    private static array $validStatuses = ['active', 'new'];
     public  function index(Request $request)
     {
         $customerId = $request->attributes->get('customer_id');
-        $clientIds = array_column(
-            CustomerRelation::where('user_id', $customerId)->select(['customer_id'])->get()
-                ->toArray(),
-            'customer_id'
-        );
+        $filterStatus = $request->get('status');
+
+        $clientIds = CustomerRelation::where('user_id', $customerId)->select(['customer_id']);
+
+        if (in_array($filterStatus, self::$validStatuses)) {
+            $clientIds->where('status', $filterStatus);
+        }
+        $clientIds = $clientIds->pluck('customer_id')->toArray();
 
         $clients = Customer::with(['role'])
             ->where('role_id', CustomerController::$roleClient)
