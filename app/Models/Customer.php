@@ -35,6 +35,6 @@ class Customer extends Model
 
     public function relations(): BelongsToMany
     {
-        return $this->belongsToMany(Customer::class, 'customer_relations', 'user_id', 'customer_id');
+        return $this->belongsToMany(Customer::class, 'customer_relations', 'user_id', 'customer_id')->withPivot('status');
     }
 }

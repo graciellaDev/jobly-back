@@ -9,8 +9,7 @@ use App\Mail\register\SuccessRecruiter;
 use App\Mail\register\Restore;
 use App\Models\Customer;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Http\Response;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\RedirectResponse;
@@ -21,11 +20,11 @@ use App\Models\Role;
 class CustomerController extends Controller
 {
     private array $roleExecutors = [3, 4];
-    private int $roleAdmin = 1;
-    private int $roleManager = 4;
-    private int $roleClient = 5;
-    private int $roleRecruiter = 3;
-    public function login(Request $request)
+    public static  int $roleAdmin = 1;
+    public static int $roleManager = 4;
+    public static int $roleClient = 5;
+    public static int $roleRecruiter = 3;
+    public function login(Request $request): JsonResponse
     {
         $cookieAuth = $request->cookie('auth_user');
         if (isset($cookieAuth) && !empty($cookieAuth)) {
@@ -107,7 +106,7 @@ class CustomerController extends Controller
         }
     }
 
-    public function register(Request $request)
+    public function register(Request $request): JsonResponse
     {
         try {
             $data = $request->validate([
@@ -163,7 +162,7 @@ class CustomerController extends Controller
             }
             $data['role_id'] = $request->role_id;
         } else {
-            $data['role_id'] = $this->roleAdmin;
+            $data['role_id'] = self::$roleAdmin;
         }
 
         $data['password'] = Hash::make($request->password);
@@ -178,15 +177,16 @@ class CustomerController extends Controller
         ];
 
         if (!empty($request->user_id)) {
+            $dataEmail['url'] = $dataEmail['url'] . '&user_id=' . $request->user_id;
             $userInvite = Customer::find($request->user_id);
             $userInvite->relations()->attach($user->id);
             $dataEmail['login'] = $user->login;
             $dataEmail['email'] = $user->email;
             $dataEmail['password'] = $request->password;
-            if ($data['role_id'] == $this->roleClient) {
+            if ($data['role_id'] == self::$roleClient) {
                 Mail::to($user->email)->send(new SuccessClient($dataEmail));
             }
-            if ($data['role_id'] == $this->roleRecruiter) {
+            if ($data['role_id'] == self::$roleRecruiter) {
                 Mail::to($user->email)->send(new SuccessRecruiter($dataEmail));
             }
         } else {
@@ -206,7 +206,7 @@ class CustomerController extends Controller
         ]);
     }
 
-    public function registerClient(request $request)
+    public function registerClient(request $request): JsonResponse
     {
         if (empty($request->email)) {
             return response()->json([
@@ -215,7 +215,7 @@ class CustomerController extends Controller
         }
 
         $request->merge(['user_id' => $request->attributes->get('customer_id')]);
-        $request->merge(['role_id' => $this->roleClient]);
+        $request->merge(['role_id' => self::$roleClient]);
         $password = Str::random(8);
         $request->merge(['login' => $request->email]);
         $request->merge(['password' => $password]);
@@ -226,7 +226,7 @@ class CustomerController extends Controller
         return  $this->register($request);
     }
 
-    public function registerRecruiter(request $request)
+    public function registerRecruiter(request $request): JsonResponse
     {
         if (empty($request->email)) {
             return response()->json([
@@ -235,7 +235,7 @@ class CustomerController extends Controller
         }
 
         $request->merge(['user_id' => $request->attributes->get('customer_id')]);
-        $request->merge(['role_id' => $this->roleRecruiter]);
+        $request->merge(['role_id' => self::$roleRecruiter]);
         $request->merge(['login' => $request->email]);
         $password = Str::random(8);
         $request->merge(['password' => $password]);
@@ -249,6 +249,7 @@ class CustomerController extends Controller
     {
         $today = Carbon::today()->subDays(3);
         $key = $request->get('key');
+
         $user = Customer::all()->find($id)->where('created_at', '>', $today)->first();
         if (!empty($user)) {
             if($key !== $user->password) {
@@ -258,6 +259,16 @@ class CustomerController extends Controller
             $token = Hash::make($customHash);
             $user->auth_token = $token;
             $user->save();
+            if ($user->role_id == self::$roleClient || $user->role_id == self::$roleRecruiter) {
+                $invitedId = intval($request->get('user_id'));
+                $userInvited = Customer::all()->find($invitedId);
+                if (empty($userInvited)) {
+                    return redirect(env('URL_FRONT') . '/auth/?reg=error');
+                }
+                $user->relations()->updateExistingPivot($invitedId, [
+                    'status' => 'active',
+                ]);
+            }
 
             return redirect(env('URL_FRONT') . '/auth/?reg=success&key=' . $token);
         } else {
@@ -270,7 +281,7 @@ class CustomerController extends Controller
         }
     }
 
-    public function restoreAccess(Request $request)
+    public function restoreAccess(Request $request): JsonResponse
     {
         try {
             $request->validate([
@@ -309,7 +320,7 @@ class CustomerController extends Controller
         ]);
     }
 
-    public function restoreSuccess(int $id, Request $request)
+    public function restoreSuccess(int $id, Request $request): JsonResponse
     {
         try {
             $request->validate([
@@ -324,7 +335,7 @@ class CustomerController extends Controller
         }
 
         if ($request->password !== $request->password_confirmation) {
-            return  json_encode([
+            return  response()->json([
                 'message' => 'Пароли не совпадают'
             ], 422);
         }
@@ -350,9 +361,10 @@ class CustomerController extends Controller
         ]);
     }
 
-    public function getManagers()
+    public function getManagers(): JsonResponse
     {
-        $managers = Customer::where('role_id', $this->roleManager)->with('role')->select(['id', 'name', 'role_id'])->get();
+        $managers = Customer::where('role_id', self::$roleManager)->with('role')->select(['id', 'name', 'role_id'])
+        ->get();
 
         return response()->json([
             'message' => 'Success',
@@ -360,7 +372,7 @@ class CustomerController extends Controller
         ]);
     }
 
-    public function getExecutors()
+    public function getExecutors(): JsonResponse
     {
         $executors = Customer::whereIn('role_id', $this->roleExecutors)->with('role')->select(['id', 'name', 'role_id'])->get();
 

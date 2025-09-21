@@ -8,7 +8,8 @@ class Client extends Model
 {
     protected $fillable = [
         'name',
-        'role_id'
+        'role_id',
+        'email'
     ];
 
     protected $table = 'customers';
@@ -21,4 +22,6 @@ class Client extends Model
         'created_at' => 'date:Y.m.d',
         'updated_at' => 'date:Y.m.d'
     ];
+
+    public static int $role = 5;
 }
