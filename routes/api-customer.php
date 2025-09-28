@@ -5,6 +5,7 @@ use App\Http\Controllers\api\CustomFieldController;
 use App\Http\Controllers\api\CustomFieldTypeController;
 use App\Http\Controllers\api\CustomerController;
 use App\Http\Controllers\api\ClientController;
+use App\Http\Controllers\api\DepartmentController;
 
 Route::group(['middleware' => 'auth:api'], function () {
     Route::get('vacancy-fields', [VacancyController::class, 'fields']);
@@ -30,5 +31,10 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     Route::get('managers', [CustomerController::class, 'getManagers']);
     Route::get('executors', [CustomerController::class, 'getExecutors']);
+
+    Route::get('departments', [DepartmentController::class, 'index']);
+    Route::get('departments/{id}', [DepartmentController::class, 'show']);
+    Route::post('departments', [DepartmentController::class, 'create']);
+    Route::post('departments/{id}/divisions', [DepartmentController::class, 'createDivision']);
 });
 
