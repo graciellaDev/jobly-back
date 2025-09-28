@@ -70,6 +70,6 @@ class Application extends Model
 
     public function responsible()
     {
-        return $this->belongsTo(Customer::class)->select(['id', 'name', 'role_id']);
+        return $this->belongsTo(Customer::class)->with('role')->select(['id', 'name', 'role_id']);
     }
 }
