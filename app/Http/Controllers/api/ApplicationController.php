@@ -16,6 +16,7 @@ class ApplicationController extends Controller
 {
     private array $roleExecutors = [3, 4];
     private int $roleManager = 4;
+    private static $defaultStatus = 1;
     private array $validFields = [
         'position' => 'required|string|min:3|max:50',
         'division' => 'string|min:3|max:50',
@@ -30,7 +31,6 @@ class ApplicationController extends Controller
         'dateStart' => 'nullable|date_format:d.m.Y',
         'dateWork' => 'nullable|date_format:d.m.Y',
         'vacancy' => 'nullable',
-        'status' => 'nullable',
         'executor' => 'nullable',
         'client' => 'nullable',
         'responsible' => 'nullable'
@@ -187,12 +187,7 @@ class ApplicationController extends Controller
             }
         }
 
-        if (isset($data['status'])) {
-            $status = Status::find(intval($data['status']));
-            if (!empty($vacancy)) {
-                $data['status_id'] = $status->id;
-            }
-        }
+        $data['status_id'] = self::$defaultStatus;
 
         if (isset($data['client'])) {
             $client = Client::where('role_id', $this->roleClient)->find(intval($data['client']));
@@ -209,6 +204,7 @@ class ApplicationController extends Controller
         }
 
         if (isset($data['responsible'])) {
+            var_dump($data['responsible']);
             $responsible = Customer::whereIn('role_id', $this->roleExecutors)->find(intval($data['responsible']));
             if (!empty($responsible)) {
                 $data['responsible_id'] = $responsible->id;
