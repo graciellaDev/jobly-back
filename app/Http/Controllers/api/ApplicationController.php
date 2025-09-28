@@ -204,7 +204,6 @@ class ApplicationController extends Controller
         }
 
         if (isset($data['responsible'])) {
-            var_dump($data['responsible']);
             $responsible = Customer::whereIn('role_id', $this->roleExecutors)->find(intval($data['responsible']));
             if (!empty($responsible)) {
                 $data['responsible_id'] = $responsible->id;
