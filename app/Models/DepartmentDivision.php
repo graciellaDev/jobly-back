@@ -8,6 +8,7 @@ class DepartmentDivision extends Model
 {
     protected $table = 'department_division';
     protected $fillable = [
+        'id',
         'department_id',
         'division'
     ];
