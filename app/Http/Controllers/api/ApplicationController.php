@@ -11,6 +11,8 @@ use App\Models\Application;
 use App\Models\Client;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\application\InviteVacancy;
 
 class ApplicationController extends Controller
 {
@@ -212,6 +214,20 @@ class ApplicationController extends Controller
 
         try {
             $application = Application::create($data);
+            if (isset($data['responsible']) && !empty($data['responsible'])) {
+                $responsible = Customer::find($data['responsible']);
+                if (!empty($responsible)) {
+                    $dataEmail = [
+                        'email' => $responsible->email,
+                        'subject' => 'Согласование вакансии job-ly.ru',
+                        'position' => $data['position'],
+                        'name' => $responsible->name,
+                        'url' => ''
+                    ];
+                    Mail::to($responsible->email)->send(new InviteVacancy($dataEmail));
+                }
+            }
+
         } catch (\Throwable $th) {
             echo $th->getMessage();
             return response()->json([
