@@ -145,11 +145,13 @@ class CustomerController extends Controller
             ],
         ];
         foreach ($isUser as $user) {
-            $users = Customer::where($user['field'], $user['value'])->first();
-            if ($users) {
-                return response()->json([
-                    'message' => $user['error'],
-                ], 422);
+            if (isset($data[$user['field']])) {
+                $users = Customer::where($user['field'], $user['value'])->first();
+                if ($users) {
+                    return response()->json([
+                        'message' => $user['error'],
+                    ], 422);
+                }
             }
         }
 
