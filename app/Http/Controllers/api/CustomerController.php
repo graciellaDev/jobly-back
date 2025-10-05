@@ -169,19 +169,13 @@ class CustomerController extends Controller
             $data['role_id'] = self::$roleAdmin;
         }
 
-        if (isset($request->department)) {
-            $department = Department::find($request->department);
-            if (empty($department)) {
-                return response()->json([
-                    'message' => 'Отдел не найден',
-                ], 422);
-            }
-            $data['department'] = $request->department;
-        }
-
         $data['password'] = Hash::make($request->password);
         $data['from_source'] = $data['from'];
         $user = Customer::create($data);
+
+        if (isset($request->department)) {
+            $user->departments()->attach($request->department);
+        }
 
         $rootUrl = $request->root();
         $url = $rootUrl . '/reg-success/' . $user->id . '/?key=' . urldecode($user->password);
