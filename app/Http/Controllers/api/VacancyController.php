@@ -124,12 +124,12 @@ class VacancyController extends Controller
             $stagesDefault = Stage::where('fixed', 1)->get();
             foreach ($stagesDefault as $stage) {
                 $count = $stage->countVacancyCandidates($vacancy->id);
-                if ($count) {
+//                if ($count) {
                     $vacancyStages[] = [
                         'name' => $stage->name,
                         'count' => $count
                     ];
-                }
+//                }
             }
             $stagesUser = FunnelStage::where('customer_id', $vacancy->customer_id)->pluck('stage_id')->toArray();
             $stagesUser = Stage::find($stagesUser);
