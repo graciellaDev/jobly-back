@@ -8,6 +8,7 @@ use App\Mail\register\SuccessClient;
 use App\Mail\register\SuccessRecruiter;
 use App\Mail\register\Restore;
 use App\Models\Customer;
+use App\Models\Department;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
@@ -119,7 +120,8 @@ class CustomerController extends Controller
                 'site' => 'nullable|string|max:50',
                 'from' => 'nullable|string|max:255',
                 'role_id' => 'nullable|integer',
-                'user_id' => 'nullable|integer'
+                'user_id' => 'nullable|integer',
+                'department' => 'nullable|bigInteger',
             ]);
         } catch (\Throwable $th) {
             return response()->json([
@@ -165,6 +167,16 @@ class CustomerController extends Controller
             $data['role_id'] = $request->role_id;
         } else {
             $data['role_id'] = self::$roleAdmin;
+        }
+
+        if (isset($request->department)) {
+            $department = Department::find($request->department);
+            if (empty($department)) {
+                return response()->json([
+                    'message' => 'Отдел не найден',
+                ], 422);
+            }
+            $data['department'] = $request->department;
         }
 
         $data['password'] = Hash::make($request->password);
