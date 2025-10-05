@@ -121,7 +121,7 @@ class CustomerController extends Controller
                 'from' => 'nullable|string|max:255',
                 'role_id' => 'nullable|integer',
                 'user_id' => 'nullable|integer',
-                'department' => 'nullable|bigInteger',
+                'department' => 'nullable|integer',
             ]);
         } catch (\Throwable $th) {
             return response()->json([
