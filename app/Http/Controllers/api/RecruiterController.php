@@ -15,7 +15,19 @@ class RecruiterController extends Controller
         $customerId = $request->attributes->get('customer_id');
         $filterStatus = $request->get('status');
 
-        $clientIds = CustomerRelation::where('user_id', $customerId)->select(['customer_id']);
+        $customer = Customer::find($customerId);
+        if ($customer->role->id == CustomerController::$roleAdmin) {
+            $clientIds = CustomerRelation::where('user_id', $customerId)->select(['customer_id']);
+        } else {
+            $admin = CustomerRelation::where('customer_id', $customerId)->select(['user_id'])->get()->first();
+            if (empty($admin)) {
+                return response()->json([
+                    'message' => 'Success',
+                    'data' => []
+                ]);
+            }
+            $clientIds = CustomerRelation::where('user_id', $admin->user_id)->select(['customer_id']);
+        }
 
         if (in_array($filterStatus, self::$validStatuses)) {
             $clientIds->where('status', $filterStatus);
