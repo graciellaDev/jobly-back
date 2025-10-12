@@ -36,5 +36,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('departments/{id}', [DepartmentController::class, 'show']);
     Route::post('departments', [DepartmentController::class, 'create']);
     Route::post('departments/{id}/divisions', [DepartmentController::class, 'createDivision']);
+
+    Route::get('profile', [CustomerController::class, 'getProfile']);
 });
 

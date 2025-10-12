@@ -389,4 +389,15 @@ class CustomerController extends Controller
             'data' => $executors
         ]);
     }
+
+    public function getProfile(Request $request): JsonResponse
+    {
+        $customerId = $request->attributes->get('customer_id');
+        $customer = Customer::with(['role'])->find($customerId);
+
+        return response()->json([
+            'message' => 'Success',
+            'data' => $customer,
+        ]);
+    }
 }

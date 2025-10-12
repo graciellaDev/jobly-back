@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\api;
 
+use App\Http\Controllers\api\CustomerController;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Models\CustomerRelation;
 use App\Models\Role;
 use App\Models\Status;
 use App\Models\Vacancy;
@@ -70,12 +72,27 @@ class ApplicationController extends Controller
     public function index(Request $request)
     {
         $customerId = $request->attributes->get('customer_id');
+        $whereType = 'where';
+        $field = 'customer_id';
         $sort = $request->get('sort');
+
+        $customer = Customer::find($customerId);
+        if ($customer->role_id == CustomerController::$roleAdmin) {
+            $usersAdmin = CustomerRelation::where('user_id', $customerId)->select(['customer_id']);
+            $adminId = $customerId;
+            $customerId = $usersAdmin->pluck('customer_id')->toArray();
+            $customerId[] = $adminId;
+            $whereType = 'whereIn';
+        }
+
+        if ($customer->role_id == CustomerController::$roleRecruiter) {
+            $field = 'responsible_id';
+        }
 
         if (!empty($sort) && in_array($sort, $this->validSort)) {
             $asc = $request->get('asc') === '0' ? 'desc' : 'asc';
             if ($sort == 'dateStart' || $sort == 'dateWork') {
-                $applications = Application::where('customer_id', $customerId)->select([
+                $applications = Application::{$whereType}($field, $customerId)->select([
                     'id',
                     'position',
                     'city',
@@ -101,7 +118,7 @@ class ApplicationController extends Controller
                     'status' => 'status_id',
                 };
 
-                $applications = Application::where('customer_id', $customerId)->select([
+                $applications = Application::{$whereType}($field, $customerId)->select([
                     'applications.id',
                     'applications.position',
                     'applications.city',
@@ -119,7 +136,7 @@ class ApplicationController extends Controller
                     ->paginate(10);
             }
         } else {
-            $applications = Application::where('customer_id', $customerId)->select([
+            $applications = Application::{$whereType}($field, $customerId)->select([
                 'id',
                 'position',
                 'city',
