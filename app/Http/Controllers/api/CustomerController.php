@@ -393,7 +393,9 @@ class CustomerController extends Controller
     public function getProfile(Request $request): JsonResponse
     {
         $customerId = $request->attributes->get('customer_id');
-        $customer = Customer::with(['role'])->find($customerId);
+        $customer = Customer::with(['role' => function ($query) {
+            $query->select('id', 'name');
+        }])->select(['id', 'name', 'email', 'phone', 'site', 'role_id', 'from_source'])->find($customerId);
 
         return response()->json([
             'message' => 'Success',
