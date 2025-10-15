@@ -161,14 +161,45 @@ class ApplicationController extends Controller
     public function show(Request $request, int $id)
     {
         $customerId = $request->attributes->get('customer_id');
-        $application = Application::with(['client', 'vacancy', 'status', 'executor', 'responsible'])
-            ->where('customer_id', $customerId)
-            ->find($id);
+        $customer = Customer::find($customerId);
+        $application = Application::with(['client', 'vacancy', 'status', 'executor', 'responsible'])->find($id);
 
         if (empty($application)) {
             return response()->json([
                 'message' => 'Заявка с id = ' . $id . ' не найдена'
             ], 404);
+        }
+
+        if ($customer->role_id == CustomerController::$roleAdmin) {
+            var_dump($application->customer_id);
+            if ($customerId != $application->customer_id) {
+                $usersAdmin = CustomerRelation::where('user_id', $customerId)
+                    ->select(['customer_id'])
+                    ->pluck('customer_id')
+                    ->toArray();
+                if (!in_array($application->customer_id, $usersAdmin)) {
+                    return response()->json([
+                        'message' => 'У вас нет доступа к заявке с id = ' . $id
+                    ], 403);
+                }
+            }
+        }
+
+         if ($customer->role_id == CustomerController::$roleRecruiter) {
+             $application = Application::with(['client', 'vacancy', 'status', 'executor', 'responsible'])
+                 ->where('responsible_id', $customerId)
+                 ->find($id);
+         }
+        if ($customer->role_id == CustomerController::$roleClient) {
+            $application = Application::with(['client', 'vacancy', 'status', 'executor', 'responsible'])
+                ->where('customer_id', $customerId)
+                ->find($id);
+        }
+
+        if (empty($application)) {
+            return response()->json([
+                'message' => 'У вас нет доступа к заявке с id = ' . $id
+            ], 403);
         }
 
         return response()->json([

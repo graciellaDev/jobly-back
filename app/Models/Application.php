@@ -72,4 +72,14 @@ class Application extends Model
     {
         return $this->belongsTo(Customer::class)->with('role')->select(['id', 'name', 'role_id']);
     }
+
+    public function approvals()
+    {
+        return $this->belongsToMany(
+            Customer::class,
+            'approval_application',
+            'application_id',
+            'customer_id'
+        )->withPivot(['description', 'status', 'created_at']);
+    }
 }
