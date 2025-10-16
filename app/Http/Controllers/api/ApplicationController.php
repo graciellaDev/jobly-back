@@ -412,7 +412,6 @@ class ApplicationController extends Controller
         if ($application->customer_id != $customerId) {
             $role = $user->role;
             if ($role->id != CustomerController::$roleAdmin) {
-                var_dump($role->id);
                 if (
                     $role->id != CustomerController::$roleRecruiter
                     || $application->responsible_id != $customerId
@@ -430,37 +429,26 @@ class ApplicationController extends Controller
             ]);
         }
 
-        $application->status_id = 2;
-        $application->save();
         Approve::create([
             'application_id' => $application->id,
             'customer_id' => $application->customer_id,
             'executor_id' => $customerId,
             'status_id' => 2
         ]);
-//
-//        $vacancy = Vacancy::create([
-//            'name' => $application,
-//            'description' => 'required|string|min:3',
-//            'code' => 'nullable|string|max:255',
-//            'specializations' => 'nullable|string|max:255',
-//            'industry' => 'nullable|string|max:255',
-//            'employment' => 'nullable|string|max:255',
-//            'schedule' => 'nullable|string|max:255',
-//            'experience' => 'nullable|string|max:255',
-//            'education' => 'nullable|string|max:255',
-//            'salary_type' => 'nullable|string|max:100',
-//            'salary_from' => 'nullable|string|max:255',
-//            'salary_to' => 'nullable|string|max:255',
-//            'currency' => 'nullable|string|max:255',
-//            'place' => 'nullable|numeric|max:255',
-//            'location' => 'nullable|string|max:255',
-//            'executor_id' => 'nullable|numeric',
-//            'executor_name' => 'nullable|string',
-//            'executor_phone' => 'nullable|regex:/^\+7\d{10}$/',
-//            'executor_email' => 'nullable|string',
-//            'show_executor' => 'nullable|boolean'
-//        ]);
+
+        $vacancy = Vacancy::create([
+            'name' => $application->position,
+            'currency' => $application->currency,
+            'salary_from' => $application->salaryFrom,
+            'salary_to' => $application->salaryTo,
+            'location' => $application->city,
+            'customer_id' => $application->responsible_id,
+            'description' => '',
+            'status' => 'active'
+        ]);
+        $application->status_id = 2;
+        $application->vacancy_id = $vacancy->id;
+        $application->save();
 
 
         return response()->json([
@@ -490,7 +478,7 @@ class ApplicationController extends Controller
                     || $application->responsible_id != $customerId
                 ) {
                     return response()->json([
-                        'message' => 'У вас нет прав для согласования заявки'
+                        'message' => 'У вас нет прав для отклонения заявки'
                     ], 403);
                 }
             }
@@ -501,6 +489,32 @@ class ApplicationController extends Controller
                 'message' => 'Заявка уже отклонена'
             ]);
         }
-    }
 
+        try {
+            $data = $request->validate([
+                'description' => 'required|string|min:3|max:200'
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Ошибка валидации',
+            ], 422);
+        }
+
+        Approve::create([
+            'application_id' => $application->id,
+            'customer_id' => $application->customer_id,
+            'executor_id' => $customerId,
+            'description' => $data['description'],
+            'status_id' => 2
+        ]);
+
+        $application->status_id = 3;
+        $application->save();
+
+        if ($application->status_id == 3) {
+            return response()->json([
+                'message' => 'Заявка успешно отклонена'
+            ]);
+        }
+    }
 }
