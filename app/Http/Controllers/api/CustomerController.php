@@ -29,7 +29,8 @@ class CustomerController extends Controller
     {
         $cookieAuth = $request->cookie('auth_user');
         if (isset($cookieAuth) && !empty($cookieAuth)) {
-            $userAuth = Customer::all()->where('auth_token', $cookieAuth)->first();
+            $userAuth = Customer::with(['role'])->where('auth_token', $cookieAuth)->first();
+
             if (!empty($userAuth)) {
                 if(!empty($userAuth->auth_time)) {
                     if ($userAuth->auth_time >= Carbon::today()) {
@@ -41,7 +42,8 @@ class CustomerController extends Controller
                                 'email' => $userAuth->email,
                                 'phone' => $userAuth->phone,
                                 'site' => $userAuth->site,
-                                'auth_token' => $userAuth->auth_token
+                                'auth_token' => $userAuth->auth_token,
+                                'role' => $userAuth->role ? $userAuth->role->name : ''
                             ]
                         ]);
                     }
