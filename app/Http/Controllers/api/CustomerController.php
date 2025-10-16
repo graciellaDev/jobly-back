@@ -78,7 +78,7 @@ class CustomerController extends Controller
             ], 422);
         }
 
-        $user = Customer::all()->where('email', $request->email)->first();
+        $user = Customer::with('role')->where('email', $request->email)->first();
         if (empty($user)) {
             return response()->json([
                 'message' => 'Неверный логин или пароль'
@@ -99,7 +99,8 @@ class CustomerController extends Controller
                 'email' => $user->email,
                 'phone' => $user->phone,
                 'site' => $user->site,
-                'auth_token' => $user->auth_token
+                'auth_token' => $user->auth_token,
+                'role' => $user->role ? $user->role->name : ''
             ]
         ]);
         } else {
