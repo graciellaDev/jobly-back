@@ -171,7 +171,6 @@ class ApplicationController extends Controller
         }
 
         if ($customer->role_id == CustomerController::$roleAdmin) {
-            var_dump($application->customer_id);
             if ($customerId != $application->customer_id) {
                 $usersAdmin = CustomerRelation::where('user_id', $customerId)
                     ->select(['customer_id'])
