@@ -59,7 +59,8 @@ class CustomerController extends Controller
                             'email' => $userAuth->email,
                             'phone' => $userAuth->phone,
                             'site' => $userAuth->site,
-                            'auth_token' => $userAuth->auth_token
+                            'auth_token' => $userAuth->auth_token,
+                            'role' => $userAuth->role ? $userAuth->role->name : ''
                         ]
                     ]);
                 }
