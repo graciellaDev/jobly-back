@@ -4,6 +4,7 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\api\CustomerController;
 use App\Http\Controllers\Controller;
+use App\Models\Approve;
 use App\Models\Customer;
 use App\Models\CustomerRelation;
 use App\Models\Role;
@@ -12,6 +13,7 @@ use App\Models\Vacancy;
 use App\Models\Application;
 use App\Models\Client;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\application\InviteVacancy;
@@ -69,7 +71,7 @@ class ApplicationController extends Controller
     ];
 
     protected int $roleClient = 5;
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $customerId = $request->attributes->get('customer_id');
         $whereType = 'where';
@@ -158,7 +160,7 @@ class ApplicationController extends Controller
         ]);
     }
 
-    public function show(Request $request, int $id)
+    public function show(Request $request, int $id): JsonResponse
     {
         $customerId = $request->attributes->get('customer_id');
         $customer = Customer::find($customerId);
@@ -207,7 +209,7 @@ class ApplicationController extends Controller
         ]);
     }
 
-    public function create(Request $request)
+    public function create(Request $request): JsonResponse
     {
         $customerId = $request->attributes->get('customer_id');
 
@@ -295,7 +297,7 @@ class ApplicationController extends Controller
 
     }
 
-    public function update(Request $request, int $id)
+    public function update(Request $request, int $id): JsonResponse
     {
         $customerId = $request->attributes->get('customer_id');
 
@@ -376,7 +378,7 @@ class ApplicationController extends Controller
         ]);
     }
 
-    public function delete(Request $request, int $id)
+    public function delete(Request $request, int $id): JsonResponse
     {
         $customerId = $request->attributes->get('customer_id');
         $application = Application::where('customer_id', $customerId)->find($id);
@@ -393,4 +395,112 @@ class ApplicationController extends Controller
             'message' => 'Заявка успешно удалена'
         ]);
     }
+
+    public function approve(Request $request, int $id): JsonResponse
+    {
+        $application = Application::find($id);
+
+        if (empty($application)) {
+            return response()->json([
+                'message' => 'Заявка с id = ' . $id . ' не найдена'
+            ]);
+        }
+
+        $customerId = $request->attributes->get('customer_id');
+        $user = Customer::with('role')->find($customerId);
+
+        if ($application->customer_id != $customerId) {
+            $role = $user->role;
+            if ($role->id != CustomerController::$roleAdmin) {
+                var_dump($role->id);
+                if (
+                    $role->id != CustomerController::$roleRecruiter
+                    || $application->responsible_id != $customerId
+                ) {
+                    return response()->json([
+                        'message' => 'У вас нет прав для согласования заявки'
+                    ], 403);
+                }
+            }
+        }
+
+        if ($application->status_id == 2) {
+            return response()->json([
+                'message' => 'Заявка уже согласована'
+            ]);
+        }
+
+        $application->status_id = 2;
+        $application->save();
+        Approve::create([
+            'application_id' => $application->id,
+            'customer_id' => $application->customer_id,
+            'executor_id' => $customerId,
+            'status_id' => 2
+        ]);
+//
+//        $vacancy = Vacancy::create([
+//            'name' => $application,
+//            'description' => 'required|string|min:3',
+//            'code' => 'nullable|string|max:255',
+//            'specializations' => 'nullable|string|max:255',
+//            'industry' => 'nullable|string|max:255',
+//            'employment' => 'nullable|string|max:255',
+//            'schedule' => 'nullable|string|max:255',
+//            'experience' => 'nullable|string|max:255',
+//            'education' => 'nullable|string|max:255',
+//            'salary_type' => 'nullable|string|max:100',
+//            'salary_from' => 'nullable|string|max:255',
+//            'salary_to' => 'nullable|string|max:255',
+//            'currency' => 'nullable|string|max:255',
+//            'place' => 'nullable|numeric|max:255',
+//            'location' => 'nullable|string|max:255',
+//            'executor_id' => 'nullable|numeric',
+//            'executor_name' => 'nullable|string',
+//            'executor_phone' => 'nullable|regex:/^\+7\d{10}$/',
+//            'executor_email' => 'nullable|string',
+//            'show_executor' => 'nullable|boolean'
+//        ]);
+
+
+        return response()->json([
+            'message' => 'Заявка успешно согласована',
+            'data' => ['id' => '']
+        ]);
+    }
+
+    public function reject(Request $request, int $id)
+    {
+        $application = Application::find($id);
+
+        if (empty($application)) {
+            return response()->json([
+                'message' => 'Заявка с id = ' . $id . ' не найдена'
+            ]);
+        }
+
+        $customerId = $request->attributes->get('customer_id');
+        $user = Customer::with('role')->find($customerId);
+
+        if ($application->customer_id != $customerId) {
+            $role = $user->role;
+            if ($role->id != CustomerController::$roleAdmin) {
+                if (
+                    $role->id != CustomerController::$roleRecruiter
+                    || $application->responsible_id != $customerId
+                ) {
+                    return response()->json([
+                        'message' => 'У вас нет прав для согласования заявки'
+                    ], 403);
+                }
+            }
+        }
+
+        if ($application->status_id == 3) {
+            return response()->json([
+                'message' => 'Заявка уже отклонена'
+            ]);
+        }
+    }
+
 }

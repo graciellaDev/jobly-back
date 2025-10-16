@@ -15,8 +15,8 @@ return new class extends Migration
             $table->foreignId('application_id')->constrained('applications')->onDelete('cascade');
             $table->foreignId('customer_id')->constrained('customers')->onDelete('cascade');
             $table->foreignId('executor_id')->constrained('customers')->onDelete('cascade');
-            $table->text('description');
-            $table->boolean('status');
+            $table->text('description')->default(NULL);
+            $table->boolean('status_id')->constrained('statuses')->onDelete('cascade');;
             $table->timestamps();
         });
     }

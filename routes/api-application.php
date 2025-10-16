@@ -9,3 +9,5 @@ Route::get('/{id}', [ApplicationController::class, 'show']);
 Route::post('/', [ApplicationController::class, 'create']);
 Route::put('/{id}', [ApplicationController::class, 'update']);
 Route::delete('/{id}', [ApplicationController::class, 'delete']);
+Route::post('/{id}/approve', [ApplicationController::class, 'approve']);
+Route::post('/{id}/reject', [ApplicationController::class, 'reject']);

@@ -12,7 +12,7 @@ class Approve extends Model
         'customer_id',
         'executor_id',
         'description',
-        'status',
+        'status_id',
         'created_at'
     ];
 }
