@@ -188,7 +188,12 @@ class VacancyController extends Controller
     public function show(Request $request, int $id)
     {
         $customerId = $request->attributes->get('customer_id');
-        $vacancy = Vacancy::where('customer_id', $customerId)->find($id);
+        $vacancy = Vacancy::where('customer_id', $customerId);
+        $user = CustomerRelation::where('customer_id', $customerId)->pluck('user_id')->first();
+        if (!empty($user)) {
+            $vacancy->orWhere('customer_id', $user);
+        }
+        $vacancy->find($id);
 
         if (!empty($vacancy)) {
             $conditions = ConditionVacancy::all()->where('vacancy_id', $id)->pluck(['condition_id']);
