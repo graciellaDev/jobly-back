@@ -9,6 +9,7 @@ use App\Models\Candidate;
 use App\Models\ConditionVacancy;
 use App\Models\Currency;
 use App\Models\Customer;
+use App\Models\CustomerRelation;
 use App\Models\Driver;
 use App\Models\DriverVacancy;
 use App\Models\Education;
@@ -56,6 +57,11 @@ class VacancyController extends Controller
         $filters = $request->get('filters');
 
         $vacancies = Vacancy::where('customer_id', $customerId);
+        $user = CustomerRelation::where('customer_id', $customerId)->pluck('user_id')->first();
+        if (!empty($user)) {
+            $vacancies->orWhere('customer_id', $user);
+        }
+
         if (!empty($filters)) {
             foreach ($filters as $key => $value) {
                 switch ($key) {
