@@ -193,8 +193,7 @@ class VacancyController extends Controller
         if (!empty($user)) {
             $vacancy->orWhere('customer_id', $user);
         }
-        $vacancy->find($id);
-
+        $vacancy = $vacancy->find($id);
         if (!empty($vacancy)) {
             $conditions = ConditionVacancy::all()->where('vacancy_id', $id)->pluck(['condition_id']);
             $conditions = Condition::whereIn('id', $conditions)->get();
