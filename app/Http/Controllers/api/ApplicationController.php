@@ -164,7 +164,8 @@ class ApplicationController extends Controller
     {
         $customerId = $request->attributes->get('customer_id');
         $customer = Customer::find($customerId);
-        $application = Application::with(['client', 'vacancy', 'status', 'executor', 'responsible'])->find($id);
+        $application = Application::with(['client', 'vacancy', 'status', 'executor', 'responsible', 'approvals'])->find
+        ($id);
 
         if (empty($application)) {
             return response()->json([

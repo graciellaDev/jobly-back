@@ -80,6 +80,6 @@ class Application extends Model
             'approval_application',
             'application_id',
             'customer_id'
-        )->withPivot(['description', 'status', 'created_at']);
+        )->withPivot(['description', 'status_id', 'created_at']);
     }
 }
