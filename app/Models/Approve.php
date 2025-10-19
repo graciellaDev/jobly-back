@@ -13,6 +13,6 @@ class Approve extends Model
         'executor_id',
         'description',
         'status_id',
-        'created_at'
     ];
+
 }

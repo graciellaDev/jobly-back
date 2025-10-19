@@ -164,7 +164,7 @@ class ApplicationController extends Controller
     {
         $customerId = $request->attributes->get('customer_id');
         $customer = Customer::find($customerId);
-        $application = Application::with(['client', 'vacancy', 'status', 'executor', 'responsible', 'approvals'])->find
+        $application = Application::with(['client', 'vacancy', 'status', 'executor', 'responsible'])->find
         ($id);
 
         if (empty($application)) {
@@ -190,12 +190,14 @@ class ApplicationController extends Controller
          if ($customer->role_id == CustomerController::$roleRecruiter) {
              $application = Application::with(['client', 'vacancy', 'status', 'executor', 'responsible'])
                  ->where('responsible_id', $customerId)
+                 ->orWhere('customer_id', $customerId)
                  ->find($id);
          }
         if ($customer->role_id == CustomerController::$roleClient) {
             $application = Application::with(['client', 'vacancy', 'status', 'executor', 'responsible'])
                 ->where('customer_id', $customerId)
                 ->find($id);
+
         }
 
         if (empty($application)) {
@@ -203,7 +205,7 @@ class ApplicationController extends Controller
                 'message' => 'У вас нет доступа к заявке с id = ' . $id
             ], 403);
         }
-
+        $application['approvals'] = Approve::where('application_id', $id)->get();
         return response()->json([
             'message' => 'Success',
             'data' => $application
