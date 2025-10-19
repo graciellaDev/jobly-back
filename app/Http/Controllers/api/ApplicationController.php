@@ -436,18 +436,7 @@ class ApplicationController extends Controller
             'status_id' => 2
         ]);
 
-        $vacancy = Vacancy::create([
-            'name' => $application->position,
-            'currency' => $application->currency,
-            'salary_from' => $application->salaryFrom,
-            'salary_to' => $application->salaryTo,
-            'location' => $application->city,
-            'customer_id' => $application->responsible_id,
-            'description' => '',
-            'status' => 'active'
-        ]);
         $application->status_id = 2;
-        $application->vacancy_id = $vacancy->id;
         $application->save();
 
 
