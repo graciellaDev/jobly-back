@@ -496,7 +496,7 @@ class ApplicationController extends Controller
             ]);
         } catch (\Throwable $th) {
             return response()->json([
-                'message' => 'Ошибка валидации',
+                'message' => 'Не указано описание причины отклонения',
             ], 422);
         }
 
