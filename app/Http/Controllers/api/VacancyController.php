@@ -245,7 +245,7 @@ class VacancyController extends Controller
                 'executor_name' => 'nullable|string',
                 'executor_phone' => 'nullable|regex:/^\+7\d{10}$/',
                 'executor_email' => 'nullable|string',
-                'show_executor' => 'nullable|boolean'
+                'show_executor' => 'nullable|boolean',
             ]);
         } catch (\Throwable $th) {
             return response()->json([
@@ -263,13 +263,6 @@ class VacancyController extends Controller
             ], 409);
         }
 
-        $isExists = Vacancy::where('name', $request->name)->where('customer_id', $customerId)->exists();
-        if ($isExists) {
-            return response()->json([
-                'massage' => 'Вакансия с названием ' . $request->name . ' уже существует'
-            ], 409);
-        }
-
         if(isset($request->place)) {
             $place = Place::all()->find($request->place);
             if (!empty($place)) {
@@ -280,6 +273,25 @@ class VacancyController extends Controller
 
         $data['customer_id'] = $request->attributes->get('customer_id');
         $data['status'] = 'active';
+
+        if ($request->application) {
+            $application = Application::with('status')->find($request->application);
+            if (!empty($application)) {
+                if ($application->status->name == 'На рассмотрении') {
+                    $customer = Customer::find($customerId);
+                    if ($customer->role_id == CustomerController::$roleAdmin) {
+                        $application->status_id = 2;
+                        $application->save();
+                    }
+                    if ($customer->role_id == CustomerController::$roleRecruiter) {
+                        if ($application->responsible_id == $customerId) {
+                            $application->status_id = 2;
+                            $application->save();
+                        }
+                    }
+                }
+            }
+        }
 
         try {
             $vacancy = Vacancy::create($data);
