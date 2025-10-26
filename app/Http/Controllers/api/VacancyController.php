@@ -26,6 +26,7 @@ use App\Models\Vacancy;
 use Illuminate\Http\Request;
 use App\Models\Employment;
 use App\Models\AdditionVacancy;
+use Carbon\Carbon;
 
 use function Symfony\Component\String\b;
 
@@ -47,7 +48,9 @@ class VacancyController extends Controller
         'id',
         'notCandidate',
         'isApplication',
-        'notExecutor'
+        'notExecutor',
+        'responsible',
+        'create'
     ];
     public function index(Request $request)
     {
@@ -56,10 +59,30 @@ class VacancyController extends Controller
         $sort = !empty($sort) && in_array($sort, $this->sort) ? $sort : null;
         $filters = $request->get('filters');
 
-        $vacancies = Vacancy::where('customer_id', $customerId);
-        $user = CustomerRelation::where('customer_id', $customerId)->pluck('user_id')->first();
-        if (!empty($user)) {
-            $vacancies->orWhere('customer_id', $user);
+        $customer = Customer::find($customerId);
+        $arrUsers = [$customerId];
+        $arrVacancies = [];
+
+        if ($customer && $customer->role_id == CustomerController::$roleAdmin) {
+            $users = CustomerRelation::where('user_id', $customerId)->pluck('customer_id')->toArray();
+            if (count($users)) {
+                $arrUsers = array_merge($arrUsers, $users);
+            }
+        }
+        if ($customer->role_id == CustomerController::$roleRecruiter) {
+            $application = Application::with(['client', 'vacancy', 'status', 'executor', 'responsible'])
+                ->where('responsible_id', $customerId)
+                ->whereNotNull('vacancy_id')
+                ->pluck('vacancy_id')
+                ->toArray();
+            if (count($application)) {
+                $arrVacancies = $application;
+            }
+        }
+
+        $vacancies = Vacancy::whereIn('customer_id', $arrUsers);
+        if (count($arrVacancies)) {
+            $vacancies->orWhereIn('id', $arrVacancies);
         }
 
         if (!empty($filters)) {
@@ -67,11 +90,11 @@ class VacancyController extends Controller
                 switch ($key) {
                     case $this->filters[0]:
                         if (in_array($value, $this->statuses)) {
-                            $vacancies = $vacancies->where($key, $value);
+                            $vacancies->where($key, $value);
                         }
                         break;
                     case $this->filters[1]:
-                        $vacancies = $vacancies->where('location', 'like', "$value%");
+                        $vacancies->where('location', 'like', "$value%");
                         break;
                     case $this->filters[2]:
                         if (!empty($value)) {
@@ -79,40 +102,67 @@ class VacancyController extends Controller
                         }
                         break;
                     case $this->filters[3]:
-                        $isApplications = Application::where('client_id', $value)
+                        $isApplications = Application::where('customer_id', $value)
+                            ->whereNotNull('vacancy_id')
                             ->select('vacancy_id')
                             ->pluck('vacancy_id')
                             ->toArray();
-                        $vacancies->whereIn('id', $isApplications);
+                        if (count($isApplications)) {
+                            $vacancies = $vacancies->whereIn('id', $isApplications);
+                        } else {
+                            $vacancies = $vacancies->where('id', 0);
+                        }
                         break;
                     case $this->filters[4]:
-                        $vacancies = $vacancies->where('id', $value);
+                        $vacancies->where('id', $value);
                         break;
                     case $this->filters[5]:
                         if ($value == 'true') {
                             $notCandidate = Candidate::whereNotNull('vacancy_id')->select('vacancy_id')->pluck('vacancy_id')->toArray();
-                            $vacancies->whereNotIn('id', $notCandidate);
+                            var_dump($notCandidate);
+                            if (count($notCandidate)) {
+                                $vacancies->whereNotIn('id', $notCandidate);
+                            }
                         }
                         break;
                     case $this->filters[6]:
-                        $applications = Application::whereNotNull('vacancy_id')
-                            ->select('vacancy_id')
-                            ->pluck('vacancy_id')
-                            ->toArray();
-                        $vacancies->whereIn('id', $applications);
+                        if ($value == 'true') {
+                            $applications = Application::whereNotNull('vacancy_id')
+                                ->select('vacancy_id')
+                                ->pluck('vacancy_id')
+                                ->toArray();
+                            if (count($applications)) {
+                                $vacancies->whereIn('id', $applications);
+                            }
+                        }
                         break;
                     case $this->filters[7]:
                         if ($value == 'true') {
                             $vacancies->whereNull('executor_id');
                         }
                         break;
+                    case $this->filters[8]:
+                        $applications = Application::where('responsible_id', $value)
+                            ->select('vacancy_id')
+                            ->pluck('vacancy_id')
+                            ->toArray();
+                        $vacancies->whereIn('id', $applications);
+                        break;
+                    case $this->filters[9]:
+                        $dates = explode(';', $value);
+                        if (count($dates) == 2) {
+                            $dateFrom = Carbon::createFromFormat('d.m.Y', $dates[0])->startOfDay();
+                            $dateTo = Carbon::createFromFormat('d.m.Y', $dates[1])->endOfDay();
+                            $vacancies->whereBetween('created_at', [$dateFrom, $dateTo]);
+                        }
+                        break;
                 }
             }
         }
 
-        $vacancies = $vacancies->select(['id', 'name as title', 'location as city', 'executor_id', 'customer_id']);
+        $vacancies->select(['id', 'name as title', 'location as city', 'executor_id', 'customer_id']);
         if (!empty($sort)) {
-            $vacancies = $vacancies->orderBy('title', $sort);
+            $vacancies->orderBy('title', $sort);
         }
         $vacancies = $vacancies->paginate();
         $vacancies->getCollection()->transform(function ($vacancy) {
@@ -130,12 +180,10 @@ class VacancyController extends Controller
             $stagesDefault = Stage::where('fixed', 1)->get();
             foreach ($stagesDefault as $stage) {
                 $count = $stage->countVacancyCandidates($vacancy->id);
-//                if ($count) {
                     $vacancyStages[] = [
                         'name' => $stage->name,
                         'count' => $count
                     ];
-//                }
             }
             $stagesUser = FunnelStage::where('customer_id', $vacancy->customer_id)->pluck('stage_id')->toArray();
             $stagesUser = Stage::find($stagesUser);
@@ -158,7 +206,6 @@ class VacancyController extends Controller
             unset($vacancy->executor_id);
             return $vacancy;
         });
-
 
         return response()->json([
             'message' => 'Success',
