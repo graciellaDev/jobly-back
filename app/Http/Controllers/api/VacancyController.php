@@ -352,6 +352,10 @@ class VacancyController extends Controller
 
         try {
             $vacancy = Vacancy::create($data);
+            if (isset($application) && $application->status_id == 2){
+                $application->vacancy_id = $vacancy->id;
+                $application->save();
+            }
         } catch (\Throwable $th) {
             return response()->json([
                 'massage' => 'Ошибка создания вакансии ' . $request->name
