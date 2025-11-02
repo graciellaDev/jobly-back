@@ -29,9 +29,6 @@ class EmployeesController extends Controller
             $clientIds = CustomerRelation::where('user_id', $admin->user_id)->select(['customer_id']);
         }
 
-        if (in_array($filterStatus, self::$validStatuses)) {
-            $clientIds->where('status', $filterStatus);
-        }
         $clientIds = $clientIds->pluck('customer_id')->toArray();
 
         $clients = Customer::with(['role'])
