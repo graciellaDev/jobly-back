@@ -280,7 +280,7 @@ class VacancyController extends Controller
             $data = $request->validate([
                 'name' => 'required|string|min:3|max:255',
                 'description' => 'required|string|min:3',
-                'dateStart' => 'nullable|date_format:d.m.Y',
+                'dateEnd' => 'nullable|date_format:d.m.Y',
                 'code' => 'nullable|string|max:255',
                 'specializations' => 'nullable|string|max:255',
                 'industry' => 'nullable|string|max:255',

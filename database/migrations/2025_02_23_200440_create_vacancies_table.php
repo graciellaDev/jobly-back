@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('name')->nullable(false);
             $table->string('code')->nullable();
             $table->longText('description')->nullable(false);
-            $table->date('dateStart')->nullable();
+            $table->date('dateEnd')->nullable();
             $table->string('specializations')->nullable();
             $table->string('industry')->nullable();
             $table->string('employment')->nullable();
