@@ -9,6 +9,7 @@ use App\Models\Candidate;
 use App\Models\ConditionVacancy;
 use App\Models\Currency;
 use App\Models\Customer;
+use App\Models\CustomerDepartment;
 use App\Models\CustomerRelation;
 use App\Models\Driver;
 use App\Models\DriverVacancy;
@@ -50,7 +51,8 @@ class VacancyController extends Controller
         'isApplication',
         'notExecutor',
         'responsible',
-        'create'
+        'create',
+        'department'
     ];
     public function index(Request $request)
     {
@@ -155,6 +157,9 @@ class VacancyController extends Controller
                             $dateTo = Carbon::createFromFormat('d.m.Y', $dates[1])->endOfDay();
                             $vacancies->whereBetween('created_at', [$dateFrom, $dateTo]);
                         }
+                        break;
+                    case $this->filters[10]:
+                        $customers = CustomerDepartment::where('department_id', $value)->pluck('customer_id')->toArray();
                         break;
                 }
             }
