@@ -324,6 +324,10 @@ class VacancyController extends Controller
             unset($data['place']);
         }
 
+        if (isset($request->dateEnd)) {
+            $data['dateEnd'] = Carbon::createFromFormat('d.m.Y', $data['dateEnd']);
+        }
+
         $data['customer_id'] = $request->attributes->get('customer_id');
         $data['status'] = 'active';
 
