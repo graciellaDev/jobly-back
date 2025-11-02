@@ -12,6 +12,7 @@ class Vacancy extends Model
         'id',
         'name',
         'description',
+        'dateStart',
         'code',
         'specializations',
         'industry',
