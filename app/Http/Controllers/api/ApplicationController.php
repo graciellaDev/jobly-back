@@ -84,6 +84,7 @@ class ApplicationController extends Controller
             $adminId = $customerId;
             $customerId = $usersAdmin->pluck('customer_id')->toArray();
             $customerId[] = $adminId;
+            $customerId = array_unique($customerId);
             $whereType = 'whereIn';
         }
 
@@ -97,6 +98,7 @@ class ApplicationController extends Controller
                 ->select(['customer_id'])
                 ->pluck('customer_id')->toArray();
             $customerId[] = $clientId;
+            $customerId = array_unique($customerId);
             var_dump($customerId);
             $whereType = 'whereIn';
         }
