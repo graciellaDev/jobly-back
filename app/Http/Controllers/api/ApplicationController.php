@@ -187,6 +187,7 @@ class ApplicationController extends Controller
                     ->select(['customer_id'])
                     ->pluck('customer_id')
                     ->toArray();
+
                 if (!in_array($application->customer_id, $usersAdmin)) {
                     return response()->json([
                         'message' => 'У вас нет доступа к заявке с id = ' . $id
@@ -205,7 +206,11 @@ class ApplicationController extends Controller
             $application = Application::with(['client', 'vacancy', 'status', 'executor', 'responsible'])
                 ->where('customer_id', $customerId)
                 ->find($id);
-
+            if (empty($application)) {
+                $application = Application::with(['client', 'vacancy', 'status', 'executor', 'responsible'])
+                    ->where('client_id', $customerId)
+                    ->find($id);
+            }
         }
 
         if (empty($application)) {
