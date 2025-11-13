@@ -412,6 +412,19 @@ class ApplicationController extends Controller
         $application = Application::where('customer_id', $customerId)->find($id);
 
         if (empty($application)) {
+            $customer = Customer::find($customerId);
+            if ($customer->role_id == CustomerController::$roleAdmin) {
+                $usersAdmin = CustomerRelation::where('user_id', $customerId)
+                    ->select(['customer_id'])
+                    ->pluck('customer_id')
+                    ->toArray();
+                if (count($usersAdmin)) {
+                    $application = Application::whereIn('customer_id', $usersAdmin)->find($id);
+                }
+            }
+        }
+
+        if (empty($application)) {
             return response()->json([
                 'message' => 'Заявка с id = ' . $id . ' не найдена'
             ]);
