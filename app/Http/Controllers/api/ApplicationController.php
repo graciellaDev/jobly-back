@@ -93,10 +93,11 @@ class ApplicationController extends Controller
 
         if ($customer->role_id == CustomerController::$roleClient) {
             $clientId = $customerId;
-            $customerId = Application::where('client_id', $customerId)
+            $customerId = Application::where('client_id', $clientId)
                 ->select(['customer_id'])
                 ->pluck('customer_id')->toArray();
             $customerId[] = $clientId;
+            $whereType = 'whereIn';
         }
 
         if (!empty($sort) && in_array($sort, $this->validSort)) {
