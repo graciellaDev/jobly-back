@@ -29,6 +29,7 @@ class CustomerController extends Controller
     public function login(Request $request): JsonResponse
     {
         $cookieAuth = $request->cookie('auth_user');
+
         if (isset($cookieAuth) && !empty($cookieAuth)) {
             $userAuth = Customer::with(['role'])->where('auth_token', $cookieAuth)->first();
 

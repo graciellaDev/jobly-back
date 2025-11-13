@@ -91,6 +91,14 @@ class ApplicationController extends Controller
             $field = 'responsible_id';
         }
 
+        if ($customer->role_id == CustomerController::$roleClient) {
+            $clientId = $customerId;
+            $customerId = Application::where('client_id', $customerId)
+                ->select(['customer_id'])
+                ->pluck('customer_id')->toArray();
+            $customerId[] = $clientId;
+        }
+
         if (!empty($sort) && in_array($sort, $this->validSort)) {
             $asc = $request->get('asc') === '0' ? 'desc' : 'asc';
             if ($sort == 'dateStart' || $sort == 'dateWork') {
