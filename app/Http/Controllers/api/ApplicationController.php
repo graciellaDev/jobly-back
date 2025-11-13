@@ -97,6 +97,7 @@ class ApplicationController extends Controller
                 ->select(['customer_id'])
                 ->pluck('customer_id')->toArray();
             $customerId[] = $clientId;
+            var_dump($customerId);
             $whereType = 'whereIn';
         }
 
