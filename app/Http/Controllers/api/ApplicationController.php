@@ -77,6 +77,7 @@ class ApplicationController extends Controller
         $whereType = 'where';
         $field = 'customer_id';
         $sort = $request->get('sort');
+        $addOrWhere = [];
 
         $customer = Customer::find($customerId);
         if ($customer->role_id == CustomerController::$roleAdmin) {
@@ -93,13 +94,9 @@ class ApplicationController extends Controller
         }
 
         if ($customer->role_id == CustomerController::$roleClient) {
-            $clientId = $customerId;
-            $customerId = Application::where('client_id', $clientId)
-                ->select(['customer_id'])
-                ->pluck('customer_id')->toArray();
-            $customerId[] = $clientId;
-            $customerId = array_unique($customerId);
-            $whereType = 'whereIn';
+            $addOrWhere = Application::where('client_id', $customerId)
+                ->select(['id'])
+                ->pluck('id')->toArray();
         }
 
         if (!empty($sort) && in_array($sort, $this->validSort)) {
@@ -118,8 +115,11 @@ class ApplicationController extends Controller
                     'responsible_id'
                 ])
                     ->orderBy($sort, $asc)
-                    ->with(['client', 'vacancy', 'status', 'executor', 'responsible'])
-                    ->paginate(10);
+                    ->with(['client', 'vacancy', 'status', 'executor', 'responsible']);
+                    if (count($addOrWhere)) {
+                        $applications->orWhereIn('id', $addOrWhere);
+                    }
+                $applications = $applications->paginate(10);
             } else {
                 $table = match ($sort) {
                     'client', 'executor' => 'customers',
@@ -131,7 +131,12 @@ class ApplicationController extends Controller
                     'status' => 'status_id',
                 };
 
-                $applications = Application::{$whereType}($field, $customerId)->select([
+                $applications = Application::{$whereType}($field, $customerId);
+                if (count($addOrWhere)) {
+                    var_dump($addOrWhere);
+                    $applications->orWhereIn('id', $addOrWhere);
+                }
+                $applications =  $applications->select([
                     'applications.id',
                     'applications.position',
                     'applications.city',
@@ -149,7 +154,8 @@ class ApplicationController extends Controller
                     ->paginate(10);
             }
         } else {
-            $applications = Application::{$whereType}($field, $customerId)->select([
+            $applications = Application::{$whereType}($field, $customerId)
+            ->select([
                 'id',
                 'position',
                 'city',
@@ -161,8 +167,11 @@ class ApplicationController extends Controller
                 'vacancy_id',
                 'responsible_id'
             ])
-                ->with(['client', 'vacancy', 'status', 'executor', 'responsible'])
-                ->paginate(10);
+                ->with(['client', 'vacancy', 'status', 'executor', 'responsible']);
+            if (count($addOrWhere)) {
+                $applications->orWhereIn('id', $addOrWhere);
+            }
+            $applications = $applications->paginate(10);
         }
 
         return response()->json([
