@@ -38,8 +38,8 @@ class Customer extends Model
         return $this->belongsToMany(
             Customer::class,
             'customer_relations',
+            'customer_id',
             'user_id',
-            'customer_id'
         )->withPivot('status');
     }
 

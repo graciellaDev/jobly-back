@@ -25,7 +25,7 @@ class CustomerController extends Controller
     public static  int $roleAdmin = 1;
     public static int $roleManager = 4;
     public static int $roleClient = 5;
-    public static int $roleRecruiter = 3;
+    public static array $roleTeam = [3, 4, 5];
     public function login(Request $request): JsonResponse
     {
         $cookieAuth = $request->cookie('auth_user');
@@ -414,16 +414,19 @@ class CustomerController extends Controller
         ]);
     }
 
-    public function getProfile(Request $request): JsonResponse
+    public function getTeam(Request $request): JsonResponse
     {
         $customerId = $request->attributes->get('customer_id');
-        $customer = Customer::with(['role' => function ($query) {
-            $query->select('id', 'name');
-        }])->select(['id', 'name', 'email', 'phone', 'site', 'role_id', 'from_source'])->find($customerId);
+
+        $team = CustomerRelation::where('user_id', $customerId)->pluck('customer_id');
+        $team = Customer::whereIn('id', $team)
+            ->with('role')
+            ->select(['id', 'name', 'role_id'])
+            ->get();
 
         return response()->json([
             'message' => 'Success',
-            'data' => $customer,
+            'data' => $team
         ]);
     }
 }
