@@ -421,7 +421,7 @@ class CustomerController extends Controller
         $team = CustomerRelation::where('user_id', $customerId)->pluck('customer_id');
         $team = Customer::whereIn('id', $team)
             ->with('role')
-            ->select(['id', 'name', 'role_id'])
+            ->select(['id', 'name', 'email', 'role_id'])
             ->get();
 
         return response()->json([
