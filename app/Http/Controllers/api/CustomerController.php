@@ -414,6 +414,19 @@ class CustomerController extends Controller
         ]);
     }
 
+    public function getProfile(Request $request): JsonResponse
+    {
+        $customerId = $request->attributes->get('customer_id');
+        $team = Customer::whereHas('relations', function ($query) use ($customerId) {
+            $query->where('user_id', $customerId);
+        })
+            ->get();
+        return response()->json([
+            'message' => 'Success',
+            'data' => $team,
+        ]);
+    }
+
     public function getTeam(Request $request): JsonResponse
     {
         $customerId = $request->attributes->get('customer_id');
