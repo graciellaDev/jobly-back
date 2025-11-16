@@ -25,6 +25,8 @@ class CustomerController extends Controller
     public static  int $roleAdmin = 1;
     public static int $roleManager = 4;
     public static int $roleClient = 5;
+
+    public static int $roleRecruiter = 3;
     public static array $roleTeam = [3, 4, 5];
     public function login(Request $request): JsonResponse
     {
