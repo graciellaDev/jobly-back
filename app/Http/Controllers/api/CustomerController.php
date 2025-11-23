@@ -419,21 +419,29 @@ class CustomerController extends Controller
     public function getProfile(Request $request): JsonResponse
     {
         $customerId = $request->attributes->get('customer_id');
-        $team = Customer::whereHas('relations', function ($query) use ($customerId) {
-            $query->where('user_id', $customerId);
-        })
-            ->get();
+//        $team = Customer::whereHas('relations', function ($query) use ($customerId) {
+//            $query->where('user_id', $customerId);
+//        })
+//            ->get();
+        $data = Customer::select(['name', 'email', 'role_id'])
+            ->with('role')
+            ->find($customerId);
+
         return response()->json([
             'message' => 'Success',
-            'data' => $team,
+            'data' => $data,
         ]);
     }
 
-    public function getTeam(Request $request): JsonResponse
+    public function getTeam(Request $request, int $vacancy_id): JsonResponse
     {
         $customerId = $request->attributes->get('customer_id');
 
         $team = CustomerRelation::where('user_id', $customerId)->pluck('customer_id');
+        $vacancy = null;
+        if ($vacancy_id) {
+            $vacancy = Vacancy::find($vacancy_id);
+        }
         $team = Customer::whereIn('id', $team)
             ->with('role')
             ->select(['id', 'name', 'email', 'role_id'])

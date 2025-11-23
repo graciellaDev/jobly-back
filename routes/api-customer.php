@@ -32,7 +32,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('managers', [CustomerController::class, 'getManagers']);
     Route::get('executors', [CustomerController::class, 'getExecutors']);
     Route::get('responsibles', [CustomerController::class, 'getResponsibles']);
-    Route::get('team', [CustomerController::class, 'getTeam']);
+    Route::get('team/{vacancy_id}', [CustomerController::class, 'getTeam']);
 
     Route::get('departments', [DepartmentController::class, 'index']);
     Route::get('departments/{id}', [DepartmentController::class, 'show']);
