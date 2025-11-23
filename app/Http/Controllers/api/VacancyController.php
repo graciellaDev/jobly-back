@@ -165,7 +165,7 @@ class VacancyController extends Controller
             }
         }
 
-        $vacancies->select(['id', 'name as title', 'location as city', 'executor_id', 'customer_id']);
+        $vacancies->select(['id', 'name as title', 'location as city', 'executor_id', 'customer_id', 'created_at', 'dateEnd']);
         if (!empty($sort)) {
             if ($sort == 'asc' || $sort == 'desc') {
                 $vacancies->orderBy('title', $sort);
