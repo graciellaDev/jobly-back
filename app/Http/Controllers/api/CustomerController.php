@@ -420,10 +420,6 @@ class CustomerController extends Controller
     public function getProfile(Request $request): JsonResponse
     {
         $customerId = $request->attributes->get('customer_id');
-//        $team = Customer::whereHas('relations', function ($query) use ($customerId) {
-//            $query->where('user_id', $customerId);
-//        })
-//            ->get();
         $data = Customer::select(['name', 'email', 'role_id'])
             ->with('role')
             ->find($customerId);
@@ -436,6 +432,7 @@ class CustomerController extends Controller
 
     public function getTeam(Request $request, int $vacancy_id): JsonResponse
     {
+        $role = $request->get('role');
         $customerId = $request->attributes->get('customer_id');
         $team = [];
         $vacancy = null;
@@ -469,8 +466,15 @@ class CustomerController extends Controller
 
         $team = Customer::whereIn('id', $team)
             ->with('role')
-            ->select(['id', 'name', 'email', 'role_id'])
-            ->get();
+            ->select(['id', 'name', 'email', 'role_id']);
+
+        if ($role && in_array($role, self::$roleTeam)) {
+            $team->whereHas('role', function ($query) use ($role) {
+                $query->where('id', $role);
+            });
+        }
+
+        $team = $team->get();
 
         return response()->json([
             'message' => 'Success',
