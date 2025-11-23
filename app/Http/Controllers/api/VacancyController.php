@@ -167,7 +167,17 @@ class VacancyController extends Controller
 
         $vacancies->select(['id', 'name as title', 'location as city', 'executor_id', 'customer_id']);
         if (!empty($sort)) {
-            $vacancies->orderBy('title', $sort);
+            if ($sort == 'asc' || $sort == 'desc') {
+                $vacancies->orderBy('title', $sort);
+            }
+            if ($sort == 'new' || $sort == 'old') {
+                $typeSort = $sort == 'new' ? 'desc' : 'asc';
+                $vacancies->orderBy('created_at', $typeSort);
+            }
+            if ($sort == 'urgent' || $sort == 'non-urgent') {
+                $typeSort = $sort == 'urgent' ? 'asc' : 'desc';
+                $vacancies->orderBy('dateEnd', $typeSort);
+            }
         }
         $vacancies = $vacancies->paginate();
         $vacancies->getCollection()->transform(function ($vacancy) {
