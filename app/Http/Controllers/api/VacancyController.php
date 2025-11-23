@@ -38,7 +38,7 @@ class VacancyController extends Controller
     ];
 
     private array $sort = [
-        'asc', 'desc'
+        'asc', 'desc', 'new', 'old', 'urgent', 'non-urgent'
     ];
 
     private array $filters = [
