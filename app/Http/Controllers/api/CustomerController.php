@@ -436,12 +436,29 @@ class CustomerController extends Controller
     public function getTeam(Request $request, int $vacancy_id): JsonResponse
     {
         $customerId = $request->attributes->get('customer_id');
-
-        $team = CustomerRelation::where('user_id', $customerId)->pluck('customer_id');
+        $team = [];
         $vacancy = null;
+        $customer = Customer::select('role')->with('role')->find($customerId);
+        if ($customer->role_id != self::$roleAdmin) {
+            $adminId = CustomerRelation::where('customer_id', $customerId)->pluck('user_id');
+            $teamIds = CustomerRelation::where('user_id', $adminId[0])->pluck('customer_id');
+        } else {
+            $teamIds = CustomerRelation::where('user_id', $customerId)->pluck('customer_id');
+        }
+
         if ($vacancy_id) {
             $vacancy = Vacancy::find($vacancy_id);
+            if (in_array($vacancy->customer_id, $teamIds))
+                $team[] = $vacancy->customer_id;
+            if (
+                in_array($vacancy->responsible_id, $teamIds)
+                && !in_array($vacancy->responsible_id, $team)
+            )
+                $team[] = $vacancy->responsible_id;
+        } else {
+            $team = $teamIds;
         }
+
         $team = Customer::whereIn('id', $team)
             ->with('role')
             ->select(['id', 'name', 'email', 'role_id'])
