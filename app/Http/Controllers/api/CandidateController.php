@@ -32,7 +32,7 @@ class CandidateController extends Controller
         'quickInfo' => 'string|min:3|max:255',
         'education' => 'string|max:100',
         'link' => 'nullable|string|max:255',
-        'vacancy' => 'required|nullable|string|max:100',
+        'vacancy' => 'required|string|max:100',
         'experience' => 'string|max:50',
         'telegram' => 'nullable|string|max:50',
         'skype' => 'nullable|string|max:50',
