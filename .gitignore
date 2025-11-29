@@ -23,3 +23,5 @@ yarn-error.log
 /.vscode
 /.zed
 worker.log
+.dockerignore
+config/view.php

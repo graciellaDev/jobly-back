@@ -164,7 +164,7 @@ class CandidateController extends Controller
         $candidate->update($data);
         $this->replaceFields($this->editFields, $candidate);
 
-        if(isset($request->skills)) {
+        if (isset($request->skills)) {
             $related = array_map(fn($el) => intval($el), $request->skills);
             $candidate->skills()->detach();
             $candidate->skills()->attach($request->skills);
@@ -173,7 +173,7 @@ class CandidateController extends Controller
         }
         $candidate['skills'] = Skill::whereIn('id', $related)->get();
 
-        if(isset($request->tags)) {
+        if (isset($request->tags)) {
             $related = array_map(fn($el) => intval($el), $request->tags);
             $candidate->tags()->detach();
             $candidate->tags()->attach($request->tags);
@@ -182,7 +182,7 @@ class CandidateController extends Controller
         }
         $candidate['tags'] = Tag::whereIn('id', $related)->get();
 
-        if(isset($request->customFields)) {
+        if (isset($request->customFields)) {
             $related = array_map(fn($el) => intval($el), $request->customFields);
             $fields = CandidateCustomField::all()->where('candidate_id', $id)->pluck('custom_field_id')->toArray();
             foreach ($request->customFields as $key => $field) {
@@ -208,14 +208,14 @@ class CandidateController extends Controller
                 $attachments[] = $candidate->attachments()->create($data)->toArray();
             }
             $candidate['attachments'] = $attachments;
-//            $candidate->attachments = $candidate->attachments()->saveMany($attachments);
+            //            $candidate->attachments = $candidate->attachments()->saveMany($attachments);
 
         }
 
         return response()->json([
-                'message' => 'Success',
-                'data' => $candidate
-            ]);
+            'message' => 'Success',
+            'data' => $candidate
+        ]);
     }
 
     public function create(Request $request): JsonResponse
@@ -231,14 +231,14 @@ class CandidateController extends Controller
         $isExists = Candidate::where('phone', $request->phone)->exists();
         if ($isExists) {
             return response()->json([
-                'massage' => 'Кандидат с номером телефона ' . $request->phone . ' уже существует'
+                'message' => 'Кандидат с номером телефона ' . $request->phone . ' уже существует'
             ], 409);
         }
 
         $isExists = Candidate::where('email', $request->email)->exists();
         if ($isExists) {
             return response()->json([
-                'massage' => 'Кандидат с email ' . $request->email . ' уже существует'
+                'message' => 'Кандидат с email ' . $request->email . ' уже существует'
             ], 409);
         }
 
@@ -256,7 +256,7 @@ class CandidateController extends Controller
         } catch (\Throwable $th) {
             echo $th->getMessage();
             return response()->json([
-                'massage' => 'Ошибка создания кандидата '
+                'message' => 'Ошибка создания кандидата '
                     . $data['surname'] . ' '
                     . $data['firstname'] . ' '
                     . $data['patronymic']
@@ -268,24 +268,24 @@ class CandidateController extends Controller
         $this->replaceFields($this->editFields, $candidate);
         $candidate->makeHidden(['customer_id', 'stage_id', 'vacancy_id']);
 
-        if(isset($request->skills)) {
+        if (isset($request->skills)) {
             $candidate->skills()->attach($request->skills);
             $skills = Skill::whereIn('id', $request->skills)->get();
             $skills = $skills->toArray();
             $candidate->skills = $skills;
         }
 
-        if(isset($request->tags)) {
+        if (isset($request->tags)) {
             $tags = Tag::whereIn('id', $request->tags)->get();
             $candidate->tags = $tags->toArray();
         }
 
-        if(isset($request->customFields)) {
+        if (isset($request->customFields)) {
             $customFields = CustomField::whereIn('id', $request->customFields)->get();
             $candidate->customFields = $customFields->toArray();
         }
 
-        if(isset($request->attachments)) {
+        if (isset($request->attachments)) {
             if (!empty($request->attachments)) {
                 $attachments = [];
                 foreach ($request->attachments as $item) {
@@ -311,12 +311,12 @@ class CandidateController extends Controller
 
         $candidate = Candidate::where('customer_id', $customerId)->find($id);
         if ($candidate) {
-            $name = $candidate->surname . ' '  . $candidate->firstname . ' ' . $candidate->patronymic;
+            $name = $candidate->surname . ' ' . $candidate->firstname . ' ' . $candidate->patronymic;
             $candidate->attachments()->delete();
             $candidate->delete();
 
             return response()->json([
-                'massage' => 'Вакансия ' . $name . ' успешно удалена'
+                'message' => 'Вакансия ' . $name . ' успешно удалена'
             ]);
         } else {
             return response()->json([
