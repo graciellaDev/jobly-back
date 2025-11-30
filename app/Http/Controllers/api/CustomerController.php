@@ -238,7 +238,8 @@ class CustomerController extends Controller
         $request->merge(['password' => $password]);
         $request->merge(['password_confirmation' => $password]);
         $request->merge(['from' => 'По приглашению из платформы']);
-        $request->merge(['site' => 'https://job-ly.ru']);
+        $frontUrl = env('APP_FRONT_URL', 'https://job-ly.ru');
+        $request->merge(['site' => $frontUrl]);
 
         return  $this->register($request);
     }
