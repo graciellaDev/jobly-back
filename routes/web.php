@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\api\CustomerController;
 use App\Http\Controllers\api\HeadHunterController;
+use App\Http\Controllers\api\AvitoController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -19,4 +20,5 @@ Route::get('/clear-cache', function () {
 
 Route::get('/reg-success/{id}', [CustomerController::class, 'regSuccess']);
 Route::get('/api/code-hh', [HeadHunterController::class, 'code']);
+Route::get('/api/code-avito', [AvitoController::class, 'code']);
 //Route::get('/restore-success/{id}', CustomerController::class, 'restoreSuccess');

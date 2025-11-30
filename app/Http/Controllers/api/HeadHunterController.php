@@ -67,6 +67,8 @@ class HeadHunterController extends Controller
                 if ($data) {
                     $data['customer_id'] = $customerId;
                     $profile = PlatformHh::requireGetPlatform($data['access_token'], config('hh.get_profile_url'));
+                    
+                    var_dump($profile);
                     if ($profile->status() == 200) {
                         $profile = $profile->json();
                         $data['employer_id'] = $profile['employer']['id'];
