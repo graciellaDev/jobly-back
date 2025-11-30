@@ -53,6 +53,10 @@ return Application::configure(basePath: dirname(__DIR__))
                     ->prefix('api/hh')
                     ->name('hh.')
                     ->group(base_path('routes/api-hh.php'));
+                Route::middleware('customer-auth')
+                    ->prefix('api/avito')
+                    ->name('avito.')
+                    ->group(base_path('routes/api-avito.php'));
             });
         })
 //        then: function () {
