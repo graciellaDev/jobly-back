@@ -70,6 +70,7 @@ class HeadHunterController extends Controller
                     
                     if ($profile->status() == 200) {
                         $profile = $profile->json();
+                        
                         var_dump($profile);
                         $data['employer_id'] = $profile['employer']['id'];
                     }
