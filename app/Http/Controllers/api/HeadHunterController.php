@@ -71,7 +71,7 @@ class HeadHunterController extends Controller
                     if ($profile->status() == 200) {
                         $profile = $profile->json();
                         if (!$profile['is_employer']) {
-                            $this->message = 'Ошибка получения токена';
+                            $this->message = 'Аккаунт не является работадателем';
                             $this->status = 400;
                         } else {
                             $data['employer_id'] = $profile['employer']['id'];
