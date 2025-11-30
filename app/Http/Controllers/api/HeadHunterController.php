@@ -69,7 +69,7 @@ class HeadHunterController extends Controller
                     $profile = PlatformHh::requireGetPlatform($data['access_token'], config('hh.get_profile_url'));
                     
                     if ($profile->status() == 200) {
-                        $profile = $profile->json();is_employer
+                        $profile = $profile->json();
                         if (!$profile['is_employer']) {
                             $this->message = 'Ошибка получения токена';
                             $this->status = 400;
