@@ -75,6 +75,8 @@ class HeadHunterController extends Controller
                             $this->status = 400;
                         } else {
                             $data['employer_id'] = $profile['employer']['id'];
+                            $this->message = 'Авторизация прошла успешно';
+                            $this->status = 200;
                         }
                     }
 
@@ -84,8 +86,8 @@ class HeadHunterController extends Controller
                     $queryParams = [
                         'popup_account' => 'true',
                         'platform' => 'hh',
-                        'status_auth' => 'true',
-                        'message' => 'Авторизация прошла успешно'
+                        'status_auth' => $this->status == 200 ? 'true' : 'false',
+                        'message' => $this->message
                     ];
                     return redirect()->to($url . '?' . http_build_query($queryParams));
                 } else {

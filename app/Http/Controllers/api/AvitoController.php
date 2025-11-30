@@ -101,10 +101,26 @@ class AvitoController extends Controller
                 } else {
                     $this->message = 'Ошибка получения токена';
                     $this->status = 400;
+                    $url = config('avito.front_save_ids');
+                    $queryParams = [
+                        'popup_account' => 'true',
+                        'platform' => 'avito',
+                        'status_auth' => 'false',
+                        'message' => $this->message
+                    ];
+                    return redirect()->to($url . '?' . http_build_query($queryParams));
                 }
             } else {
                 $this->message = 'Пользователь не найден';
                 $this->status = 404;
+                $url = config('avito.front_save_ids');
+                $queryParams = [
+                    'popup_account' => 'true',
+                    'platform' => 'avito',
+                    'status_auth' => 'false',
+                    'message' => $this->message
+                ];
+                return redirect()->to($url . '?' . http_build_query($queryParams));
             }
         }
 
