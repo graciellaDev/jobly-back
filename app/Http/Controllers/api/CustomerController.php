@@ -29,6 +29,7 @@ class CustomerController extends Controller
 
     public static int $roleRecruiter = 3;
     public static array $roleTeam = [3, 4, 5];
+
     public function login(Request $request): JsonResponse
     {
         $cookieAuth = $request->cookie('auth_user');
@@ -90,11 +91,19 @@ class CustomerController extends Controller
             ], 404);
         }
         if (Hash::check($request->password, $user->password)) {
-            $customHash = Str::random(16) . time();
-            $token = Hash::make($customHash);
-            $user->auth_token = $token;
-            $user->auth_time = Carbon::now()->addMonths(2);
-            $user->save();
+            if (!$user->auth_token) {
+                $relation = CustomerRelation::where('customer_id', $user->id)->first();
+                if ($relation) {
+                    $relation->status = 'active';
+                    $relation->save();
+                }
+            }
+        }
+        $customHash = Str::random(16) . time();
+        $token = Hash::make($customHash);
+        $user->auth_token = $token;
+        $user->auth_time = Carbon::now()->addMonths(2);
+        $user->save();
 
         return response()->json([
             'message' => 'Авторизация прошла успешно',
@@ -263,6 +272,7 @@ class CustomerController extends Controller
 
         return  $this->register($request);
     }
+
     public function regSuccess(int $id, Request $request): RedirectResponse
     {
         $today = Carbon::today()->subDays(3);
