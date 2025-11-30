@@ -12,8 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('customer_department', function (Blueprint $table) {
-            $table->foreignId('department_id')->constrained('departments')->onDelete('cascade');
+            $table->id();
+            $table->unsignedBigInteger('department_id');
             $table->foreignId('customer_id')->constrained('customers')->onDelete('cascade');
+            $table->foreign('department_id', 'customer_department_department_id_foreign')
+                ->references('id')
+                ->on('department_division')
+                ->onDelete('cascade');
         });
     }
 
@@ -22,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('department_customer');
+        Schema::dropIfExists('customer_department');
     }
 };

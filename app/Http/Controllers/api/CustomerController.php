@@ -186,7 +186,10 @@ class CustomerController extends Controller
         $user = Customer::create($data);
 
         if (isset($request->department)) {
-            $user->departments()->attach($request->department);
+            \App\Models\CustomerDepartment::create([
+                'customer_id' => $user->id,
+                'department_division_id' => $request->department
+            ]);
         }
 
         $rootUrl = $request->root();
