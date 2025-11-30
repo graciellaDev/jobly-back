@@ -52,4 +52,14 @@ class Customer extends Model
             'department_id'
         );
     }
+
+    public function departmentDivisions(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            DepartmentDivision::class,
+            'customer_department',
+            'customer_id',
+            'department_division_id'
+        );
+    }
 }
