@@ -9,6 +9,7 @@ class CustomerRelation extends Model
 {
     protected $table = 'customer_relations';
     protected $fillable = ['user_id', 'customer_id'];
+    public $timestamps = false;
 
     public function customer()
     {
