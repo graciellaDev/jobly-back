@@ -117,12 +117,6 @@ class CustomerController extends Controller
                 'role' => $user->role ? $user->role->name : ''
             ]
         ]);
-        } else {
-
-            return response()->json([
-                'message' => 'Неверный логин или пароль',
-            ], 404);
-        }
     }
 
     public function register(Request $request): JsonResponse
@@ -204,8 +198,8 @@ class CustomerController extends Controller
 
         if (!empty($request->user_id)) {
             $dataEmail['url'] = $dataEmail['url'] . '&user_id=' . $request->user_id;
-            $userInvite = Customer::find($request->user_id);
-            $userInvite->relations()->attach($user->id);
+            $userInvite = Customer::find($user->id);
+            $userInvite->relations()->attach($request->user_id);
             $dataEmail['login'] = $user->login;
             $dataEmail['email'] = $user->email;
             $dataEmail['password'] = $request->password;
