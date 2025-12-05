@@ -25,3 +25,4 @@ yarn-error.log
 worker.log
 .dockerignore
 config/view.php
+*.sql
