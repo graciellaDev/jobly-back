@@ -251,8 +251,10 @@ class CandidateController extends Controller
         $customerId = $request->attributes->get('customer_id');
 
         $data['customer_id'] = $customerId;
-        $data['vacancy_id'] = intval($data['vacancy']);
-        unset($data['vacancy']);
+        if (isset($data['vacancy'])) {
+            $data['vacancy_id'] = intval($data['vacancy']);
+            unset($data['vacancy']);
+        }
 
         $data['stage_id'] = 1;
 
@@ -302,11 +304,13 @@ class CandidateController extends Controller
             }
         }
 
+        $name = $candidate->surname ?? '';
+        $name .= $candidate->firstname ? " {$candidate->firstname}" : '';
+        $name .= $candidate->patronymic ? " {$candidate->patronymic}" : '';
+        $name = trim($name);
+
         return response()->json([
-            'message' => 'Кандидат '
-                . $data['surname'] . ' '
-                . $data['firstname'] . ' '
-                . $data['patronymic'] . ' успешно создан',
+            'message' => "Кандидат {$name} успешно создан",
             'data' => $candidate
         ]);
     }
