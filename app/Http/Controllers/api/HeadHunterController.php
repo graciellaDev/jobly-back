@@ -12,17 +12,17 @@ use Illuminate\Support\Facades\Cookie;
 
 class HeadHunterController extends Controller
 {
-    private string |null $url = null;
-    private string |null $message = null;
+    private string|null $url = null;
+    private string|null $message = null;
     private int $status = 200;
     private string $COOKIE_ID_CUSTOMER = 'customer_id';
     public function auth(Request $request): JsonResponse
     {
-//        $clientId = Cookie::get($this->COOKIE_ID_CLIENT);
+        //        $clientId = Cookie::get($this->COOKIE_ID_CLIENT);
         if (!empty($clientId)) {
             $this->url = config('hh.auth_url')
                 . '?response_type=code&'
-//                . "client_id=$clientId&"
+                //                . "client_id=$clientId&"
                 . "force_login=true&"
                 . config('hh.redirect_url');
             $this->message = 'Success';
@@ -106,9 +106,12 @@ class HeadHunterController extends Controller
         ], $this->status);
     }
 
-    private function getToken(string | null $code = null, string | null $clientId = null, string | null $secretId =
-    null): bool | array
-    {
+    private function getToken(
+        string|null $code = null,
+        string|null $clientId = null,
+        string|null $secretId =
+        null
+    ): bool|array {
         if (!$code || !$clientId || !$secretId) {
             return false;
         } else {
@@ -181,7 +184,7 @@ class HeadHunterController extends Controller
             ], 422);
         }
         $url = config('hh.get_available_types')['url'] . $data['employer_id'] . config('hh.get_available_types')
-            ['folder'] .
+        ['folder'] .
             $data['manager_id'] . config('hh.get_available_types')['catalog'];
         $response = PlatformHh::requireGetPlatform($customerToken, $url);
 
@@ -206,7 +209,7 @@ class HeadHunterController extends Controller
             ], 404);
         }
 
-        $pubEndpoint = config('hh.get_publications')['url'] . $customerToken['employer_id']  . config('hh.get_publications')['folder'];
+        $pubEndpoint = config('hh.get_publications')['url'] . $customerToken['employer_id'] . config('hh.get_publications')['folder'];
         $data = PlatformHh::requireGetPlatform($customerToken['token'], $pubEndpoint)->json();
 
         return response()->json([
@@ -218,7 +221,7 @@ class HeadHunterController extends Controller
     {
         $customerToken = $request->attributes->get('token');
 
-        $response = PlatformHh::requireGetPlatform($customerToken, config('hh.get_publication') . 'id');
+        $response = PlatformHh::requireGetPlatform($customerToken, config('hh.get_publication') . $id);
 
         if ($response->status() != 200) {
             return response()->json([
@@ -236,10 +239,11 @@ class HeadHunterController extends Controller
     public function getVacancies(Request $request)
     {
         $customerToken = $request->attributes->get('token');
+        $employerId = $request->attributes->get('employer_id');
 
         $response = PlatformHh::requireGetPlatform(
             $customerToken,
-            config('hh.get_vacancies')['url'] . $customerToken['employer_id'] . config('hh.get_vacancies')['folder']
+            config('hh.get_vacancies')['url'] . $employerId . config('hh.get_vacancies')['folder']
         );
 
         if ($response->status() != 200) {
@@ -282,7 +286,7 @@ class HeadHunterController extends Controller
                 'message' => 'Ошибка валидации',
             ], 422);
         }
-        $response = $this->requirePostPlatform($customerToken, config('hh.get_publication'), $data);
+        $response = PlatformHh::requirePostPlatform($customerToken, config('hh.get_publication'), $data);
 
         return response()->json([
             'message' => 'Success',
