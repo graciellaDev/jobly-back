@@ -22,8 +22,8 @@ class CandidateController extends Controller
 
     private array $validFields = [
         'firstname' => 'required|string|min:3|max:50',
-        'surname' => 'required|string|min:3|max:50',
-        'patronymic' => 'nullable|string|min:3|max:50',
+        'surname' => 'nullable|string|max:50',
+        'patronymic' => 'nullable|string|max:50',
         'email' => 'required|string|max:50',
         'age' => 'nullable|numeric',
         'phone' => 'regex:/^\+7\d{10}$/',
@@ -35,6 +35,7 @@ class CandidateController extends Controller
         'vacancy' => 'nullable|string|max:100',
         'experience' => 'nullable|string|max:50',
         'telegram' => 'nullable|string|max:50',
+        'messengerMax' => 'nullable|string|max:50',
         'skype' => 'nullable|string|max:50',
         'icon' => 'nullable|string|max:50',
         'imagePath' => 'nullable|string|max:50',
@@ -42,14 +43,16 @@ class CandidateController extends Controller
         'resume' => 'nullable|string|max:50',
         'resumePath' => 'nullable|string|max:50',
         'coverPath' => 'nullable|string|max:50',
+        'source' => 'nullable|string|max:50',
+        'isReserve' => 'nullable|boolean',
         'customFields' => 'nullable|numeric',
     ];
 
     private array $validUpdateFields = [
         'firstname' => 'string|min:3|max:50',
-        'surname' => 'string|min:3|max:50',
-        'patronymic' => 'string|min:3|max:50',
-        'email' => 'string|max:50',
+        'surname' => 'nullable|string|max:50',
+        'patronymic' => 'nullable|string|max:50',
+        'email' => 'required|string|max:50|regex:/^[^\s@]+@[^\s@]+\.[^\s@]+$/',
         'age' => 'nullable|numeric',
         'phone' => 'regex:/^\+7\d{10}$/',
         'stage_id' => 'nullable|numeric',
@@ -60,6 +63,7 @@ class CandidateController extends Controller
         'vacancy' => 'nullable|string|max:100',
         'experience' => 'string|max:50',
         'telegram' => 'nullable|string|max:50',
+        'messengerMax' => 'nullable|string|max:50',
         'skype' => 'nullable|string|max:50',
         'icon' => 'nullable|string|max:50',
         'imagePath' => 'nullable|string|max:50',
@@ -67,6 +71,8 @@ class CandidateController extends Controller
         'resume' => 'nullable|string|max:50',
         'resumePath' => 'nullable|string|max:50',
         'coverPath' => 'nullable|string|max:50',
+        'source' => 'nullable|string|max:50',
+        'isReserve' => 'nullable|boolean',
         'customFields' => 'nullable|numeric',
     ];
 
