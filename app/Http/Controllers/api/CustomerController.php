@@ -404,7 +404,7 @@ class CustomerController extends Controller
     {
         $executors = Customer::whereIn('role_id', $this->roleExecutors)
             ->with('role')
-            ->select(['id', 'name', 'role_id'])
+            ->select(['id', 'name', 'email', 'role_id'])
             ->get();
 
         return response()->json([
