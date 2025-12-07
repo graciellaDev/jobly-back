@@ -16,6 +16,8 @@ return new class extends Migration {
             $table->boolean('isReserve')->default(false)->nullable()->after('source');
             $table->string('patronymic', 50)->nullable()->change();
             $table->string('surname', 50)->nullable()->change();
+            $table->foreignId('vacancy_id')->nullable()->change();
+            $table->foreignId('stage_id')->nullable()->change();
         });
     }
 

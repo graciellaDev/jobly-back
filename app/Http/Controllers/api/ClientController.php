@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 class ClientController extends Controller
 {
     private static array $validStatuses = ['active', 'new'];
+    
     public  function index(Request $request)
     {
         $customerId = $request->attributes->get('customer_id');

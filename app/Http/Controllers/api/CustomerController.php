@@ -9,6 +9,7 @@ use App\Mail\register\SuccessRecruiter;
 use App\Mail\register\Restore;
 use App\Models\Customer;
 use App\Models\CustomerRelation;
+use App\Models\CustomerDepartment;
 use App\Models\Department;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -186,7 +187,7 @@ class CustomerController extends Controller
         $user = Customer::create($data);
 
         if (isset($request->department)) {
-            \App\Models\CustomerDepartment::create([
+            CustomerDepartment::create([
                 'customer_id' => $user->id,
                 'department_division_id' => $request->department
             ]);
