@@ -35,9 +35,9 @@ return new class extends Migration
             $table->string('resumePath', 50)->nullable();
             $table->string('resume', 50)->nullable();
             $table->string('coverPath', 50)->nullable();
-            $table->foreignId('vacancy_id')->constrained()->onDelete('cascade');
+            $table->foreignId('vacancy_id')->nullable()->constrained()->onDelete('cascade');
             $table->foreignId('customer_id')->constrained()->onDelete('cascade');
-            $table->foreignId('stage_id')->constrained()->onDelete('cascade');
+            $table->foreignId('stage_id')->nullable()->constrained()->onDelete('cascade');
             $table->foreignId('manager_id')->nullable()->constrained('customers')->onDelete('cascade');
             $table->timestamps();
         });
