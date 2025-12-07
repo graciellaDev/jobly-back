@@ -209,19 +209,28 @@ class ApplicationController extends Controller
         }
 
          if ($customer->role_id == CustomerController::$roleRecruiter) {
-             $application = Application::with(['client', 'vacancy', 'status', 'executor', 'responsible'])
-                 ->where('responsible_id', $customerId)
-                 ->orWhere('customer_id', $customerId)
-                 ->find($id);
+             if (!empty($application->customer_id)) {
+                 $isAccess = false;
+                 if ($application->customer_id == $customerId) {
+                     $isAccess = true;
+                 }
+                 if ($application->responsible_id == $customer->id) {
+                     $isAccess = true;
+                 }
+             }
+             if (!$isAccess) {
+                 $application = null;
+             }
          }
         if ($customer->role_id == CustomerController::$roleClient) {
-            $application = Application::with(['client', 'vacancy', 'status', 'executor', 'responsible'])
-                ->where('customer_id', $customerId)
-                ->find($id);
-            if (empty($application)) {
-                $application = Application::with(['client', 'vacancy', 'status', 'executor', 'responsible'])
-                    ->where('client_id', $customerId)
-                    ->find($id);
+            if (!empty($application->customer_id)) {
+                $isAccess = false;
+                if ($application->client_id == $customer->id) {
+                    $isAccess = true;
+                }
+                if (!$isAccess) {
+                    $application = null;
+                }
             }
         }
 
