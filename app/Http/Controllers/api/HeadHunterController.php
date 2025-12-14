@@ -67,7 +67,7 @@ class HeadHunterController extends Controller
                 if ($data) {
                     $data['customer_id'] = $customerId;
                     $profile = PlatformHh::requireGetPlatform($data['access_token'], config('hh.get_profile_url'));
-                    
+
                     if ($profile->status() == 200) {
                         $profile = $profile->json();
                         if (!$profile['is_employer']) {
@@ -425,6 +425,30 @@ class HeadHunterController extends Controller
         return response()->json([
             'message' => 'Success',
             'data' => $response->json()
+        ]);
+    }
+
+    public function closeAuth(Request $request) {
+        $customerId = $request->attributes->get('customer_id');
+        $customer = Customer::find($customerId);
+
+        if (empty($customer)) {
+            return response()->json([
+                'message' => 'Пользователь не найден',
+            ], 404);
+        }
+
+        $hh = HeadHunter::where('customer_id', $customerId);
+
+        if (empty($hh)) {
+            return response()->json([
+                'message' => 'Аккаунт не найден',
+            ]);
+        }
+
+        $hh->delete();
+        return response()->json([
+            'message' => 'Аккаунт hh.ru успешно отвязан от платформы',
         ]);
     }
 }
