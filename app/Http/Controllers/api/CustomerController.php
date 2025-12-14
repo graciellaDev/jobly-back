@@ -478,12 +478,21 @@ class CustomerController extends Controller
             ->with('role')
             ->select(['id', 'name', 'email', 'role_id']);
 
+        if ($role && in_array($role, self::$roleTeam)) {
+            $team->whereHas('role', function ($query) use ($role) {
+                $query->where('id', $role);
+            });
+        }
+
+        $team = $team->get();
+
         $clients = DB::table('client_vacancy')
             ->where('vacancy_id', $vacancy_id)
             ->pluck('customer_id');
         $clients = Customer::select(['id', 'name', 'email'])
             ->whereIn('id', $clients)
             ->get();
+
         if (!empty($clients)) {
             foreach ($clients as $client) {
                 $client['role'] = ['id' => 5, 'name' => 'Клиент'];
@@ -503,14 +512,6 @@ class CustomerController extends Controller
                 $team[] = $coordinator;
             }
         }
-
-        if ($role && in_array($role, self::$roleTeam)) {
-            $team->whereHas('role', function ($query) use ($role) {
-                $query->where('id', $role);
-            });
-        }
-
-        $team = $team->get();
 
         return response()->json([
             'message' => 'Success',
