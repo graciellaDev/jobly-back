@@ -278,6 +278,25 @@ class VacancyController extends Controller
             $vacancy['phrases'] = $phrases;
 
             $vacancy['place'] = $vacancy->places;
+
+            $clients = DB::table('client_vacancy')
+                ->where('vacancy_id', $id)
+                ->pluck('customer_id');
+            $clients = Customer::select(['id', 'name', 'email'])
+                ->whereIn('id', $clients)
+                ->get();
+            $vacancy['clients'] = $clients;
+
+            $coordinators = DB::table('coordinating_vacancy')
+                ->where('vacancy_id', $id)
+                ->pluck('customer_id');
+            $coordinators = Customer::select(['id', 'name', 'email'])
+                ->whereIn('id', $coordinators)
+                ->get();
+            $vacancy['coordinators'] = $coordinators;
+
+            $recruiter = Customer::select(['id', 'name', 'email'])->find($vacancy->executor_id);
+            $vacancy['recruiter'] = $recruiter;
             unset($vacancy['places']);
         }
 
@@ -475,7 +494,6 @@ class VacancyController extends Controller
                 ], 422);
             }
 
-            // Проверка валидности role_id
             if (isset($data['role_id']) && !in_array($data['role_id'], $this->validRole)) {
                 return response()->json([
                     'message' => 'Недопустимое значение роли',
@@ -512,6 +530,7 @@ class VacancyController extends Controller
                             ->exists();
                         if (!$exists) {
                             $vacancy->coordinators()->attach($customerRoleId);
+                            var_dump($vacancy->coordinators());
                         }
                     }
                     unset($data['customer_role']);
@@ -528,15 +547,16 @@ class VacancyController extends Controller
                 if ($data['role_id'] == 5 && isset($data['customer_role'])) {
                     $customerRoleId = intval($data['customer_role']);
                     if ($customerRoleId > 0) {
-                        // Проверяем, существует ли уже связь в pivot таблице
                         $exists = DB::table('client_vacancy')
                             ->where('vacancy_id', $id)
                             ->where('customer_id', $customerRoleId)
                             ->exists();
                         if (!$exists) {
                             $vacancy->clients()->attach($customerRoleId);
+                           
                         }
                     }
+                    
                     unset($data['customer_role']);
                 }
                 unset($data['role_id']);
@@ -605,7 +625,7 @@ class VacancyController extends Controller
                     ], 409);
             }
 
-//            $vacancy = Vacancy::with(['conditions', 'drivers', 'additions'])->find($vacancy->id);
+            //            $vacancy = Vacancy::with(['conditions', 'drivers', 'additions'])->find($vacancy->id);
 
             return response()->json([
                 'message' => 'Вакансия ' . $vacancy->name . ' успешно обновлена',
