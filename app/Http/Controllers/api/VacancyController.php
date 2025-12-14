@@ -512,7 +512,6 @@ class VacancyController extends Controller
                             ->exists();
                         if (!$exists) {
                             $vacancy->coordinators()->attach($customerRoleId);
-                            var_dump($vacancy->coordinators());
                         }
                     }
                     unset($data['customer_role']);
@@ -538,7 +537,6 @@ class VacancyController extends Controller
                            
                         }
                     }
-                    
                     unset($data['customer_role']);
                 }
                 unset($data['role_id']);
