@@ -21,6 +21,7 @@ use Illuminate\Support\Str;
 use App\Models\Role;
 use App\Models\Vacancy;
 use Illuminate\Support\Facades\DB;
+use App\Models\Application;
 
 class CustomerController extends Controller
 {
@@ -486,6 +487,25 @@ class CustomerController extends Controller
 
         $team = $team->get();
 
+        $applications = Application::select('id', 'client_id', 'vacancy_id')
+            ->where('vacancy_id', $vacancy_id)
+            ->get();
+        $clientApplication = null;
+        if (!empty($applications)) {
+            foreach ($applications as $application) {
+                if (!empty($application->client_id)) {
+                    $client = Customer::select('id', 'name', 'email', 'role_id')
+                        ->with('role')
+                        ->find($application->client_id);
+                    // var_dump($client->name);
+                    if (!empty($client)) {
+                        $clientApplication = $client;
+                        $team[] = $client;
+                    }
+                }
+            }
+        }
+
         $clients = DB::table('client_vacancy')
             ->where('vacancy_id', $vacancy_id)
             ->pluck('customer_id');
@@ -495,6 +515,9 @@ class CustomerController extends Controller
 
         if (!empty($clients)) {
             foreach ($clients as $client) {
+                if ($client->id == $clientApplication->id) {
+                    continue;
+                }
                 $client['role'] = ['id' => 5, 'name' => 'Клиент'];
                 $team[] = $client;
             }
@@ -517,5 +540,100 @@ class CustomerController extends Controller
             'message' => 'Success',
             'data' => $team
         ]);
+    }
+
+    public function removeTeamMember(Request $request, int $vacancy_id): JsonResponse
+    {
+        $customerId = $request->attributes->get('customer_id');
+        
+        try {
+            $data = $request->validate([
+                'team_member_id' => 'required|integer',
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Ошибка валидации',
+            ], 422);
+        }
+
+        $vacancy = Vacancy::find($vacancy_id);
+        if (empty($vacancy)) {
+            return response()->json([
+                'message' => 'Вакансия не найдена',
+            ], 404);
+        }
+
+        // Проверяем права доступа
+        $customer = Customer::find($customerId);
+        if (empty($customer)) {
+            return response()->json([
+                'message' => 'Пользователь не найден',
+            ], 404);
+        }
+
+        // Проверяем, что пользователь имеет право управлять этой вакансией
+        if ($customer->role_id != self::$roleAdmin && $vacancy->customer_id != $customerId) {
+            return response()->json([
+                'message' => 'Недостаточно прав для выполнения операции',
+            ], 403);
+        }
+
+        $teamMemberId = $data['customer_id'];
+        $teamMember = Customer::find($teamMemberId);
+        
+        if (empty($teamMember)) {
+            return response()->json([
+                'message' => 'Сотрудник не найден',
+            ], 404);
+        }
+
+        if ($teamMember->role_id == self::$roleClient) {
+            $applications = Application::where('vacancy_id', $vacancy_id)
+            ->where('customer_id', $teamMemberId)
+            ->get();
+            if (!empty($applications)) {
+                foreach ($applications as $application) {
+                    $application->delete();
+                }
+            } else {
+                DB::table('client_vacancy')
+                ->where('vacancy_id', $vacancy_id)
+                ->where('customer_id', $teamMemberId)
+                ->delete();
+            } 
+            
+            return response()->json([
+                'message' => 'Клиент успешно удален из команды вакансии',
+            ]);
+        }
+
+        $isCoordinator = DB::table('coordinating_vacancy')
+            ->where('vacancy_id', $vacancy_id)
+            ->where('customer_id', $teamMemberId)
+            ->exists();
+
+        if ($isCoordinator) {
+            DB::table('coordinating_vacancy')
+                ->where('vacancy_id', $vacancy_id)
+                ->where('customer_id', $teamMemberId)
+                ->delete();
+            
+            return response()->json([
+                'message' => 'Согласующий успешно удален из команды вакансии',
+            ]);
+        }
+
+        if ($vacancy->executor_id == $teamMemberId) {
+            $vacancy->executor_id = null;
+            $vacancy->save();
+            
+            return response()->json([
+                'message' => 'Рекрутер успешно удален из команды вакансии',
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Сотрудник не найден в команде вакансии',
+        ], 404);
     }
 }
