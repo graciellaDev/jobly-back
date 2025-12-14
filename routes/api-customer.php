@@ -33,6 +33,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('executors', [CustomerController::class, 'getExecutors']);
     Route::get('responsibles', [CustomerController::class, 'getResponsibles']);
     Route::get('team/{vacancy_id}', [CustomerController::class, 'getTeam']);
+    Route::delete('team/{vacancy_id}', [CustomerController::class, 'removeTeamMember']);
 
     Route::get('departments', [DepartmentController::class, 'index']);
     Route::get('departments/{id}', [DepartmentController::class, 'show']);
