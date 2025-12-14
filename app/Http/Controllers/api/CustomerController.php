@@ -20,6 +20,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Str;
 use App\Models\Role;
 use App\Models\Vacancy;
+use Illuminate\Support\Facades\DB;
 
 class CustomerController extends Controller
 {
@@ -476,6 +477,32 @@ class CustomerController extends Controller
         $team = Customer::whereIn('id', $team)
             ->with('role')
             ->select(['id', 'name', 'email', 'role_id']);
+
+        $clients = DB::table('client_vacancy')
+            ->where('vacancy_id', $vacancy_id)
+            ->pluck('customer_id');
+        $clients = Customer::select(['id', 'name', 'email'])
+            ->whereIn('id', $clients)
+            ->get();
+        if (!empty($clients)) {
+            foreach ($clients as $client) {
+                $client['role'] = ['id' => 5, 'name' => 'Клиент'];
+                $team[] = $client;
+            }
+        }
+
+        $coordinators = DB::table('coordinating_vacancy')
+            ->where('vacancy_id', $vacancy_id)
+            ->pluck('customer_id');
+        $coordinators = Customer::select(['id', 'name', 'email'])
+            ->whereIn('id', $coordinators)
+            ->get();
+        if (!empty($coordinators)) {
+            foreach ($coordinators as $coordinator) {
+                $coordinator['role'] = ['name' => 'Согласующий'];
+                $team[] = $coordinator;
+            }
+        }
 
         if ($role && in_array($role, self::$roleTeam)) {
             $team->whereHas('role', function ($query) use ($role) {

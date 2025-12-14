@@ -279,24 +279,6 @@ class VacancyController extends Controller
 
             $vacancy['place'] = $vacancy->places;
 
-            $clients = DB::table('client_vacancy')
-                ->where('vacancy_id', $id)
-                ->pluck('customer_id');
-            $clients = Customer::select(['id', 'name', 'email'])
-                ->whereIn('id', $clients)
-                ->get();
-            $vacancy['clients'] = $clients;
-
-            $coordinators = DB::table('coordinating_vacancy')
-                ->where('vacancy_id', $id)
-                ->pluck('customer_id');
-            $coordinators = Customer::select(['id', 'name', 'email'])
-                ->whereIn('id', $coordinators)
-                ->get();
-            $vacancy['coordinators'] = $coordinators;
-
-            $recruiter = Customer::select(['id', 'name', 'email'])->find($vacancy->executor_id);
-            $vacancy['recruiter'] = $recruiter;
             unset($vacancy['places']);
         }
 
