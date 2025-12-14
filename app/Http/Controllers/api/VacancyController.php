@@ -28,6 +28,7 @@ use Illuminate\Http\Request;
 use App\Models\Employment;
 use App\Models\AdditionVacancy;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 use function Symfony\Component\String\b;
 
@@ -54,6 +55,9 @@ class VacancyController extends Controller
         'create',
         'department'
     ];
+
+    private array $validRole = [1, 3, 5];
+    
     public function index(Request $request)
     {
         $customerId = $request->attributes->get('customer_id');
@@ -458,11 +462,23 @@ class VacancyController extends Controller
                     'executor_name' => 'nullable|string',
                     'executor_phone' => 'nullable|regex:/^\+7\d{10}$/',
                     'executor_email' => 'nullable|string',
-                    'show_executor' => 'nullable|boolean'
+                    'show_executor' => 'nullable|boolean',
+                    'role_id' => 'nullable|numeric',
+                    'customer_role' => 'nullable|string',
+                    'conditions' => 'nullable',
+                    'additions' => 'nullable',
+                    'phrases' => 'nullable',
                 ]);
             } catch (\Throwable $th) {
                 return response()->json([
                     'message' => 'Ошибка валидации',
+                ], 422);
+            }
+
+            // Проверка валидности role_id
+            if (isset($data['role_id']) && !in_array($data['role_id'], $this->validRole)) {
+                return response()->json([
+                    'message' => 'Недопустимое значение роли',
                 ], 422);
             }
 
@@ -485,6 +501,53 @@ class VacancyController extends Controller
                     $vacancy->places = $request->place;
                 }
             }
+
+            if (isset($data['role_id'])) {
+                if ($data['role_id'] == 1 && isset($data['customer_role'])) {
+                    $customerRoleId = intval($data['customer_role']);
+                    if ($customerRoleId > 0) {
+                        $exists = DB::table('coordinating_vacancy')
+                            ->where('vacancy_id', $id)
+                            ->where('customer_id', $customerRoleId)
+                            ->exists();
+                        if (!$exists) {
+                            $vacancy->coordinators()->attach($customerRoleId);
+                        }
+                    }
+                    unset($data['customer_role']);
+                }
+                
+                if ($data['role_id'] == 3 && isset($data['customer_role'])) {
+                    $customerRoleId = intval($data['customer_role']);
+                    if ($customerRoleId > 0) {
+                        $data['executor_id'] = $customerRoleId;
+                    }
+                    unset($data['customer_role']);
+                }
+                
+                if ($data['role_id'] == 5 && isset($data['customer_role'])) {
+                    $customerRoleId = intval($data['customer_role']);
+                    if ($customerRoleId > 0) {
+                        // Проверяем, существует ли уже связь в pivot таблице
+                        $exists = DB::table('client_vacancy')
+                            ->where('vacancy_id', $id)
+                            ->where('customer_id', $customerRoleId)
+                            ->exists();
+                        if (!$exists) {
+                            $vacancy->clients()->attach($customerRoleId);
+                        }
+                    }
+                    unset($data['customer_role']);
+                }
+                unset($data['role_id']);
+            }
+
+            if (empty($data)) {
+                return response()->json([
+                    'message' => 'Нет данных для обновления',
+                ], 422);
+            }
+
             $vacancy->update($data);
 
             $place = Place::find($vacancy->places);

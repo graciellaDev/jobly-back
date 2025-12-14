@@ -26,3 +26,4 @@ worker.log
 .dockerignore
 config/view.php
 *.sql
+/.cursor

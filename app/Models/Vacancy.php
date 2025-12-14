@@ -81,4 +81,14 @@ class Vacancy extends Model
     {
         return $this->belongsToMany(Phrase::class);
     }
+
+    public function clients(): BelongsToMany
+    {
+        return $this->belongsToMany(Customer::class, 'client_vacancy', 'vacancy_id', 'customer_id');
+    }
+
+    public function coordinators(): BelongsToMany
+    {
+        return $this->belongsToMany(Customer::class, 'coordinating_vacancy', 'vacancy_id', 'customer_id');
+    }
 }
