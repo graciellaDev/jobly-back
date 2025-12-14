@@ -545,10 +545,10 @@ class CustomerController extends Controller
     public function removeTeamMember(Request $request, int $vacancy_id): JsonResponse
     {
         $customerId = $request->attributes->get('customer_id');
-        
+
         try {
             $data = $request->validate([
-                'team_member_id' => 'required|integer',
+                'customer_id' => 'required|integer',
             ]);
         } catch (\Throwable $th) {
             return response()->json([
@@ -580,7 +580,7 @@ class CustomerController extends Controller
 
         $teamMemberId = $data['customer_id'];
         $teamMember = Customer::find($teamMemberId);
-        
+
         if (empty($teamMember)) {
             return response()->json([
                 'message' => 'Сотрудник не найден',
@@ -600,8 +600,8 @@ class CustomerController extends Controller
                 ->where('vacancy_id', $vacancy_id)
                 ->where('customer_id', $teamMemberId)
                 ->delete();
-            } 
-            
+            }
+
             return response()->json([
                 'message' => 'Клиент успешно удален из команды вакансии',
             ]);
@@ -617,7 +617,7 @@ class CustomerController extends Controller
                 ->where('vacancy_id', $vacancy_id)
                 ->where('customer_id', $teamMemberId)
                 ->delete();
-            
+
             return response()->json([
                 'message' => 'Согласующий успешно удален из команды вакансии',
             ]);
@@ -626,7 +626,7 @@ class CustomerController extends Controller
         if ($vacancy->executor_id == $teamMemberId) {
             $vacancy->executor_id = null;
             $vacancy->save();
-            
+
             return response()->json([
                 'message' => 'Рекрутер успешно удален из команды вакансии',
             ]);
