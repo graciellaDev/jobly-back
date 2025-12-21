@@ -551,7 +551,7 @@ class VacancyController extends Controller
 
             if (isset($request->dateEnd)) {
                 if (!empty($request->dateEnd)) {
-                    $data['dateEnd'] = Carbon::createFromFormat('Y-m-d', $data['dateEnd']);
+                    $data['dateEnd'] = Carbon::createFromFormat('d.m.Y', $data['dateEnd'])->format('Y-m-d');
                 } else {
                     $data['dateEnd'] = null;
                 }
