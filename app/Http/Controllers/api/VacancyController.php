@@ -57,7 +57,7 @@ class VacancyController extends Controller
     ];
 
     private array $validRole = [1, 3, 5];
-    
+
     public function index(Request $request)
     {
         $customerId = $request->attributes->get('customer_id');
@@ -469,6 +469,7 @@ class VacancyController extends Controller
                     'conditions' => 'nullable',
                     'additions' => 'nullable',
                     'phrases' => 'nullable',
+                    'dateEnd' => 'nullable|date_format:d.m.Y',
                 ]);
             } catch (\Throwable $th) {
                 return response()->json([
@@ -516,7 +517,7 @@ class VacancyController extends Controller
                     }
                     unset($data['customer_role']);
                 }
-                
+
                 if ($data['role_id'] == 3 && isset($data['customer_role'])) {
                     $customerRoleId = intval($data['customer_role']);
                     if ($customerRoleId > 0) {
@@ -524,7 +525,7 @@ class VacancyController extends Controller
                     }
                     unset($data['customer_role']);
                 }
-                
+
                 if ($data['role_id'] == 5 && isset($data['customer_role'])) {
                     $customerRoleId = intval($data['customer_role']);
                     if ($customerRoleId > 0) {
@@ -534,7 +535,7 @@ class VacancyController extends Controller
                             ->exists();
                         if (!$exists) {
                             $vacancy->clients()->attach($customerRoleId);
-                           
+
                         }
                     }
                     unset($data['customer_role']);
