@@ -549,6 +549,14 @@ class VacancyController extends Controller
                 ], 422);
             }
 
+            if (isset($request->dateEnd)) {
+                if (!empty($request->dateEnd)) {
+                    $data['dateEnd'] = Carbon::createFromFormat('Y-m-d', $data['dateEnd']);
+                } else {
+                    $data['dateEnd'] = null;
+                }
+            }
+
             $vacancy->update($data);
 
             $place = Place::find($vacancy->places);
