@@ -20,7 +20,8 @@ return [
     'get_profile_url' => env('HH_DOMAIN') . '/me',
     'get_publications' => [
         'url' => env('HH_DOMAIN') . '/employers/',
-        'folder' => '/vacancies/active'
+        'folder' => '/vacancies/active',
+        'folder_archived' => '/vacancies/archived'
     ],
     'get_publication' => env('HH_DOMAIN') . '/vacancies/',
     'get_drafts' => env('HH_DOMAIN') . '/vacancies/drafts',

@@ -209,7 +209,13 @@ class HeadHunterController extends Controller
             ], 404);
         }
 
-        $pubEndpoint = config('hh.get_publications')['url'] . $customerToken['employer_id'] . config('hh.get_publications')['folder'];
+        // Определяем endpoint в зависимости от параметра archived
+        $archived = $request->get('archived');
+        $folder = ($archived === 'true') 
+            ? config('hh.get_publications')['folder_archived'] 
+            : config('hh.get_publications')['folder'];
+        
+        $pubEndpoint = config('hh.get_publications')['url'] . $customerToken['employer_id'] . $folder;
         $data = PlatformHh::requireGetPlatform($customerToken['token'], $pubEndpoint)->json();
 
         return response()->json([
