@@ -35,11 +35,18 @@ use function Symfony\Component\String\b;
 class VacancyController extends Controller
 {
     private $statuses = [
-      'active',  'draft', 'archive'
+        'active',
+        'draft',
+        'archive'
     ];
 
     private array $sort = [
-        'asc', 'desc', 'new', 'old', 'urgent', 'non-urgent'
+        'asc',
+        'desc',
+        'new',
+        'old',
+        'urgent',
+        'non-urgent'
     ];
 
     private array $filters = [
@@ -190,19 +197,19 @@ class VacancyController extends Controller
                 $responsible = Customer::select(['id', 'name'])->find($vacancy->executor_id);
             }
             $candidates = Candidate::where('vacancy_id', $vacancy->id)->get();
-           $vacancyStages = [
-               [
-                   'name' => 'Все',
-                   'count' => $candidates->count()
-               ]
-           ];
+            $vacancyStages = [
+                [
+                    'name' => 'Все',
+                    'count' => $candidates->count()
+                ]
+            ];
             $stagesDefault = Stage::where('fixed', 1)->get();
             foreach ($stagesDefault as $stage) {
                 $count = $stage->countVacancyCandidates($vacancy->id);
-                    $vacancyStages[] = [
-                        'name' => $stage->name,
-                        'count' => $count
-                    ];
+                $vacancyStages[] = [
+                    'name' => $stage->name,
+                    'count' => $count
+                ];
             }
             $stagesUser = FunnelStage::where('customer_id', $vacancy->customer_id)->pluck('stage_id')->toArray();
             $stagesUser = Stage::find($stagesUser);
@@ -282,7 +289,7 @@ class VacancyController extends Controller
             unset($vacancy['places']);
         }
 
-        return json_encode([
+        return response()->json([
             'message' => 'Success',
             'data' => $vacancy
         ]);
@@ -331,7 +338,7 @@ class VacancyController extends Controller
             ], 409);
         }
 
-        if(isset($request->place)) {
+        if (isset($request->place)) {
             $place = Place::all()->find($request->place);
             if (!empty($place)) {
                 $data['places'] = $request->place;
@@ -367,7 +374,7 @@ class VacancyController extends Controller
 
         try {
             $vacancy = Vacancy::create($data);
-            if (isset($application) && $application->status_id == 2){
+            if (isset($application) && $application->status_id == 2) {
                 $application->vacancy_id = $vacancy->id;
                 $application->save();
             }
@@ -377,7 +384,7 @@ class VacancyController extends Controller
             ], 500);
         }
 
-        if(isset($request->place)) {
+        if (isset($request->place)) {
             $place = Place::all()->find($request->place);
             if (!empty($place)) {
                 $vacancy->places = $request->place;
@@ -385,17 +392,17 @@ class VacancyController extends Controller
             unset($data['place']);
         }
 
-        if(isset($request->conditions)) {
+        if (isset($request->conditions)) {
             $vacancy->conditions()->attach($request->conditions);
             $conditions = Condition::whereIn('id', $request->conditions)->get();
             $vacancy->conditions = $conditions->toArray();
         }
-        if(isset($request->additions)) {
+        if (isset($request->additions)) {
             $vacancy->additions()->attach($request->additions);
             $drivers = Driver::whereIn('id', $request->drivers)->get();
             $vacancy->drivers = $drivers;
         }
-        if(isset($request->drivers)) {
+        if (isset($request->drivers)) {
             $vacancy->drivers()->attach($request->drivers);
             $additions = Addition::whereIn('id', $request->additions)->get();
             $vacancy->additions = $additions;
@@ -416,7 +423,7 @@ class VacancyController extends Controller
         ]);
     }
 
-    public function delete (Request $request, int $id)
+    public function delete(Request $request, int $id)
     {
         $customerId = $request->attributes->get('customer_id');
         $vacancy = Vacancy::where('customer_id', $customerId)->find($id);
@@ -434,7 +441,7 @@ class VacancyController extends Controller
         }
     }
 
-    public function update (Request $request, int $id): mixed
+    public function update(Request $request, int $id): mixed
     {
         $customerId = $request->attributes->get('customer_id');
         $vacancy = Vacancy::where('customer_id', $customerId)->find($id);
@@ -496,7 +503,7 @@ class VacancyController extends Controller
                 }
             }
 
-            if(isset($request->place)) {
+            if (isset($request->place)) {
                 $place = Place::all()->find(intval($request->place));
                 if (!empty($place)) {
                     $vacancy->places = $request->place;
@@ -563,7 +570,7 @@ class VacancyController extends Controller
             $vacancy->place = $place;
             $vacancy->makeHidden('places');
 
-            try{
+            try {
                 if (isset($request->conditions)) {
                     $relatedFields = array_map(fn($el) => intval($el), $request->conditions);
                     $vacancy->conditions()->detach();
@@ -573,7 +580,7 @@ class VacancyController extends Controller
                     $conditions = ConditionVacancy::all()->where('vacancy_id', $id)->pluck(['condition_id']);
                     $conditions = Condition::whereIn('id', $conditions)->get();
                 }
-                    $vacancy['conditions'] = $conditions;
+                $vacancy['conditions'] = $conditions;
 
                 if (isset($request->drivers)) {
                     $relatedFields = array_map(fn($el) => $el['id'], $request->drivers);
@@ -587,7 +594,7 @@ class VacancyController extends Controller
                 $vacancy['drivers'] = $drivers;
 
                 if (isset($request->additions)) {
-                    $relatedFields= array_map(fn($el) => intval($el), $request->additions);
+                    $relatedFields = array_map(fn($el) => intval($el), $request->additions);
                     $vacancy->additions()->detach();
                     $vacancy->additions()->sync($relatedFields);
                     $additions = Addition::whereIn('id', $relatedFields)->get();
@@ -598,7 +605,7 @@ class VacancyController extends Controller
                 $vacancy['additions'] = $additions;
 
                 if (isset($request->phrases)) {
-                    $phrases= array_map(fn($el) => intval($el), $request->phrases);
+                    $phrases = array_map(fn($el) => intval($el), $request->phrases);
                     $vacancy->phrases()->detach();
                     $vacancy->phrases()->sync($phrases);
                     $phrases = Phrase::whereIn('id', $phrases)->get();
@@ -611,7 +618,7 @@ class VacancyController extends Controller
 
                 return response()->json([
                     'message' => 'Ошибка обновления связаных данных',
-                    ], 409);
+                ], 409);
             }
 
             //            $vacancy = Vacancy::with(['conditions', 'drivers', 'additions'])->find($vacancy->id);
