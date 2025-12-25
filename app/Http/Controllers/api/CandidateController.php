@@ -32,7 +32,7 @@ class CandidateController extends Controller
         'quickInfo' => 'nullable|string|min:3|max:255',
         'education' => 'nullable|string|max:100',
         'link' => 'nullable|string|max:255',
-        'vacancy' => 'nullable|string|max:100',
+        'vacancy_id' => 'nullable|integer',
         'experience' => 'nullable|string|max:50',
         'telegram' => 'nullable|string|max:50',
         'messengerMax' => 'nullable|string|max:80',
@@ -56,11 +56,11 @@ class CandidateController extends Controller
         'age' => 'nullable|numeric',
         'phone' => 'regex:/^\+7\d{10}$/',
         'stage_id' => 'nullable|numeric',
-        'location' => 'string|max:100',
-        'quickInfo' => 'string|min:3|max:255',
-        'education' => 'string|max:100',
+        'location' => 'nullable|string|max:100',
+        'quickInfo' => 'nullable|string|min:3|max:255',
+        'education' => 'nullable|string|max:100',
         'link' => 'nullable|string|max:255',
-        'vacancy' => 'nullable|string|max:100',
+        'vacancy_id' => 'nullable|integer',
         'experience' => 'string|max:50',
         'telegram' => 'nullable|string|max:80',
         'messengerMax' => 'nullable|string|max:80',
@@ -78,7 +78,7 @@ class CandidateController extends Controller
 
     private array $editFields = [
         'customer_id' => 'customer',
-        'vacancy_id' => 'vacancy',
+        // 'vacancy_id' => 'vacancy_id',
         'stage_id' => 'stage'
     ];
 
