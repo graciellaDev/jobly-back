@@ -37,7 +37,7 @@ class VacancyController extends Controller
     private $statuses = [
         'active',
         'draft',
-        'archive'
+        'archive',
     ];
 
     private array $sort = [
@@ -60,7 +60,8 @@ class VacancyController extends Controller
         'notExecutor',
         'responsible',
         'create',
-        'department'
+        'department',
+        'platforms'
     ];
 
     private array $validRole = [1, 3, 5];
@@ -132,7 +133,6 @@ class VacancyController extends Controller
                     case $this->filters[5]:
                         if ($value == 'true') {
                             $notCandidate = Candidate::whereNotNull('vacancy_id')->select('vacancy_id')->pluck('vacancy_id')->toArray();
-                            var_dump($notCandidate);
                             if (count($notCandidate)) {
                                 $vacancies->whereNotIn('id', $notCandidate);
                             }
@@ -172,6 +172,9 @@ class VacancyController extends Controller
                     case $this->filters[10]:
                         $customers = CustomerDepartment::where('department_id', $value)->pluck('customer_id')->toArray();
                         break;
+                    case $this->filters[11]:
+                            //$vacancies->whereHas('platforms');
+                            break;
                 }
             }
         }

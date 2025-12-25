@@ -84,11 +84,18 @@ class Vacancy extends Model
 
     public function clients(): BelongsToMany
     {
-        return $this->belongsToMany(Customer::class, 'client_vacancy', 'vacancy_id', 'customer_id');
+        return $this->belongsToMany(Client::class, 'client_vacancy', 'vacancy_id', 'customer_id');
     }
 
     public function coordinators(): BelongsToMany
     {
         return $this->belongsToMany(Customer::class, 'coordinating_vacancy', 'vacancy_id', 'customer_id');
+    }
+
+    public function platforms(): BelongsToMany
+    {
+        return $this->belongsToMany(Platform::class, 'vacancy_platform', 'vacancy_id', 'platform_id')
+            ->withPivot('base_vacancy_id')
+            ->withTimestamps();
     }
 }
