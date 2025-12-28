@@ -324,22 +324,24 @@ class VacancyController extends Controller
                 'executor_phone' => 'nullable|regex:/^\+7\d{10}$/',
                 'executor_email' => 'nullable|string',
                 'show_executor' => 'nullable|boolean',
+                'platform_id' => 'nullable|numeric',
+                'base_id' => 'nullable|numeric'
             ]);
         } catch (\Throwable $th) {
             return response()->json([
                 'message' => 'Ошибка валидации',
             ], 422);
         }
-        $isExists = null;
-        if (!empty($request->code)) {
-            $isExists = Vacancy::where('code', $request->code)->where('customer_id', $customerId)->exists();
-        }
-
-        if ($isExists) {
-            return response()->json([
-                'massage' => 'Вакансия с кодом ' . $request->code . ' уже существует'
-            ], 409);
-        }
+//        $isExists = null;
+//        if (!empty($request->code)) {
+//            $isExists = Vacancy::where('code', $request->code)->where('customer_id', $customerId)->exists();
+//        }
+//
+//        if ($isExists) {
+//            return response()->json([
+//                'massage' => 'Вакансия с кодом ' . $request->code . ' уже существует'
+//            ], 409);
+//        }
 
         if (isset($request->place)) {
             $place = Place::all()->find($request->place);
@@ -375,6 +377,16 @@ class VacancyController extends Controller
             }
         }
 
+        if (!empty($request->platform_id) && !empty($request->base_id)) {
+            $baseVacancy = Vacancy::find($request->base_id);
+            if (empty($baseVacancy)) {
+                return response()->json(
+                    [
+                        'massage' => 'Вакансия с id = ' . $request->base_id . ' не найдена'
+                    ], 404);
+            }
+        }
+
         try {
             $vacancy = Vacancy::create($data);
             if (isset($application) && $application->status_id == 2) {
@@ -385,6 +397,23 @@ class VacancyController extends Controller
             return response()->json([
                 'massage' => 'Ошибка создания вакансии ' . $request->name
             ], 500);
+        }
+
+        if (!empty($request->platform_id) && !empty($request->base_id)) {
+            // Проверяем, существует ли уже связь
+            $exists = $vacancy->platforms()->where('platform_id', $request->platform_id)->exists();
+
+            if ($exists) {
+                // Обновляем существующую
+                $vacancy->platforms()->updateExistingPivot($request->platform_id, [
+                    'base_vacancy_id' => $request->base_id
+                ]);
+            } else {
+                // Создаём новую связь с дополнительным полем
+                $vacancy->platforms()->attach($request->platform_id, [
+                    'base_vacancy_id' => $request->base_id
+                ]);
+            }
         }
 
         if (isset($request->place)) {
