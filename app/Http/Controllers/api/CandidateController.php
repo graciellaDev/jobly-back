@@ -52,7 +52,7 @@ class CandidateController extends Controller
         'firstname' => 'string|min:3|max:50',
         'surname' => 'nullable|string|max:50',
         'patronymic' => 'nullable|string|max:50',
-        'email' => 'required|string|max:50|regex:/^[^\s@]+@[^\s@]+\.[^\s@]+$/',
+        'email' => 'string|max:50|regex:/^[^\s@]+@[^\s@]+\.[^\s@]+$/',
         'age' => 'nullable|numeric',
         'phone' => 'regex:/^\+7\d{10}$/',
         'stage_id' => 'nullable|numeric',
@@ -74,6 +74,7 @@ class CandidateController extends Controller
         'source' => 'nullable|string|max:50',
         'isReserve' => 'nullable|boolean',
         'customFields' => 'nullable|numeric',
+        'tags' => 'nullable|array'
     ];
 
     private array $editFields = [
@@ -91,6 +92,11 @@ class CandidateController extends Controller
         $customerId = $request->attributes->get('customer_id');
         $sort = $request->get('sort');
         $candidates = Candidate::where('customer_id', $customerId);
+        $perPage = $request->integer('per_page', 3);
+        $perPage = max(1, min($perPage, 100));
+        $perPage = $request->get('per_page') == 'all' ? Candidate::count() : $perPage;
+        $filterVacancy = $request->get('vacancy_id');
+        if (!empty($filterVacancy)) $candidates = $candidates->where('vacancy_id', $filterVacancy);
         if (!empty($sort) && in_array($sort, $this->validSort)) {
             $sort = match ($sort) {
                 'dateCreate' => 'created_at'
@@ -98,7 +104,7 @@ class CandidateController extends Controller
             $asc = $request->get('asc') === '0' ? 'desc' : 'asc';
             $candidates = $candidates->orderBy($sort, $asc);
         }
-        $candidates = $candidates->paginate();
+        $candidates = $candidates->paginate($perPage);
         $candidates->getCollection()->transform(function ($candidate) {
             $this->replaceFields($this->editFields, $candidate);
 
@@ -178,11 +184,12 @@ class CandidateController extends Controller
             $related = CandidateSkill::all()->where('candidate_id', $id)->pluck('skill_id');
         }
         $candidate['skills'] = Skill::whereIn('id', $related)->get();
-
         if (isset($request->tags)) {
-            $related = array_map(fn($el) => intval($el), $request->tags);
             $candidate->tags()->detach();
-            $candidate->tags()->attach($request->tags);
+            if (!empty($request->tags)) {
+                $related = array_map(fn($el) => intval($el), $request->tags);
+                $candidate->tags()->attach($request->tags);
+            }
         } else {
             $related = CandidateTag::all()->where('candidate_id', $id)->pluck('tag_id');
         }
