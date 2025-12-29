@@ -50,7 +50,7 @@ class TagController extends Controller
         $tag = Tag::where('name', $request->name)->get();
         if (!$tag->isEmpty()) {
             return response()->json([
-                'massage' => 'Тэг ' . $data['name'] . ' уже существует'
+                'message' => 'Тэг ' . $data['name'] . ' уже существует'
             ], 409);
         }
 
@@ -74,7 +74,7 @@ class TagController extends Controller
         $tag = Tag::find($id);
         if (empty($tag)) {
             return response()->json([
-                'massage' => 'Тэг с id = ' . $id  . ' не существует'
+                'message' => 'Тэг с id = ' . $id . ' не существует'
             ], 404);
         }
         $name = $tag->name;
@@ -82,6 +82,22 @@ class TagController extends Controller
         $tag->delete();
         return response()->json([
             'message' => 'Тэг ' . $name . ' успешно удален',
+        ]);
+    }
+
+    public function find(Request $request, string $name): JsonResponse
+    {
+        $tag = Tag::where('name', $request->name)->get();
+
+        if (empty($tag)) {
+            return response()->json([
+                'message' => 'Тэг ' . $name . ' не существует'
+            ], 404);
+        }
+
+        return response()->json([
+            'message' => 'Success',
+            'data' => $tag
         ]);
     }
 }

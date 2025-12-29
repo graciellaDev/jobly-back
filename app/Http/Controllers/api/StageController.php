@@ -43,7 +43,7 @@ class StageController extends Controller
     {
         $stage = Stage::find($id);
 
-        if (!empty($stage) ) {
+        if (!empty($stage)) {
             $name = $stage->name;
             if ($stage->fixed) {
                 return response()->json([
@@ -52,7 +52,7 @@ class StageController extends Controller
             }
 
             return response()->json([
-                'massage' => 'Этап ' . $name . ' успешно удален',
+                'message' => 'Этап ' . $name . ' успешно удален',
                 'data' => $stage
             ]);
         } else {
