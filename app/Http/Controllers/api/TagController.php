@@ -69,7 +69,7 @@ class TagController extends Controller
         ]);
     }
 
-    public function delete(Request $request, int $id): JsonResponse
+    public function delete(int $id): JsonResponse
     {
         $tag = Tag::find($id);
         if (empty($tag)) {
@@ -87,7 +87,7 @@ class TagController extends Controller
 
     public function find(Request $request, string $name): JsonResponse
     {
-        $tag = Tag::where('name', $request->name)->get();
+        $tag = Tag::where('name', $request->name)->first();
 
         if (empty($tag)) {
             return response()->json([
@@ -98,6 +98,6 @@ class TagController extends Controller
         return response()->json([
             'message' => 'Success',
             'data' => $tag
-        ]);
+        ], 200);
     }
 }
