@@ -57,11 +57,11 @@ class CandidateController extends Controller
         'phone' => 'regex:/^\+7\d{10}$/',
         'stage_id' => 'nullable|numeric',
         'location' => 'nullable|string|max:100',
-        'quickInfo' => 'nullable|string|min:3|max:255',
+        'quickInfo' => 'nullable|string|max:255',
         'education' => 'nullable|string|max:100',
         'link' => 'nullable|string|max:255',
         'vacancy_id' => 'nullable|integer',
-        'experience' => 'string|max:50',
+        'experience' => 'nullable|string|max:50',
         'telegram' => 'nullable|string|max:80',
         'messengerMax' => 'nullable|string|max:80',
         'skype' => 'nullable|string|max:50',
@@ -92,11 +92,12 @@ class CandidateController extends Controller
         $customerId = $request->attributes->get('customer_id');
         $sort = $request->get('sort');
         $candidates = Candidate::where('customer_id', $customerId);
-        $perPage = $request->integer('per_page', 3);
+        $perPage = $request->integer('per_page', 15);
         $perPage = max(1, min($perPage, 100));
         $perPage = $request->get('per_page') == 'all' ? Candidate::count() : $perPage;
         $filterVacancy = $request->get('vacancy_id');
-        if (!empty($filterVacancy)) $candidates = $candidates->where('vacancy_id', $filterVacancy);
+        if (!empty($filterVacancy))
+            $candidates = $candidates->where('vacancy_id', $filterVacancy);
         if (!empty($sort) && in_array($sort, $this->validSort)) {
             $sort = match ($sort) {
                 'dateCreate' => 'created_at'
