@@ -87,10 +87,15 @@ class CandidateController extends Controller
         'dateCreate'
     ];
 
+    private array $validFilters = [
+        'stage_id'
+    ];
+
     public function index(Request $request): JsonResponse
     {
         $customerId = $request->attributes->get('customer_id');
         $sort = $request->get('sort');
+        $filters = $request->get('filters');
         $candidates = Candidate::where('customer_id', $customerId);
         $perPage = $request->integer('per_page', 15);
         $perPage = max(1, min($perPage, 100));
@@ -98,6 +103,17 @@ class CandidateController extends Controller
         $filterVacancy = $request->get('vacancy_id');
         if (!empty($filterVacancy))
             $candidates = $candidates->where('vacancy_id', $filterVacancy);
+        if (!empty($filters)) {
+            foreach ($filters as $key => $value) {
+                if (in_array($key, $this->validFilters)) {
+                    switch ($key) {
+                        case  $this->validFilters[0]:
+                            $candidates->where($key, $value);
+                            break;
+                    }
+                }
+            }
+        }
         if (!empty($sort) && in_array($sort, $this->validSort)) {
             $sort = match ($sort) {
                 'dateCreate' => 'created_at'
@@ -367,11 +383,11 @@ class CandidateController extends Controller
         if ($candidate) {
             $candidate->tags()->detach($tag);
             return response()->json([
-                'message' => 'Тег успешно удален'
+                'message' => 'Тег у кандидата успешно удален'
             ]);
         } else {
             return response()->json([
-                'message' => 'Кандидата не найден'
+                'message' => 'Кандидат не найден'
             ], 404);
         }
     }
