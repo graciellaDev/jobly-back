@@ -211,10 +211,10 @@ class HeadHunterController extends Controller
 
         // Определяем endpoint в зависимости от параметра archived
         $archived = $request->get('archived');
-        $folder = ($archived === 'true') 
-            ? config('hh.get_publications')['folder_archived'] 
+        $folder = ($archived === 'true')
+            ? config('hh.get_publications')['folder_archived']
             : config('hh.get_publications')['folder'];
-        
+
         $pubEndpoint = config('hh.get_publications')['url'] . $customerToken['employer_id'] . $folder;
         $data = PlatformHh::requireGetPlatform($customerToken['token'], $pubEndpoint)->json();
 
@@ -455,6 +455,28 @@ class HeadHunterController extends Controller
         $hh->delete();
         return response()->json([
             'message' => 'Аккаунт hh.ru успешно отвязан от платформы',
+        ]);
+    }
+
+    public function getAddresses(Request $request) {
+        $customerToken = $request->attributes->get('token');
+        $employerId = $request->attributes->get('employer_id');
+
+        $response = PlatformHh::requireGetPlatform(
+            $customerToken,
+            config('hh.get_addresses')['url'] . $employerId . config('hh.get_addresses')['folder']
+        );
+
+        if ($response->status() != 200) {
+            return response()->json([
+                'message' => $response->status() == 404 ? 'Адресов  не найдено' : 'Ошибка получения адресов',
+                'data' => []
+            ], $response->status());
+        }
+
+        return response()->json([
+            'message' => 'Success',
+            'data' => $response->json()
         ]);
     }
 }
