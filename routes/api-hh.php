@@ -18,6 +18,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::get('/vacancies', [HeadHunterController::class, 'getVacancies']);
         Route::post('/send-url', [HeadHunterController::class, 'sendUrl']);
         Route::delete('auth', [HeadHunterController::class, 'closeAuth']);
+        Route::get('/addresses', [HeadHunterController::class, 'getAddresses']);
     });
 });
 
