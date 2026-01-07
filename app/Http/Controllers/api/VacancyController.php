@@ -94,7 +94,12 @@ class VacancyController extends Controller
             }
         }
 
+//        $vacancies = Vacancy::with('clients')->whereIn('customer_id', $arrUsers);
+//        $vacancies = Vacancy::with('platforms')->whereIn('customer_id', $arrUsers);
+
+
         $vacancies = Vacancy::whereIn('customer_id', $arrUsers);
+
         if (count($arrVacancies)) {
             $vacancies->orWhereIn('id', $arrVacancies);
         }
@@ -173,13 +178,15 @@ class VacancyController extends Controller
                         $customers = CustomerDepartment::where('department_id', $value)->pluck('customer_id')->toArray();
                         break;
                     case $this->filters[11]:
-                            //$vacancies->whereHas('platforms');
+                            $vacancies->whereHas('platforms');
                             break;
                 }
             }
         }
 
-        $vacancies->select(['id', 'name as title', 'location as city', 'executor_id', 'customer_id', 'created_at', 'dateEnd']);
+        $vacancies->select([
+            'id', 'name as title', 'location as city', 'executor_id', 'customer_id', 'created_at', 'dateEnd'
+        ]);
         if (!empty($sort)) {
             if ($sort == 'asc' || $sort == 'desc') {
                 $vacancies->orderBy('title', $sort);
@@ -225,6 +232,16 @@ class VacancyController extends Controller
                     ];
                 }
             }
+            if (!empty($vacancy->platforms)) {
+                $vacancy->platforms = $vacancy->platforms->toArray();
+            }
+//            var_dump($vacancy->platforms()->get());
+
+//            $vacancy->platforms_data = $vacancy->platforms->map(fn ($p) => [
+//                'id' => $p->id,
+//                'name' => $p->name,
+//                'base_vacancy_id' => $p->pivot->base_vacancy_id,
+//            ]);
 
             $vacancy->footerData = [
                 'sites' => 0,

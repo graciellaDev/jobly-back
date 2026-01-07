@@ -186,14 +186,17 @@ class CandidateController extends Controller
         }
         $candidate['skills'] = Skill::whereIn('id', $related)->get();
         if (isset($request->tags)) {
-            $candidate->tags()->detach();
-            if (!empty($request->tags)) {
-                $related = array_map(fn($el) => intval($el), $request->tags);
+            if (empty($request->tags)){
+                $candidate->tags()->detach();
+                $related = [];
+            } else {
                 $candidate->tags()->attach($request->tags);
+                $related = CandidateTag::all()->where('candidate_id', $id)->pluck('tag_id');
             }
         } else {
             $related = CandidateTag::all()->where('candidate_id', $id)->pluck('tag_id');
         }
+
         $candidate['tags'] = Tag::whereIn('id', $related)->get();
 
         if (isset($request->customFields)) {
@@ -356,5 +359,20 @@ class CandidateController extends Controller
         return response()->json([
             'message' => 'Отклик по вакансии'
         ]);
+    }
+
+    public function detachTag(Request $request, int $id, int $tag): JsonResponse
+    {
+        $candidate = Candidate::find($id);
+        if ($candidate) {
+            $candidate->tags()->detach($tag);
+            return response()->json([
+                'message' => 'Тег успешно удален'
+            ]);
+        } else {
+            return response()->json([
+                'message' => 'Кандидата не найден'
+            ], 404);
+        }
     }
 }

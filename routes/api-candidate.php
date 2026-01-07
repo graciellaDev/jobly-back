@@ -9,4 +9,5 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::put('candidates/{id}', [CandidateController::class, 'update']);
     Route::delete('candidates/{id}', [CandidateController::class, 'delete']);
     Route::post('candidates/reply', [CandidateController::class, 'reply']);
+    Route::delete('/candidates/{id}/tags/{tag}', [CandidateController::class, 'detachTag']);
 });
