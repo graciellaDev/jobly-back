@@ -26,14 +26,13 @@ class Vacancy extends Model
         'places',
         'currency',
         'location',
-        'footerData',
         'customer_id',
         'executor_name',
         'executor_phone',
         'executor_email',
         'executor_id',
         'status',
-        'show_executor'
+        'show_executor',
     ];
 
     public function drivers(): BelongsToMany
@@ -60,12 +59,6 @@ class Vacancy extends Model
         return $this->belongsToMany(Addition::class, 'addition_vacancy', 'vacancy_id');
     }
 
-    public function footerData()
-    {
-        return $this->footerData = [
-            'itemId' => $this->id . ' ID'
-        ];
-    }
 
     public function customer(): BelongsTo
     {
@@ -95,7 +88,6 @@ class Vacancy extends Model
     public function platforms(): BelongsToMany
     {
         return $this->belongsToMany(Platform::class, 'vacancy_platform', 'vacancy_id', 'platform_id')
-            ->withPivot('base_vacancy_id')
-            ->withTimestamps();
+            ->withPivot('base_vacancy_id');
     }
 }
