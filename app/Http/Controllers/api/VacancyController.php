@@ -74,27 +74,31 @@ class VacancyController extends Controller
         $filters = $request->get('filters');
 
         $customer = Customer::find($customerId);
+
         $arrUsers = [$customerId];
         $arrVacancies = [];
 
-        if ($customer && $customer->role_id == CustomerController::$roleAdmin) {
-            $users = CustomerRelation::where('user_id', $customerId)->pluck('customer_id')->toArray();
-            if (count($users)) {
-                $arrUsers = array_merge($arrUsers, $users);
+        if ($customer) {
+
+            if ($customer->role_id == CustomerController::$roleAdmin) {
+                $users = CustomerRelation::where('user_id', $customerId)->pluck('customer_id')->toArray();
+                if (count($users)) {
+                    $arrUsers = array_merge($arrUsers, $users);
+                }
             }
-        }
-        if ($customer->role_id == CustomerController::$roleRecruiter) {
-            $application = Application::with(['client', 'vacancy', 'status', 'executor', 'responsible'])
-                ->where('responsible_id', $customerId)
-                ->whereNotNull('vacancy_id')
-                ->pluck('vacancy_id')
-                ->toArray();
-            if (count($application)) {
-                $arrVacancies = $application;
+            if ($customer->role_id == CustomerController::$roleRecruiter) {
+                $application = Application::with(['client', 'vacancy', 'status', 'executor', 'responsible'])
+                    ->where('responsible_id', $customerId)
+                    ->whereNotNull('vacancy_id')
+                    ->pluck('vacancy_id')
+                    ->toArray();
+                if (count($application)) {
+                    $arrVacancies = $application;
+                }
             }
         }
 
-//        $vacancies = Vacancy::with('clients')->whereIn('customer_id', $arrUsers);
+        //        $vacancies = Vacancy::with('clients')->whereIn('customer_id', $arrUsers);
 //        $vacancies = Vacancy::with('platforms')->whereIn('customer_id', $arrUsers);
 
 
@@ -178,14 +182,20 @@ class VacancyController extends Controller
                         $customers = CustomerDepartment::where('department_id', $value)->pluck('customer_id')->toArray();
                         break;
                     case $this->filters[11]:
-                            $vacancies->whereHas('platforms');
-                            break;
+                        $vacancies->whereHas('platforms');
+                        break;
                 }
             }
         }
 
         $vacancies->select([
-            'id', 'name as title', 'location as city', 'executor_id', 'customer_id', 'created_at', 'dateEnd'
+            'id',
+            'name as title',
+            'location as city',
+            'executor_id',
+            'customer_id',
+            'created_at',
+            'dateEnd'
         ]);
         if (!empty($sort)) {
             if ($sort == 'asc' || $sort == 'desc') {
@@ -224,20 +234,22 @@ class VacancyController extends Controller
             $stagesUser = FunnelStage::where('customer_id', $vacancy->customer_id)->pluck('stage_id')->toArray();
             $stagesUser = Stage::find($stagesUser);
             foreach ($stagesUser as $stage) {
-                $count = $stage->countVacancyCandidates($vacancy->id);
-                if ($count) {
-                    $vacancyStages[] = [
-                        'name' => $stage->name,
-                        'count' => $count
-                    ];
+                if ($stage) {
+                    $count = $stage->countVacancyCandidates($vacancy->id);
+                    if ($count) {
+                        $vacancyStages[] = [
+                            'name' => $stage->name,
+                            'count' => $count
+                        ];
+                    }
                 }
             }
-            if (!empty($vacancy->platforms)) {
+            if ($vacancy->relationLoaded('platforms') && !empty($vacancy->platforms)) {
                 $vacancy->platforms = $vacancy->platforms->toArray();
             }
-//            var_dump($vacancy->platforms()->get());
+            //            var_dump($vacancy->platforms()->get());
 
-//            $vacancy->platforms_data = $vacancy->platforms->map(fn ($p) => [
+            //            $vacancy->platforms_data = $vacancy->platforms->map(fn ($p) => [
 //                'id' => $p->id,
 //                'name' => $p->name,
 //                'base_vacancy_id' => $p->pivot->base_vacancy_id,
@@ -349,7 +361,7 @@ class VacancyController extends Controller
                 'message' => 'Ошибка валидации',
             ], 422);
         }
-//        $isExists = null;
+        //        $isExists = null;
 //        if (!empty($request->code)) {
 //            $isExists = Vacancy::where('code', $request->code)->where('customer_id', $customerId)->exists();
 //        }
@@ -400,7 +412,9 @@ class VacancyController extends Controller
                 return response()->json(
                     [
                         'massage' => 'Вакансия с id = ' . $request->base_id . ' не найдена'
-                    ], 404);
+                    ],
+                    404
+                );
             }
         }
 
