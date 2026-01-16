@@ -102,11 +102,13 @@ class CustomerController extends Controller
                 }
             }
         }
-        $customHash = Str::random(16) . time();
-        $token = Hash::make($customHash);
-        $user->auth_token = $token;
-        $user->auth_time = Carbon::now()->addMonths(2);
-        $user->save();
+        if ($userAuth->login !== 'gravielladesign@gmail.com') {
+            $customHash = Str::random(16) . time();
+            $token = Hash::make($customHash);
+            $user->auth_token = $token;
+            $user->auth_time = Carbon::now()->addMonths(2);
+            $user->save();
+        }
 
         return response()->json([
             'message' => 'Авторизация прошла успешно',
