@@ -102,7 +102,7 @@ class CustomerController extends Controller
                 }
             }
         }
-        if ($userAuth->login !== 'gravielladesign@gmail.com') {
+        if ($user->login !== 'gravielladesign@gmail.com') {
             $customHash = Str::random(16) . time();
             $token = Hash::make($customHash);
             $user->auth_token = $token;
