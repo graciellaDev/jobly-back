@@ -56,6 +56,7 @@ class CandidateController extends Controller
         'age' => 'nullable|numeric',
         'phone' => 'regex:/^\+7\d{10}$/',
         'stage_id' => 'nullable|numeric',
+        'stage' => 'nullable|numeric',
         'location' => 'nullable|string|max:100',
         'quickInfo' => 'nullable|string|max:255',
         'education' => 'nullable|string|max:100',
@@ -107,7 +108,7 @@ class CandidateController extends Controller
             foreach ($filters as $key => $value) {
                 if (in_array($key, $this->validFilters)) {
                     switch ($key) {
-                        case  $this->validFilters[0]:
+                        case $this->validFilters[0]:
                             $candidates->where($key, $value);
                             break;
                     }
@@ -190,6 +191,10 @@ class CandidateController extends Controller
             ], 422);
         }
 
+        if (isset($data['stage'])) {
+            $data['stage_id'] = $data['stage'];
+            unset($data['stage']);
+        }
         $candidate->update($data);
         $this->replaceFields($this->editFields, $candidate);
 
@@ -202,7 +207,7 @@ class CandidateController extends Controller
         }
         $candidate['skills'] = Skill::whereIn('id', $related)->get();
         if (isset($request->tags)) {
-            if (empty($request->tags)){
+            if (empty($request->tags)) {
                 $candidate->tags()->detach();
                 $related = [];
             } else {
