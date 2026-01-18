@@ -354,7 +354,8 @@ class VacancyController extends Controller
                 'executor_email' => 'nullable|string',
                 'show_executor' => 'nullable|boolean',
                 'platform_id' => 'nullable|numeric',
-                'base_id' => 'nullable|numeric'
+                'base_id' => 'nullable|numeric',
+                'status' => 'nullable|string'
             ]);
         } catch (\Throwable $th) {
             return response()->json([
@@ -408,17 +409,8 @@ class VacancyController extends Controller
             }
         }
 
-        if (!empty($request->platform_id) && !empty($request->base_id)) {
-            $baseVacancy = Vacancy::find($request->base_id);
-            if (empty($baseVacancy)) {
-                return response()->json(
-                    [
-                        'massage' => 'Вакансия с id = ' . $request->base_id . ' не найдена'
-                    ],
-                    404
-                );
-            }
-        }
+        unset($data['platform_id']);
+        unset($data['base_id']);
 
         try {
             $vacancy = Vacancy::create($data);
