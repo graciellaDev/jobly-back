@@ -61,7 +61,7 @@ class VacancyController extends Controller
         'responsible',
         'create',
         'department',
-        'platforms'
+        'platforms',
     ];
 
     private array $validRole = [1, 3, 5];
@@ -188,6 +188,9 @@ class VacancyController extends Controller
                                 ->where('platform_id', $platformId)
                                 ->pluck('vacancy_id')
                                 ->toArray();
+                            if (!empty($filters['vacancy_id'])) {
+                                $vacancyIds = $vacancyIds->whereIn('id', $filters['vacancy_id']);
+                            }
                             if (count($vacancyIds)) {
                                 $vacancies->whereIn('id', $vacancyIds);
                             } else {
