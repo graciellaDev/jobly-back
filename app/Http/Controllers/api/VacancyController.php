@@ -385,7 +385,9 @@ class VacancyController extends Controller
         }
 
         $data['customer_id'] = $request->attributes->get('customer_id');
-        $data['status'] = 'active';
+        if  (!isset($data['platform_id'])) {
+            $data['status'] = 'active';
+        }
 
         if ($request->application) {
             $application = Application::with('status')->find($request->application);
