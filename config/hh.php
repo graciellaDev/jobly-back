@@ -40,5 +40,5 @@ return [
     'get_addresses' => [
         'url' => env('HH_DOMAIN') . '/employers/',
         'folder' => '/addresses'
-    ]
+    ],
 ];
