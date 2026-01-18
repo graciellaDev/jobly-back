@@ -182,7 +182,20 @@ class VacancyController extends Controller
                         $customers = CustomerDepartment::where('department_id', $value)->pluck('customer_id')->toArray();
                         break;
                     case $this->filters[11]:
-                        $vacancies->whereHas('platforms');
+                        if (!empty($value)) {
+                            $platformId = (int) $value;
+                            $vacancyIds = DB::table('vacancy_platform')
+                                ->where('platform_id', $platformId)
+                                ->pluck('vacancy_id')
+                                ->toArray();
+                            if (count($vacancyIds)) {
+                                $vacancies->whereIn('id', $vacancyIds);
+                            } else {
+                                $vacancies->where('id', 0);
+                            }
+                        } else {
+                            $vacancies->whereHas('platforms');
+                        }
                         break;
                 }
             }
