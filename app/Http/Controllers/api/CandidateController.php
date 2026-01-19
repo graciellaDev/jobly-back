@@ -195,6 +195,12 @@ class CandidateController extends Controller
             $data['stage_id'] = $data['stage'];
             unset($data['stage']);
         }
+
+        // if (isset($data['vacancy'])) {
+        //     $data['vacancy_id'] = intval($data['vacancy']);
+        //     unset($data['vacancy']);
+        // }
+
         $candidate->update($data);
         $this->replaceFields($this->editFields, $candidate);
 
@@ -266,19 +272,19 @@ class CandidateController extends Controller
             ], 422);
         }
 
-        $isExists = Candidate::where('phone', $request->phone)->exists();
-        if ($isExists) {
-            return response()->json([
-                'message' => 'Кандидат с номером телефона ' . $request->phone . ' уже существует'
-            ], 409);
-        }
+        // $isExists = Candidate::where('phone', $request->phone)->exists();
+        // if ($isExists) {
+        //     return response()->json([
+        //         'message' => 'Кандидат с номером телефона ' . $request->phone . ' уже существует'
+        //     ], 409);
+        // }
 
-        $isExists = Candidate::where('email', $request->email)->exists();
-        if ($isExists) {
-            return response()->json([
-                'message' => 'Кандидат с email ' . $request->email . ' уже существует'
-            ], 409);
-        }
+        // $isExists = Candidate::where('email', $request->email)->exists();
+        // if ($isExists) {
+        //     return response()->json([
+        //         'message' => 'Кандидат с email ' . $request->email . ' уже существует'
+        //     ], 409);
+        // }
 
         $customerId = $request->attributes->get('customer_id');
 
