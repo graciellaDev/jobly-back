@@ -479,4 +479,29 @@ class HeadHunterController extends Controller
             'data' => $response->json()
         ]);
     }
+
+    public function getCountVisitors(Request $request, int $id): JsonResponse {
+        $customerToken = $request->attributes->get('token');
+
+        if (!$id) {
+            return response()->json([
+                'message' => 'Не передан идентификатор вакансии',
+                'data' => []
+            ], 422);
+        }
+
+        $response = PlatformHh::requireGetPlatform($customerToken, config('hh.get_publication') . $id . '/visitors');
+
+        if ($response->status() != 200) {
+            return response()->json([
+                'message' => $response->status() == 404 ? 'Отклики не найдены' : 'Ошибка получения откликов',
+                'data' => []
+            ], $response->status());
+        }
+
+        return response()->json([
+            'message' => 'Количество просмотров за последнюю неделю успешно получено',
+            'data' => $response['found']
+        ]);
+    }
 }

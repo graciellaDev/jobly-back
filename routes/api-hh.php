@@ -9,6 +9,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::get('/profile', [HeadHunterController::class, 'getProfile']);
         Route::get('/publications', [HeadHunterController::class, 'getPublicationList']);
         Route::get('/publications/{id}', [HeadHunterController::class, 'getPublication']);
+        Route::get('/publications/{id}/count-visitors', [HeadHunterController::class, 'getCountVisitors']);
         Route::get('/drafts', [HeadHunterController::class, 'getDraftList']);
         Route::post('/drafts', [HeadHunterController::class, 'addDraft']);
         Route::post('/avalibale-types', [HeadHunterController::class, 'getAvailableTypes']);

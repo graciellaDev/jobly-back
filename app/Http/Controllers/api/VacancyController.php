@@ -61,7 +61,7 @@ class VacancyController extends Controller
         'responsible',
         'create',
         'department',
-        'platforms'
+        'platforms',
     ];
 
     private array $validRole = [1, 3, 5];
@@ -181,7 +181,23 @@ class VacancyController extends Controller
                         $customers = CustomerDepartment::where('department_id', $value)->pluck('customer_id')->toArray();
                         break;
                     case $this->filters[11]:
-                        $vacancies->whereHas('platforms');
+                        if (!empty($value)) {
+                            $platformId = (int) $value;
+                            $vacancyIds = DB::table('vacancy_platform')
+                                ->where('platform_id', $platformId)
+                                ->pluck('vacancy_id')
+                                ->toArray();
+                            if (!empty($filters['vacancy_id'])) {
+                                $vacancyIds = $vacancyIds->whereIn('id', $filters['vacancy_id']);
+                            }
+                            if (count($vacancyIds)) {
+                                $vacancies->whereIn('id', $vacancyIds);
+                            } else {
+                                $vacancies->where('id', 0);
+                            }
+                        } else {
+                            $vacancies->whereHas('platforms');
+                        }
                         break;
                 }
             }
@@ -353,7 +369,8 @@ class VacancyController extends Controller
                 'executor_email' => 'nullable|string',
                 'show_executor' => 'nullable|boolean',
                 'platform_id' => 'nullable|numeric',
-                'base_id' => 'nullable|numeric'
+                'base_id' => 'nullable|numeric',
+                'status' => 'nullable|string'
             ]);
         } catch (\Throwable $th) {
             return response()->json([
@@ -384,7 +401,9 @@ class VacancyController extends Controller
         }
 
         $data['customer_id'] = $request->attributes->get('customer_id');
-        $data['status'] = 'active';
+        if  (!isset($data['platform_id'])) {
+            $data['status'] = 'active';
+        }
 
         if ($request->application) {
             $application = Application::with('status')->find($request->application);
@@ -405,17 +424,8 @@ class VacancyController extends Controller
             }
         }
 
-        if (!empty($request->platform_id) && !empty($request->base_id)) {
-            $baseVacancy = Vacancy::find($request->base_id);
-            if (empty($baseVacancy)) {
-                return response()->json(
-                    [
-                        'massage' => 'Вакансия с id = ' . $request->base_id . ' не найдена'
-                    ],
-                    404
-                );
-            }
-        }
+        unset($data['platform_id']);
+        unset($data['base_id']);
 
         try {
             $vacancy = Vacancy::create($data);
