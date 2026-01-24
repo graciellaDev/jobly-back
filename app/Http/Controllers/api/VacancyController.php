@@ -79,7 +79,6 @@ class VacancyController extends Controller
         $arrVacancies = [];
 
         if ($customer) {
-
             if ($customer->role_id == CustomerController::$roleAdmin) {
                 $users = CustomerRelation::where('user_id', $customerId)->pluck('customer_id')->toArray();
                 if (count($users)) {
@@ -88,7 +87,7 @@ class VacancyController extends Controller
             }
             if ($customer->role_id == CustomerController::$roleRecruiter) {
                 $application = Application::with(['client', 'vacancy', 'status', 'executor', 'responsible'])
-                    ->where('responsible_id', $customerId)
+                    ->where('responsable_id', $customerId)
                     ->whereNotNull('vacancy_id')
                     ->pluck('vacancy_id')
                     ->toArray();
@@ -227,12 +226,12 @@ class VacancyController extends Controller
             }
         }
         $vacancies = $vacancies->paginate();
-        $vacancies->getCollection()->transform(function ($vacancy) {
+        $vacancies->getCollection()->transform(function ($vacancy) use ($customerId) {
             $responsible = 'Не назначен';
             if (!empty($vacancy->executor_id)) {
                 $responsible = Customer::select(['id', 'name'])->find($vacancy->executor_id);
             }
-            $candidates = Candidate::where('vacancy_id', $vacancy->id)->get();
+            $candidates = Candidate::where('vacancy_id', $vacancy->id)->where('customer_id', $customerId)->get();
             $vacancyStages = [
                 [
                     'name' => 'Все',
@@ -241,7 +240,7 @@ class VacancyController extends Controller
             ];
             $stagesDefault = Stage::where('fixed', 1)->get();
             foreach ($stagesDefault as $stage) {
-                $count = $stage->countVacancyCandidates($vacancy->id);
+                $count = $stage->countVacancyCandidates($vacancy->id, $customerId);
                 $vacancyStages[] = [
                     'name' => $stage->name,
                     'count' => $count
@@ -251,7 +250,7 @@ class VacancyController extends Controller
             $stagesUser = Stage::find($stagesUser);
             foreach ($stagesUser as $stage) {
                 if ($stage) {
-                    $count = $stage->countVacancyCandidates($vacancy->id);
+                    $count = $stage->countVacancyCandidates($vacancy->id, $customerId);
                     if ($count) {
                         $vacancyStages[] = [
                             'name' => $stage->name,

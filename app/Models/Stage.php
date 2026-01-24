@@ -31,8 +31,14 @@ class Stage extends Model
         return $this->candidates()->count();
     }
 
-    public function countVacancyCandidates(int $vacancyId)
+    public function countVacancyCandidates(int $vacancyId, ?int $customerId = null)
     {
-        return $this->candidates()->where('vacancy_id', $vacancyId)->count();
+        $query = $this->candidates()->where('vacancy_id', $vacancyId);
+
+        if ($customerId !== null && $customerId > 0) {
+            $query->where('customer_id', $customerId);
+        }
+
+        return $query->count();
     }
 }

@@ -48,7 +48,7 @@ class Candidate extends Model
         return $this->belongsToMany(Tag::class);
     }
 
-    public  function customFields()
+    public function customFields()
     {
         return $this->belongsToMany(
             CustomField::class,
@@ -81,5 +81,10 @@ class Candidate extends Model
     public function vacancy()
     {
         return $this->belongsTo(Vacancy::class);
+    }
+
+    public function getOriginal($key = null, $default = null)
+    {
+        return parent::getOriginal($key, $default);
     }
 }
