@@ -10,10 +10,17 @@ use App\Models\CandidateSkill;
 use App\Models\CandidateTag;
 use App\Models\Skill;
 use App\Models\Tag;
-use Illuminate\Http\Request;
+use App\Models\Stage;
+use App\Models\Vacancy;
+use App\Models\Customer;
 use App\Models\CustomField;
-use App\Traits\ModelTrait;
+use App\Services\EventService;
+use App\Services\SystemEventMessageBuilder;
+use App\Services\CandidateChangeEventService;
+use Illuminate\Http\Request;
 use \Illuminate\Http\JsonResponse;
+use App\DTO\SystemEventData;
+use App\Traits\ModelTrait;
 class CandidateController extends Controller
 {
     use ModelTrait;
@@ -91,6 +98,13 @@ class CandidateController extends Controller
     private array $validFilters = [
         'stage_id'
     ];
+
+    public function __construct(
+        private EventService $eventService,
+        private SystemEventMessageBuilder $messageBuilder,
+        private CandidateChangeEventService $candidateChangeEventService,
+    ) {
+    }
 
     public function index(Request $request): JsonResponse
     {
@@ -175,6 +189,8 @@ class CandidateController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $customerId = $request->attributes->get('customer_id');
+        $customerName = Customer::find($customerId)?->name;
+
         $candidate = Candidate::with('attachments')->where('customer_id', $customerId)->find($id);
         if (empty($candidate)) {
             return response()->json([
@@ -200,8 +216,54 @@ class CandidateController extends Controller
         //     $data['vacancy_id'] = intval($data['vacancy']);
         //     unset($data['vacancy']);
         // }
+        $oldStageId = $candidate->stage_id;
+        $oldVacancyId = $candidate->vacancy_id;
+        $oldStageName = $stageName = Stage::find($candidate->stage_id)?->name ?? '';
+        $old = $candidate->only(['firstname', 'surname', 'patronymic', 'phone', 'email']);
+        $oldTags = $candidate->tags->pluck('name')->toArray();
 
         $candidate->update($data);
+
+        $fullName = $candidate->surname ?? '';
+        $fullName .= $candidate->firstname ? " {$candidate->firstname}" : '';
+        $fullName .= $candidate->patronymic ? " {$candidate->patronymic}" : '';
+        $fullName = trim($fullName);
+
+        if ($oldStageId != $candidate->stage_id) {
+            $stageName = Stage::find($candidate->stage_id)?->name ?? '';
+            $text = $this->messageBuilder->movedStage($stageName, $oldStageName, $customerName);
+
+            $this->eventService->createSystemEvent(new SystemEventData(
+                candidateId: $candidate->id,
+                vacancyId: $candidate->vacancy_id,
+                previewText: $text,
+                authorName: $customerName
+            ));
+        }
+
+        if ($oldVacancyId != $candidate->vacancy_id) {
+            $fromId = $oldVacancyId;
+            $toId = $candidate->vacancy_id;
+
+            $fromName = $fromId ? (Vacancy::find($fromId)?->name ?? '') : '';
+            $toName = $toId ? (Vacancy::find($toId)?->name ?? '') : '';
+
+            if (is_null($fromId) && !is_null($toId)) {
+                $text = $this->messageBuilder->attachedVacancy($fullName, $toName, $customerName);
+            } elseif (!is_null($fromId) && is_null($toId)) {
+                $text = $this->messageBuilder->detachedVacancy($fromName, $customerName);
+            } else {
+                $text = $this->messageBuilder->movedBetweenVacancies($fullName, $fromName, $toName, $customerName);
+            }
+
+            $this->eventService->createSystemEvent(new SystemEventData(
+                candidateId: $candidate->id,
+                vacancyId: $toId,
+                previewText: $text,
+                authorName: $customerName
+            ));
+        }
+
         $this->replaceFields($this->editFields, $candidate);
 
         if (isset($request->skills)) {
@@ -256,6 +318,18 @@ class CandidateController extends Controller
 
         }
 
+        $new = $candidate->only(['firstname', 'surname', 'patronymic', 'phone', 'email']);
+        $newTags = $candidate->tags->pluck('name')->toArray();
+
+        $this->candidateChangeEventService->handleChanges(
+            $candidate,
+            $old,
+            $new,
+            $oldTags,
+            $newTags,
+            $customerName
+        );
+
         return response()->json([
             'message' => 'Success',
             'data' => $candidate
@@ -287,6 +361,7 @@ class CandidateController extends Controller
         // }
 
         $customerId = $request->attributes->get('customer_id');
+        $customerName = Customer::find($customerId)?->name;
 
         $data['customer_id'] = $customerId;
         if (isset($data['vacancy'])) {
@@ -309,7 +384,6 @@ class CandidateController extends Controller
             ], 500);
         }
 
-        $customerId = $request->attributes->get('customer_id');
         $candidate->customer = $customerId;
         $this->replaceFields($this->editFields, $candidate);
         $candidate->makeHidden(['customer_id', 'stage_id', 'vacancy_id']);
@@ -342,13 +416,34 @@ class CandidateController extends Controller
             }
         }
 
-        $name = $candidate->surname ?? '';
-        $name .= $candidate->firstname ? " {$candidate->firstname}" : '';
-        $name .= $candidate->patronymic ? " {$candidate->patronymic}" : '';
-        $name = trim($name);
+        $fullName = $candidate->surname ?? '';
+        $fullName .= $candidate->firstname ? " {$candidate->firstname}" : '';
+        $fullName .= $candidate->patronymic ? " {$candidate->patronymic}" : '';
+        $fullName = trim($fullName);
+        $text = $this->messageBuilder->createdCandidate($fullName, $customerName);
+
+        $this->eventService->createSystemEvent(new SystemEventData(
+            candidateId: $candidate->id,
+            vacancyId: null,
+            previewText: $text,
+            authorName: $customerName
+        ));
+
+        if (isset($data['vacancy_id'])) {
+            $newVacancyId = intval($data['vacancy_id']);
+            $newVacancyName = Vacancy::find($newVacancyId)?->name ?? '';
+            $text = $this->messageBuilder->attachedVacancy($fullName, $newVacancyName, $customerName);
+
+            $this->eventService->createSystemEvent(new SystemEventData(
+                candidateId: $candidate->id,
+                vacancyId: $data['vacancy_id'],
+                previewText: $text,
+                authorName: $customerName
+            ));
+        }
 
         return response()->json([
-            'message' => "Кандидат {$name} успешно создан",
+            'message' => "Кандидат {$fullName} успешно создан",
             'data' => $candidate
         ]);
     }
