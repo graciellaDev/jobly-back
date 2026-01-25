@@ -330,7 +330,7 @@ class HeadHunterController extends Controller
             ], 422);
         }
 
-        $response = PlatformHh::requirePostPlatform($customerToken, config('hh.get_drafts'), $data, true);
+        $response = PlatformHh::requirePostPlatform($customerToken, config('hh.get_publication'), $data, true);
 
         return response()->json([
             'message' => 'Success',
