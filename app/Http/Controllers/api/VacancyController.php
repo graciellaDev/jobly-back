@@ -472,6 +472,7 @@ class VacancyController extends Controller
                 'show_executor' => 'nullable|boolean',
                 'platform_id' => 'nullable|numeric',
                 'base_id' => 'nullable|numeric',
+                'vacancy_platform_id' => 'nullable|numeric',
                 'status' => 'nullable|string'
             ]);
         } catch (\Throwable $th) {
@@ -549,13 +550,13 @@ class VacancyController extends Controller
                 // Обновляем существующую
                 $vacancy->platforms()->updateExistingPivot($request->platform_id, [
                     'base_vacancy_id' => $request->base_id,
-                    'vacancy_platform_id' => $request->platform_id
+                    'vacancy_platform_id' => !empty($request->vacancy_platform_id) ? $request->vacancy_platform_id : null
                 ]);
             } else {
                 // Создаём новую связь с дополнительным полем
                 $vacancy->platforms()->attach($request->platform_id, [
                     'base_vacancy_id' => $request->base_id,
-                    'vacancy_platform_id' => $request->platform_id
+                    'vacancy_platform_id' => !empty($request->vacancy_platform_id) ? $request->vacancy_platform_id : null
                 ]);
             }
         }
