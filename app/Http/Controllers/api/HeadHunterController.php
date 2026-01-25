@@ -294,7 +294,7 @@ class HeadHunterController extends Controller
                 'message' => 'Ошибка валидации',
             ], 422);
         }
-        $response = PlatformHh::requirePostPlatform($customerToken, config('hh.get_publication'), $data);
+        $response = PlatformHh::requirePostPlatform($customerToken, config('hh.get_publication'), $data, true);
 
         return response()->json([
             'message' => 'Success',
