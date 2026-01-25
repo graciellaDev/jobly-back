@@ -7,6 +7,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     Route::group(['middleware' => 'head-hunter-auth'], function () {
         Route::get('/profile', [HeadHunterController::class, 'getProfile']);
+        Route::post('/publication', [HeadHunterController::class, 'addPublication']);
         Route::get('/publications', [HeadHunterController::class, 'getPublicationList']);
         Route::get('/publications/{id}', [HeadHunterController::class, 'getPublication']);
         Route::get('/publications/{id}/count-visitors', [HeadHunterController::class, 'getCountVisitors']);
