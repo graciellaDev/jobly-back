@@ -234,12 +234,12 @@ class VacancyController extends Controller
             }
         }
         $vacancies = $vacancies->paginate();
-        
+
         // Загружаем платформы после пагинации, если используется фильтр baseVacancyId
         if ($needPlatforms && !$vacancies->isEmpty()) {
             $this->loadPlatformsForVacancies($vacancies);
         }
-        
+
         $vacancies->getCollection()->transform(function ($vacancy) use ($customerId, $needPlatforms) {
             $responsible = 'Не назначен';
             if (!empty($vacancy->executor_id)) {
@@ -307,7 +307,7 @@ class VacancyController extends Controller
         if (empty($vacancyIds)) {
             $vacancyIds = [];
         }
-        
+
         $platformsData = DB::table('vacancy_platform')
             ->whereIn('vacancy_id', $vacancyIds)
             ->join('platforms', 'vacancy_platform.platform_id', '=', 'platforms.id')
@@ -320,7 +320,7 @@ class VacancyController extends Controller
             )
             ->get()
             ->groupBy('vacancy_id');
-        
+
         // Добавляем платформы к каждой вакансии (временно для обработки в transform)
         $vacancies->getCollection()->each(function ($vacancy) use ($platformsData) {
             $vacancy->_platforms_temp = collect($platformsData->get($vacancy->id, collect()))->map(function ($item) {
@@ -548,12 +548,14 @@ class VacancyController extends Controller
             if ($exists) {
                 // Обновляем существующую
                 $vacancy->platforms()->updateExistingPivot($request->platform_id, [
-                    'base_vacancy_id' => $request->base_id
+                    'base_vacancy_id' => $request->base_id,
+                    'vacancy_platform_id' => $request->platform_id
                 ]);
             } else {
                 // Создаём новую связь с дополнительным полем
                 $vacancy->platforms()->attach($request->platform_id, [
-                    'base_vacancy_id' => $request->base_id
+                    'base_vacancy_id' => $request->base_id,
+                    'vacancy_platform_id' => $request->platform_id
                 ]);
             }
         }
