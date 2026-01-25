@@ -62,6 +62,7 @@ class VacancyController extends Controller
         'create',
         'department',
         'platforms',
+        'baseVacancyId',
     ];
 
     private array $validRole = [1, 3, 5];
@@ -72,6 +73,7 @@ class VacancyController extends Controller
         $sort = $request->get('sort');
         $sort = !empty($sort) && in_array($sort, $this->sort) ? $sort : null;
         $filters = $request->get('filters');
+        $needPlatforms = !empty($filters['baseVacancyId']); // Флаг для загрузки платформ
 
         $customer = Customer::find($customerId);
 
@@ -111,7 +113,7 @@ class VacancyController extends Controller
             foreach ($filters as $key => $value) {
                 switch ($key) {
                     case $this->filters[0]:
-                        if (in_array($value, $this->statuses)) {
+                        if (is_string($value) && in_array($value, $this->statuses)) {
                             $vacancies->where($key, $value);
                         }
                         break;
@@ -136,7 +138,9 @@ class VacancyController extends Controller
                         }
                         break;
                     case $this->filters[4]:
-                        $vacancies->where('id', $value);
+                        if (!empty($value)) {
+                            $vacancies->where('id', $value);
+                        }
                         break;
                     case $this->filters[5]:
                         if ($value == 'true') {
@@ -187,9 +191,6 @@ class VacancyController extends Controller
                                 ->where('platform_id', $platformId)
                                 ->pluck('vacancy_id')
                                 ->toArray();
-                            if (!empty($filters['vacancy_id'])) {
-                                $vacancyIds = $vacancyIds->whereIn('id', $filters['vacancy_id']);
-                            }
                             if (count($vacancyIds)) {
                                 $vacancies->whereIn('id', $vacancyIds);
                             } else {
@@ -197,6 +198,13 @@ class VacancyController extends Controller
                             }
                         } else {
                             $vacancies->whereHas('platforms');
+                        }
+                        break;
+                    case $this->filters[12]:
+                        // Фильтр по базовой вакансии: выбираем только вакансии, привязанные к указанной базовой вакансии и имеющие платформу
+                        if (!empty($value)) {
+                            $baseVacancyId = (int) $value;
+                            $vacancies->forBaseVacancyWithPlatform($baseVacancyId);
                         }
                         break;
                 }
@@ -226,12 +234,21 @@ class VacancyController extends Controller
             }
         }
         $vacancies = $vacancies->paginate();
-        $vacancies->getCollection()->transform(function ($vacancy) use ($customerId) {
+        
+        // Загружаем платформы после пагинации, если используется фильтр baseVacancyId
+        if ($needPlatforms && !$vacancies->isEmpty()) {
+            $this->loadPlatformsForVacancies($vacancies);
+        }
+        
+        $vacancies->getCollection()->transform(function ($vacancy) use ($customerId, $needPlatforms) {
             $responsible = 'Не назначен';
             if (!empty($vacancy->executor_id)) {
                 $responsible = Customer::select(['id', 'name'])->find($vacancy->executor_id);
             }
             $candidates = Candidate::where('vacancy_id', $vacancy->id)->where('customer_id', $customerId)->get();
+            if (!$candidates || !($candidates instanceof \Illuminate\Support\Collection)) {
+                $candidates = collect([]);
+            }
             $vacancyStages = [
                 [
                     'name' => 'Все',
@@ -259,16 +276,8 @@ class VacancyController extends Controller
                     }
                 }
             }
-            if ($vacancy->relationLoaded('platforms') && !empty($vacancy->platforms)) {
-                $vacancy->platforms = $vacancy->platforms->toArray();
-            }
-            //            var_dump($vacancy->platforms()->get());
-
-            //            $vacancy->platforms_data = $vacancy->platforms->map(fn ($p) => [
-//                'id' => $p->id,
-//                'name' => $p->name,
-//                'base_vacancy_id' => $p->pivot->base_vacancy_id,
-//            ]);
+            // Обработка платформ: добавляем информацию о платформе и ID на сторонней платформе только для фильтра baseVacancyId
+            $this->processPlatformsForVacancy($vacancy, $needPlatforms);
 
             $vacancy->footerData = [
                 'sites' => 0,
@@ -285,6 +294,99 @@ class VacancyController extends Controller
             'data' => $vacancies
         ]);
     }
+
+    /**
+     * Загружает платформы для вакансий и добавляет их во временное свойство _platforms_temp
+     *
+     * @param \Illuminate\Pagination\LengthAwarePaginator $vacancies
+     * @return void
+     */
+    private function loadPlatformsForVacancies($vacancies): void
+    {
+        $vacancyIds = $vacancies->getCollection()->pluck('id')->toArray();
+        if (empty($vacancyIds)) {
+            $vacancyIds = [];
+        }
+        
+        $platformsData = DB::table('vacancy_platform')
+            ->whereIn('vacancy_id', $vacancyIds)
+            ->join('platforms', 'vacancy_platform.platform_id', '=', 'platforms.id')
+            ->select(
+                'vacancy_platform.vacancy_id',
+                'platforms.id as platform_id',
+                'platforms.name as platform_name',
+                'vacancy_platform.vacancy_platform_id',
+                'vacancy_platform.base_vacancy_id'
+            )
+            ->get()
+            ->groupBy('vacancy_id');
+        
+        // Добавляем платформы к каждой вакансии (временно для обработки в transform)
+        $vacancies->getCollection()->each(function ($vacancy) use ($platformsData) {
+            $vacancy->_platforms_temp = collect($platformsData->get($vacancy->id, collect()))->map(function ($item) {
+                return (object) [
+                    'id' => $item->platform_id,
+                    'name' => $item->platform_name,
+                    'pivot' => (object) [
+                        'vacancy_platform_id' => $item->vacancy_platform_id,
+                        'base_vacancy_id' => $item->base_vacancy_id,
+                    ]
+                ];
+            });
+        });
+    }
+
+    /**
+     * Обрабатывает платформы для вакансии в зависимости от флага needPlatforms
+     *
+     * @param mixed $vacancy
+     * @param bool $needPlatforms
+     * @return void
+     */
+    private function processPlatformsForVacancy($vacancy, bool $needPlatforms): void
+    {
+        if ($needPlatforms) {
+            if (isset($vacancy->_platforms_temp) && $vacancy->_platforms_temp instanceof \Illuminate\Support\Collection) {
+                // Платформы уже загружены через DB запрос (для фильтра baseVacancyId)
+                if ($vacancy->_platforms_temp->isNotEmpty()) {
+                    $vacancy->platforms_data = $vacancy->_platforms_temp->map(function ($platform) {
+                        return [
+                            'id' => $platform->id ?? null,
+                            'name' => $platform->name ?? null,
+                            'platform_id' => $platform->pivot->vacancy_platform_id ?? null, // ID вакансии на сторонней платформе
+                            'base_vacancy_id' => $platform->pivot->base_vacancy_id ?? null, // ID базовой вакансии в нашей системе
+                        ];
+                    })->toArray();
+                } else {
+                    $vacancy->platforms_data = [];
+                }
+                unset($vacancy->_platforms_temp);
+            } else {
+                // Если платформы не загружены, загружаем их для текущей вакансии
+                $platforms = $vacancy->platforms()->withPivot('base_vacancy_id', 'vacancy_platform_id')->get();
+                if ($platforms->isNotEmpty()) {
+                    $vacancy->platforms_data = $platforms->map(function ($platform) {
+                        return [
+                            'id' => $platform->id ?? null,
+                            'name' => $platform->name ?? null,
+                            'platform_id' => $platform->pivot->vacancy_platform_id ?? null,
+                            'base_vacancy_id' => $platform->pivot->base_vacancy_id ?? null,
+                        ];
+                    })->toArray();
+                } else {
+                    $vacancy->platforms_data = [];
+                }
+            }
+            // Убираем platforms из ответа, если используется фильтр
+            unset($vacancy->platforms);
+        } else {
+            // Для обычных запросов оставляем стандартную обработку платформ
+            if ($vacancy->relationLoaded('platforms') && !empty($vacancy->platforms)) {
+                $vacancy->platforms = $vacancy->platforms->toArray();
+            }
+        }
+    }
+
     public function fields()
     {
         $data = [
