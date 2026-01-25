@@ -272,20 +272,22 @@ class HeadHunterController extends Controller
             $data = $request->validate([
                 'name' => 'required|string|min:3|max:100',
                 'description' => 'required|string|min:1|max:1024',
-                'area' => 'required',
-                'code' => 'nullable|string|max:255',
+                'billing_types' => 'nullable',
+                'professional_roles' => 'nullable',
+                'areas' => 'nullable',
+                'code' => 'nullable',
                 'employment_form' => 'nullable',
-                'working_hours' => 'nullable',
+                'driver_license_types' => 'nullable',
                 'work_schedule_by_days' => 'nullable',
                 'education_level' => 'nullable',
-                'experience' => 'nullable',
-                'driver_license_types' => 'nullable',
-                'manager' => 'numeric',
-                'previous_id' => 'numeric', // id архивной вакансии
+                'manager' => 'nullable',
+                'previous_id' => 'nullable',
                 'type' => 'nullable',
-                'address' => 'numeric|default:1',
+                'address' => 'nullable',
+                'experience' => 'nullable',
                 'fly_in_fly_out_duration' => 'nullable',
                 'work_format' => 'nullable',
+                'schedule' => 'nullable'
             ]);
         } catch (\Throwable $th) {
             return response()->json([
