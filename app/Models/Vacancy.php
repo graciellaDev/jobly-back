@@ -88,6 +88,31 @@ class Vacancy extends Model
     public function platforms(): BelongsToMany
     {
         return $this->belongsToMany(Platform::class, 'vacancy_platform', 'vacancy_id', 'platform_id')
-            ->withPivot('base_vacancy_id');
+            ->withPivot('base_vacancy_id', 'vacancy_platform_id');
+    }
+
+    /**
+     * Scope: вакансии, привязанные к указанной базовой вакансии и имеющие платформу
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param int $baseVacancyId
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeForBaseVacancyWithPlatform($query, int $baseVacancyId)
+    {
+        return $query->whereHas('platforms', function ($q) use ($baseVacancyId) {
+            $q->where('base_vacancy_id', $baseVacancyId);
+        });
+    }
+
+    /**
+     * Scope: вакансии, имеющие связанную платформу
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeWithPlatform($query)
+    {
+        return $query->whereHas('platforms');
     }
 }

@@ -15,6 +15,6 @@ class Platform extends Model
     protected $table = 'platforms';
     public function vacancies(): BelongsToMany {
         return $this->belongsToMany(Vacancy::class, 'vacancy_platform', 'platform_id', 'vacancy_id')
-            ->withPivot('base_vacancy_id');
+            ->withPivot('base_vacancy_id', 'vacancy_platform_id');
     }
 }
