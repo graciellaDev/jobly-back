@@ -199,8 +199,7 @@ class HeadHunterController extends Controller
         $customerToken = $request->attributes->get('token');
         try {
             $data = $request->validate([
-                'employer_id' => 'required|string|min:1|max:20',
-                'manager_id' => 'required|string|min:1|max:20',
+                'employer_id' => 'required|string|min:1|max:20'
             ]);
         } catch (\Throwable $th) {
             return response()->json([
