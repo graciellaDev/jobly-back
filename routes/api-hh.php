@@ -14,7 +14,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::get('/drafts', [HeadHunterController::class, 'getDraftList']);
         Route::post('/drafts', [HeadHunterController::class, 'addDraft']);
         Route::post('/available-types', [HeadHunterController::class, 'getAvailableTypes']);
-        Route::get('/available-publications', [HeadHunterController::class, 'getAvailablePublications');
+        Route::get('/available-publications', [HeadHunterController::class, 'getAvailablePublications']);
         Route::get('/roles', [HeadHunterController::class, 'getProfessionals']);
         Route::get('/vacancy-responses/{id}', [HeadHunterController::class, 'getVacancyResponses']);
         Route::get('/vacancy-response/{id}', [HeadHunterController::class, 'getVacancyResponse']);
