@@ -30,6 +30,10 @@ return [
         'folder' => '/managers/',
         'catalog' => '/vacancies/available_types'
     ],
+    'get_available_publications' => [
+        'url' => env('HH_DOMAIN') . '/employers/',
+        'folder' => '/services/available_publications'
+    ],
     'get_vacancies' => [
         'url' => env('HH_DOMAIN') . '/employers/',
         'folder' => '/vacancies/active'
