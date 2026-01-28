@@ -287,7 +287,8 @@ class HeadHunterController extends Controller
                 'experience' => 'nullable',
                 'fly_in_fly_out_duration' => 'nullable',
                 'work_format' => 'nullable',
-                'schedule' => 'nullable'
+                'schedule' => 'nullable',
+                'vacancy_properties' => 'nullable'
             ]);
         } catch (\Throwable $th) {
             return response()->json([
