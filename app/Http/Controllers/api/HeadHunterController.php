@@ -194,6 +194,29 @@ class HeadHunterController extends Controller
         ]);
     }
 
+    public function getAvailablePublications(Request $request)
+    {
+        $customerToken = $request->attributes->get('token');
+        try {
+            $data = $request->validate([
+                'employer_id' => 'required|string|min:1|max:20',
+                'manager_id' => 'required|string|min:1|max:20',
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Ошибка валидации',
+            ], 422);
+        }
+        $url = config('hh.get_available_publications')['url'] . $data['employer_id'] . config('hh.get_available_types')
+            ['folder'];
+        $response = PlatformHh::requireGetPlatform($customerToken, $url);
+
+        return response()->json([
+            'message' => 'Success',
+            'data' => $response->json()
+        ]);
+    }
+
     public function getPublicationList(Request $request): JsonResponse
     {
         $data = [];
