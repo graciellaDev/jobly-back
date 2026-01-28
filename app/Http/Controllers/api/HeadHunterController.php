@@ -274,7 +274,7 @@ class HeadHunterController extends Controller
                 'description' => 'required|string|min:1|max:1024',
                 'billing_types' => 'nullable',
                 'professional_roles' => 'nullable',
-                'areas' => 'nullable',
+                'area' => 'nullable',
                 'code' => 'nullable',
                 'employment_form' => 'nullable',
                 'driver_license_types' => 'nullable',
@@ -287,7 +287,8 @@ class HeadHunterController extends Controller
                 'experience' => 'nullable',
                 'fly_in_fly_out_duration' => 'nullable',
                 'work_format' => 'nullable',
-                'schedule' => 'nullable'
+                'schedule' => 'nullable',
+                'vacancy_properties' => 'nullable'
             ]);
         } catch (\Throwable $th) {
             return response()->json([
