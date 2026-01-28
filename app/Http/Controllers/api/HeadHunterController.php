@@ -207,7 +207,7 @@ class HeadHunterController extends Controller
                 'message' => 'Ошибка валидации',
             ], 422);
         }
-        $url = config('hh.get_available_publications')['url'] . $data['employer_id'] . config('hh.get_available_types')
+        $url = config('hh.get_available_publications')['url'] . $data['employer_id'] . config('hh.get_available_publications')
             ['folder'];
         $response = PlatformHh::requireGetPlatform($customerToken, $url);
 
