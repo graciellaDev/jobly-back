@@ -294,6 +294,16 @@ class HeadHunterController extends Controller
                 'message' => 'Ошибка валидации',
             ], 422);
         }
+
+        if (isset($data['address']) && is_array($data['address'])) {
+            if (isset($data['address']['show_metro_only'])) {
+                $data['address']['show_metro_only'] = filter_var(
+                    $data['address']['show_metro_only'],
+                    FILTER_VALIDATE_BOOLEAN
+                );
+            }
+        }
+
         $response = PlatformHh::requirePostPlatform($customerToken, config('hh.get_publication'), $data, true);
 
         return response()->json([
