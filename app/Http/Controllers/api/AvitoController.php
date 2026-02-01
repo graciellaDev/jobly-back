@@ -202,16 +202,8 @@ class AvitoController extends Controller
     {
         $data = [];
         $customerToken = $request->attributes->get('token');
-        $employerId = $request->attributes->get('employer_id');
 
-        if (empty($employerId)) {
-            return response()->json([
-                'message' => 'Ваш аккаунт не может иметь публикаций',
-                'data' => $data
-            ], 404);
-        }
-
-        $pubEndpoint = config('avito.get_publications')['url'] . $employerId . config('avito.get_publications')['folder'];
+        $pubEndpoint = config('avito.get_publication');
         $response = PlatformAvito::requireGetPlatform($customerToken, $pubEndpoint);
 
         if ($response->status() != 200) {
