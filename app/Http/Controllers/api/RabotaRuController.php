@@ -512,4 +512,220 @@ class RabotaRuController extends Controller
             'data' => $response->json()
         ]);
     }
+
+    /**
+     * Получение списка регионов (areas)
+     * Используется для указания региона размещения вакансии
+     */
+    public function getAreas(Request $request): JsonResponse
+    {
+        $customerToken = $request->attributes->get('token');
+
+        // Согласно OpenAPI v4: справочники используют POST метод
+        $response = PlatformRabotaRu::requirePostPlatform($customerToken, config('rabota.get_areas'), [], true);
+
+        if ($response->status() != 200) {
+            return response()->json([
+                'message' => $response->status() == 404 ? 'Регионы не найдены' : 'Ошибка получения регионов',
+                'data' => []
+            ], $response->status());
+        }
+
+        return response()->json([
+            'message' => 'Success',
+            'data' => $response->json()
+        ]);
+    }
+
+    /**
+     * Получение списка форм занятости (employment_form)
+     * Используется для указания типа занятости (полная, частичная и т.д.)
+     */
+    public function getEmploymentForms(Request $request): JsonResponse
+    {
+        $customerToken = $request->attributes->get('token');
+
+        // Согласно OpenAPI v4: справочники используют POST метод
+        $response = PlatformRabotaRu::requirePostPlatform($customerToken, config('rabota.get_employment_forms'), [], true);
+
+        if ($response->status() != 200) {
+            return response()->json([
+                'message' => $response->status() == 404 ? 'Формы занятости не найдены' : 'Ошибка получения форм занятости',
+                'data' => []
+            ], $response->status());
+        }
+
+        return response()->json([
+            'message' => 'Success',
+            'data' => $response->json()
+        ]);
+    }
+
+    /**
+     * Получение списка уровней образования (education_level)
+     * Используется для указания требований к образованию соискателя
+     */
+    public function getEducationLevels(Request $request): JsonResponse
+    {
+        $customerToken = $request->attributes->get('token');
+
+        // Согласно OpenAPI v4: справочники используют POST метод
+        $response = PlatformRabotaRu::requirePostPlatform($customerToken, config('rabota.get_education_levels'), [], true);
+
+        if ($response->status() != 200) {
+            return response()->json([
+                'message' => $response->status() == 404 ? 'Уровни образования не найдены' : 'Ошибка получения уровней образования',
+                'data' => []
+            ], $response->status());
+        }
+
+        return response()->json([
+            'message' => 'Success',
+            'data' => $response->json()
+        ]);
+    }
+
+    /**
+     * Получение списка опыта работы (experience)
+     * Используется для указания требований к опыту работы
+     */
+    public function getExperience(Request $request): JsonResponse
+    {
+        $customerToken = $request->attributes->get('token');
+
+        // Согласно OpenAPI v4: справочники используют POST метод
+        $response = PlatformRabotaRu::requirePostPlatform($customerToken, config('rabota.get_experience'), [], true);
+
+        if ($response->status() != 200) {
+            return response()->json([
+                'message' => $response->status() == 404 ? 'Опыт работы не найден' : 'Ошибка получения опыта работы',
+                'data' => []
+            ], $response->status());
+        }
+
+        return response()->json([
+            'message' => 'Success',
+            'data' => $response->json()
+        ]);
+    }
+
+    /**
+     * Получение списка типов водительских прав (driver_license_types)
+     * Используется для указания требований к водительским правам
+     */
+    public function getDriverLicenseTypes(Request $request): JsonResponse
+    {
+        $customerToken = $request->attributes->get('token');
+
+        // Согласно OpenAPI v4: справочники используют POST метод
+        $response = PlatformRabotaRu::requirePostPlatform($customerToken, config('rabota.get_driver_license_types'), [], true);
+
+        if ($response->status() != 200) {
+            return response()->json([
+                'message' => $response->status() == 404 ? 'Типы водительских прав не найдены' : 'Ошибка получения типов водительских прав',
+                'data' => []
+            ], $response->status());
+        }
+
+        return response()->json([
+            'message' => 'Success',
+            'data' => $response->json()
+        ]);
+    }
+
+    /**
+     * Получение списка типов оплаты (billing_types)
+     * Используется для указания способа оплаты труда
+     */
+    public function getBillingTypes(Request $request): JsonResponse
+    {
+        $customerToken = $request->attributes->get('token');
+
+        // Согласно OpenAPI v4: справочники используют POST метод
+        $response = PlatformRabotaRu::requirePostPlatform($customerToken, config('rabota.get_billing_types'), [], true);
+
+        if ($response->status() != 200) {
+            return response()->json([
+                'message' => $response->status() == 404 ? 'Типы оплаты не найдены' : 'Ошибка получения типов оплаты',
+                'data' => []
+            ], $response->status());
+        }
+
+        return response()->json([
+            'message' => 'Success',
+            'data' => $response->json()
+        ]);
+    }
+
+    /**
+     * Получение списка форматов работы (work_format)
+     * Используется для указания формата работы (удаленно, офис и т.д.)
+     */
+    public function getWorkFormats(Request $request): JsonResponse
+    {
+        $customerToken = $request->attributes->get('token');
+
+        // Согласно OpenAPI v4: справочники используют POST метод
+        $response = PlatformRabotaRu::requirePostPlatform($customerToken, config('rabota.get_work_formats'), [], true);
+
+        if ($response->status() != 200) {
+            return response()->json([
+                'message' => $response->status() == 404 ? 'Форматы работы не найдены' : 'Ошибка получения форматов работы',
+                'data' => []
+            ], $response->status());
+        }
+
+        return response()->json([
+            'message' => 'Success',
+            'data' => $response->json()
+        ]);
+    }
+
+    /**
+     * Получение списка рабочих часов (working_hours)
+     * Используется для указания количества рабочих часов
+     */
+    public function getWorkingHours(Request $request): JsonResponse
+    {
+        $customerToken = $request->attributes->get('token');
+
+        // Согласно OpenAPI v4: справочники используют POST метод
+        $response = PlatformRabotaRu::requirePostPlatform($customerToken, config('rabota.get_working_hours'), [], true);
+
+        if ($response->status() != 200) {
+            return response()->json([
+                'message' => $response->status() == 404 ? 'Рабочие часы не найдены' : 'Ошибка получения рабочих часов',
+                'data' => []
+            ], $response->status());
+        }
+
+        return response()->json([
+            'message' => 'Success',
+            'data' => $response->json()
+        ]);
+    }
+
+    /**
+     * Получение списка графиков работы (schedules)
+     * Используется для указания графика работы (полный день, сменный график и т.д.)
+     */
+    public function getSchedules(Request $request): JsonResponse
+    {
+        $customerToken = $request->attributes->get('token');
+
+        // Согласно OpenAPI v4: справочники используют POST метод
+        $response = PlatformRabotaRu::requirePostPlatform($customerToken, config('rabota.get_schedules'), [], true);
+
+        if ($response->status() != 200) {
+            return response()->json([
+                'message' => $response->status() == 404 ? 'Графики работы не найдены' : 'Ошибка получения графиков работы',
+                'data' => []
+            ], $response->status());
+        }
+
+        return response()->json([
+            'message' => 'Success',
+            'data' => $response->json()
+        ]);
+    }
 }
