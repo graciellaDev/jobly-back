@@ -20,5 +20,15 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('/send-url', [RabotaRuController::class, 'sendUrl']);
         Route::delete('auth', [RabotaRuController::class, 'closeAuth']);
         Route::get('/addresses', [RabotaRuController::class, 'getAddresses']);
+        // Справочники для создания вакансии
+        Route::get('/dictionaries/areas', [RabotaRuController::class, 'getAreas']);
+        Route::get('/dictionaries/employment-forms', [RabotaRuController::class, 'getEmploymentForms']);
+        Route::get('/dictionaries/education-levels', [RabotaRuController::class, 'getEducationLevels']);
+        Route::get('/dictionaries/experience', [RabotaRuController::class, 'getExperience']);
+        Route::get('/dictionaries/driver-license-types', [RabotaRuController::class, 'getDriverLicenseTypes']);
+        Route::get('/dictionaries/billing-types', [RabotaRuController::class, 'getBillingTypes']);
+        Route::get('/dictionaries/work-formats', [RabotaRuController::class, 'getWorkFormats']);
+        Route::get('/dictionaries/working-hours', [RabotaRuController::class, 'getWorkingHours']);
+        Route::get('/dictionaries/schedules', [RabotaRuController::class, 'getSchedules']);
     });
 });

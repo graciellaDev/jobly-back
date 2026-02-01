@@ -43,4 +43,14 @@ return [
     'get_addresses' => env('RABOTA_DOMAIN', 'https://api.rabota.ru') . '/v4/me/company/addresses.json',
     // Согласно OpenAPI v4: статистика просмотров через /me/vacancies/responses/counters.json
     'get_count_visitors' => env('RABOTA_DOMAIN', 'https://api.rabota.ru') . '/v4/me/vacancies/responses/counters.json',
+    // Справочники для создания вакансии
+    'get_areas' => env('RABOTA_DOMAIN', 'https://api.rabota.ru') . '/v4/dictionaries/areas.json',
+    'get_employment_forms' => env('RABOTA_DOMAIN', 'https://api.rabota.ru') . '/v4/dictionaries/employment_forms.json',
+    'get_education_levels' => env('RABOTA_DOMAIN', 'https://api.rabota.ru') . '/v4/dictionaries/education_levels.json',
+    'get_experience' => env('RABOTA_DOMAIN', 'https://api.rabota.ru') . '/v4/dictionaries/experience.json',
+    'get_driver_license_types' => env('RABOTA_DOMAIN', 'https://api.rabota.ru') . '/v4/dictionaries/driver_license_types.json',
+    'get_billing_types' => env('RABOTA_DOMAIN', 'https://api.rabota.ru') . '/v4/dictionaries/billing_types.json',
+    'get_work_formats' => env('RABOTA_DOMAIN', 'https://api.rabota.ru') . '/v4/dictionaries/work_formats.json',
+    'get_working_hours' => env('RABOTA_DOMAIN', 'https://api.rabota.ru') . '/v4/dictionaries/working_hours.json',
+    'get_schedules' => env('RABOTA_DOMAIN', 'https://api.rabota.ru') . '/v4/dictionaries/schedules.json',
 ];
