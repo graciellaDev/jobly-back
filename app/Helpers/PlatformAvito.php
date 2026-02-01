@@ -8,12 +8,20 @@ use Illuminate\Support\Facades\Http;
 
 class PlatformAvito
 {
-    public static function requireGetPlatform(string $token, string $url): PromiseInterface | Response
+    public static function requireGetPlatform(string $token, string $url, array $queryParams = []): PromiseInterface | Response
     {
-        return  Http::withHeaders([
-            'Content-Type'  => config('avito.content_type'),
+        $headers = [
             'Authorization' => 'Bearer ' . $token
-        ])->asForm()->get($url);
+        ];
+
+        $request = Http::withHeaders($headers);
+
+        // Если есть query параметры, добавляем их к URL
+        if (!empty($queryParams)) {
+            return $request->get($url, $queryParams);
+        }
+
+        return $request->get($url);
     }
 
     public static function requirePostPlatform(string | null $token, string $url, array $data, bool $jsonData = false):
