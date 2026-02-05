@@ -293,7 +293,7 @@ class HeadHunterController extends Controller
         try {
             $data = $request->validate([
                 'name' => 'required|string|min:3|max:100',
-                'description' => 'required|string|min:1|max:1024',
+                'description' => 'required|string|min:1',
                 'billing_types' => 'nullable',
                 'professional_roles' => 'nullable',
                 'area' => 'nullable',
