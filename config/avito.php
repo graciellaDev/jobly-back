@@ -27,6 +27,15 @@ return [
         'url' => env('AVITO_DOMAIN', 'https://api.avito.ru') . '/core/v1/accounts/',
         'folder' => '/items/draft'
     ],
+    // Endpoints для создания публикаций
+    'create_publication' => [
+        'url' => env('AVITO_DOMAIN', 'https://api.avito.ru') . '/core/v1/accounts/',
+        'folder' => '/items'
+    ],
+    'create_draft' => [
+        'url' => env('AVITO_DOMAIN', 'https://api.avito.ru') . '/core/v1/accounts/',
+        'folder' => '/items/draft'
+    ],
     // Scope для OAuth авторизации
     // В Avito API scope разделяются ЗАПЯТЫМИ, а не пробелами!
     // Формат: scope1,scope2,scope3 (например: messenger:read,messenger:write)
