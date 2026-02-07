@@ -42,8 +42,9 @@ class AvitoController extends Controller
                     'state' => $state // Рекомендуется для защиты от CSRF
                 ];
                 
-                // Scope может быть необязательным или настраивается при регистрации приложения
-                // http_build_query автоматически кодирует двоеточия (: → %3A)
+                // Scope для Avito API разделяются ЗАПЯТЫМИ (не пробелами!)
+                // Формат: scope1,scope2,scope3 (например: messenger:read,messenger:write)
+                // http_build_query автоматически кодирует двоеточия (: → %3A) и запятые
                 $scope = config('avito.scope');
                 if (!empty($scope)) {
                     $queryParams['scope'] = $scope;
@@ -92,8 +93,9 @@ class AvitoController extends Controller
                     'state' => $state // Рекомендуется для защиты от CSRF
                 ];
                 
-                // Scope может быть необязательным или настраивается при регистрации приложения
-                // http_build_query автоматически кодирует двоеточия (: → %3A)
+                // Scope для Avito API разделяются ЗАПЯТЫМИ (не пробелами!)
+                // Формат: scope1,scope2,scope3 (например: messenger:read,messenger:write)
+                // http_build_query автоматически кодирует двоеточия (: → %3A) и запятые
                 $scope = config('avito.scope');
                 if (!empty($scope)) {
                     $queryParams['scope'] = $scope;

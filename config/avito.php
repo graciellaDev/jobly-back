@@ -28,8 +28,9 @@ return [
         'folder' => '/items/draft'
     ],
     // Scope для OAuth авторизации
-    // http_build_query автоматически кодирует двоеточия (: → %3A)
-    // Если scope настраивается при регистрации приложения, оставьте пустым
-    'scope' => env('AVITO_SCOPE', 'items:info job:applications job:cv job:vacancy job:write messenger:read messenger:write user_balance:read user:read'),
+    // В Avito API scope разделяются ЗАПЯТЫМИ, а не пробелами!
+    // Формат: scope1,scope2,scope3 (например: messenger:read,messenger:write)
+    // http_build_query автоматически кодирует двоеточия (: → %3A) и запятые
+    'scope' => env('AVITO_SCOPE', 'items:info,job:applications,job:cv,job:vacancy,job:write,messenger:read,messenger:write,user_balance:read,user:read'),
 ];
 
