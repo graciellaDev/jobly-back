@@ -22,7 +22,7 @@ return [
         'url' => env('AVITO_DOMAIN', 'https://api.avito.ru') . '/core/v1/accounts/',
         'folder' => '/items/active'
     ],
-    'get_publication' => env('AVITO_DOMAIN', 'https://api.avito.ru') . '/core/v1/items/',
+    'get_publication' => env('AVITO_DOMAIN', 'https://api.avito.ru') . '/core/v1/items',
     'get_drafts' => [
         'url' => env('AVITO_DOMAIN', 'https://api.avito.ru') . '/core/v1/accounts/',
         'folder' => '/items/draft'
