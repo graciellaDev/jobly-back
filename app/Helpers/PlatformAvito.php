@@ -14,7 +14,7 @@ class PlatformAvito
             'Authorization' => 'Bearer ' . $token
         ];
 
-        $request = Http::withHeaders($headers);
+        $request = Http::withHeaders($headers)->asForm();
 
         // Если есть query параметры, добавляем их к URL
         if (!empty($queryParams)) {
