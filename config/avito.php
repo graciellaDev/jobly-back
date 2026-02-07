@@ -27,6 +27,9 @@ return [
         'url' => env('AVITO_DOMAIN', 'https://api.avito.ru') . '/core/v1/accounts/',
         'folder' => '/items/draft'
     ],
+    // Scope для OAuth авторизации
+    // http_build_query автоматически кодирует двоеточия (: → %3A)
+    // Если scope настраивается при регистрации приложения, оставьте пустым
     'scope' => env('AVITO_SCOPE', 'items:info job:applications job:cv job:vacancy job:write messenger:read messenger:write user_balance:read user:read'),
 ];
 

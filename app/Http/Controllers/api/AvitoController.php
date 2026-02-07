@@ -9,6 +9,7 @@ use App\Models\Customer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Str;
 
 class AvitoController extends Controller
 {
@@ -29,12 +30,26 @@ class AvitoController extends Controller
                 $this->status = 404;
             } else {
                 Cookie::queue($this->COOKIE_ID_CUSTOMER, $customer->id, 60);
+                
+                // Генерируем state для защиты от CSRF
+                $state = Str::random(32);
+                Cookie::queue('avito_oauth_state', $state, 10); // 10 минут
+                
                 $queryParams = [
-                    'response_type' => 'code',
+                    'response_type' => 'code', // КРИТИЧНО
                     'client_id' => config('avito.client_id'),
-                    'redirect_uri' => config('avito.redirect_url'),
-                    'scope' => config('avito.scope')
+                    'redirect_uri' => config('avito.redirect_url'), // http_build_query автоматически URL-кодирует
+                    'state' => $state // Рекомендуется для защиты от CSRF
                 ];
+                
+                // Scope может быть необязательным или настраивается при регистрации приложения
+                // http_build_query автоматически кодирует двоеточия (: → %3A)
+                $scope = config('avito.scope');
+                if (!empty($scope)) {
+                    $queryParams['scope'] = $scope;
+                }
+                
+                // http_build_query автоматически URL-кодирует все параметры, включая redirect_uri и scope
                 $this->url = config('avito.auth_url') . '?' . http_build_query($queryParams);
                 $this->message = 'Success';
             }
@@ -64,16 +79,52 @@ class AvitoController extends Controller
                 $this->status = 404;
             } else {
                 Cookie::queue($this->COOKIE_ID_CUSTOMER, $customer->id, 60);
+                
+                // Генерируем state для защиты от CSRF
+                $state = Str::random(32);
+                Cookie::queue('avito_oauth_state', $state, 10); // 10 минут
+                
                 $url = config('avito.auth_url');
                 $queryParams = [
-                    'response_type' => 'code',
+                    'response_type' => 'code', // КРИТИЧНО
                     'client_id' => config('avito.client_id'),
-                    'redirect_uri' => config('avito.redirect_url'),
-                    'scope' => config('avito.scope')
+                    'redirect_uri' => config('avito.redirect_url'), // http_build_query автоматически URL-кодирует
+                    'state' => $state // Рекомендуется для защиты от CSRF
                 ];
+                
+                // Scope может быть необязательным или настраивается при регистрации приложения
+                // http_build_query автоматически кодирует двоеточия (: → %3A)
+                $scope = config('avito.scope');
+                if (!empty($scope)) {
+                    $queryParams['scope'] = $scope;
+                }
+                
+                // http_build_query автоматически URL-кодирует все параметры, включая redirect_uri и scope
                 return redirect($url . '?' . http_build_query($queryParams));
             }
         } else {
+            // Проверяем state для защиты от CSRF
+            $stateFromRequest = $request->get('state');
+            $stateFromCookie = Cookie::get('avito_oauth_state');
+            
+            // Проверяем наличие и совпадение state
+            if (empty($stateFromRequest) || empty($stateFromCookie) || $stateFromRequest !== $stateFromCookie) {
+                Cookie::forget('avito_oauth_state');
+                $this->message = 'Ошибка проверки state. Возможна CSRF атака.';
+                $this->status = 403;
+                $url = config('avito.front_save_ids');
+                $queryParams = [
+                    'popup_account' => 'true',
+                    'platform' => 'avito',
+                    'status_auth' => 'false',
+                    'message' => $this->message
+                ];
+                return redirect()->to($url . '?' . http_build_query($queryParams));
+            }
+            
+            // Удаляем state после проверки
+            Cookie::forget('avito_oauth_state');
+            
             $customerId = Cookie::get($this->COOKIE_ID_CUSTOMER);
             if ($customerId) {
                 $data = $this->getToken($code, $clientId, $clientSecret);
