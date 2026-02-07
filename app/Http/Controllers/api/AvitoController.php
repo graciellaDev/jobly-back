@@ -329,6 +329,140 @@ class AvitoController extends Controller
             'data' => $response->json()
         ]);
     }
+
+    /**
+     * Создание публикации (вакансии) в Avito
+     * POST /api/avito/publications
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function addPublication(Request $request): JsonResponse
+    {
+        $customerToken = $request->attributes->get('token');
+        $employerId = $request->attributes->get('employer_id');
+
+        if (empty($employerId)) {
+            return response()->json([
+                'message' => 'Ваш аккаунт не может создавать публикации',
+                'data' => []
+            ], 404);
+        }
+
+        try {
+            // Валидация данных согласно документации Avito API для вакансий
+            $data = $request->validate([
+                'title' => 'required|string|min:3|max:200',
+                'description' => 'required|string|min:10',
+                'category_id' => 'required|integer',
+                'location_id' => 'required|integer',
+                'price' => 'nullable|numeric|min:0',
+                'contact_phone' => 'nullable|string',
+                'address' => 'nullable|string',
+                'images' => 'nullable|array',
+                'images.*' => 'nullable|string',
+                // Дополнительные поля для вакансий (job)
+                'salary' => 'nullable|integer',
+                'employment' => 'nullable|string',
+                'schedule' => 'nullable|string',
+                'experience' => 'nullable|string',
+                'education' => 'nullable|string',
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Ошибка валидации: ' . $th->getMessage(),
+                'data' => []
+            ], 422);
+        }
+
+        // Формируем endpoint для создания публикации
+        // POST /core/v1/accounts/{employer_id}/items
+        $endpoint = config('avito.create_publication')['url'] . $employerId . config('avito.create_publication')['folder'];
+        
+        // Отправляем POST запрос с JSON данными
+        $response = PlatformAvito::requirePostPlatform($customerToken, $endpoint, $data, true);
+
+        if ($response->status() != 200 && $response->status() != 201) {
+            return response()->json([
+                'message' => $response->status() == 400 ? 'Ошибка валидации данных' : 
+                           ($response->status() == 403 ? 'Недостаточно прав для создания публикации' : 
+                           'Ошибка создания публикации'),
+                'data' => $response->json() ?? []
+            ], $response->status());
+        }
+
+        return response()->json([
+            'message' => 'Публикация успешно создана',
+            'data' => $response->json()
+        ], $response->status());
+    }
+
+    /**
+     * Создание черновика публикации (вакансии) в Avito
+     * POST /api/avito/drafts
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function addDraft(Request $request): JsonResponse
+    {
+        $customerToken = $request->attributes->get('token');
+        $employerId = $request->attributes->get('employer_id');
+
+        if (empty($employerId)) {
+            return response()->json([
+                'message' => 'Ваш аккаунт не может создавать черновики',
+                'data' => []
+            ], 404);
+        }
+
+        try {
+            // Валидация данных для черновика (те же поля, но все опциональные)
+            $data = $request->validate([
+                'title' => 'nullable|string|min:3|max:200',
+                'description' => 'nullable|string|min:10',
+                'category_id' => 'nullable|integer',
+                'location_id' => 'nullable|integer',
+                'price' => 'nullable|numeric|min:0',
+                'contact_phone' => 'nullable|string',
+                'address' => 'nullable|string',
+                'images' => 'nullable|array',
+                'images.*' => 'nullable|string',
+                // Дополнительные поля для вакансий (job)
+                'salary' => 'nullable|integer',
+                'employment' => 'nullable|string',
+                'schedule' => 'nullable|string',
+                'experience' => 'nullable|string',
+                'education' => 'nullable|string',
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Ошибка валидации: ' . $th->getMessage(),
+                'data' => []
+            ], 422);
+        }
+
+        // Формируем endpoint для создания черновика
+        // POST /core/v1/accounts/{employer_id}/items/draft
+        $endpoint = config('avito.create_draft')['url'] . $employerId . config('avito.create_draft')['folder'];
+        
+        // Отправляем POST запрос с JSON данными
+        $response = PlatformAvito::requirePostPlatform($customerToken, $endpoint, $data, true);
+
+        if ($response->status() != 200 && $response->status() != 201) {
+            return response()->json([
+                'message' => $response->status() == 400 ? 'Ошибка валидации данных' : 
+                           ($response->status() == 403 ? 'Недостаточно прав для создания черновика' : 
+                           'Ошибка создания черновика'),
+                'data' => $response->json() ?? []
+            ], $response->status());
+        }
+
+        return response()->json([
+            'message' => 'Черновик успешно создан',
+            'data' => $response->json()
+        ], $response->status());
+    }
 }
 
 
