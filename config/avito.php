@@ -27,5 +27,6 @@ return [
         'url' => env('AVITO_DOMAIN', 'https://api.avito.ru') . '/core/v1/accounts/',
         'folder' => '/items/draft'
     ],
+    'scope' => env('AVITO_SCOPE', 'items:info job:applications job:cv job:vacancy job:write messenger:read messenger:write user_balance:read user:read'),
 ];
 

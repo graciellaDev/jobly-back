@@ -29,10 +29,13 @@ class AvitoController extends Controller
                 $this->status = 404;
             } else {
                 Cookie::queue($this->COOKIE_ID_CUSTOMER, $customer->id, 60);
-                $this->url = config('avito.auth_url')
-                    . '?response_type=code&'
-                    . 'client_id=' . config('avito.client_id') . '&'
-                    . 'redirect_uri=' . urlencode(config('avito.redirect_url'));
+                $queryParams = [
+                    'response_type' => 'code',
+                    'client_id' => config('avito.client_id'),
+                    'redirect_uri' => config('avito.redirect_url'),
+                    'scope' => config('avito.scope')
+                ];
+                $this->url = config('avito.auth_url') . '?' . http_build_query($queryParams);
                 $this->message = 'Success';
             }
         } else {
@@ -65,7 +68,8 @@ class AvitoController extends Controller
                 $queryParams = [
                     'response_type' => 'code',
                     'client_id' => config('avito.client_id'),
-                    'redirect_uri' => config('avito.redirect_url')
+                    'redirect_uri' => config('avito.redirect_url'),
+                    'scope' => config('avito.scope')
                 ];
                 return redirect($url . '?' . http_build_query($queryParams));
             }
